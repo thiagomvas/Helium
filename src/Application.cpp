@@ -121,6 +121,7 @@ namespace Helium {
         if (isRunning) {
             isRunning = false;
             std::cout << "Application ended" << std::endl;
+            // Save Image to file
             Image image = LoadImageFromTexture(target.texture);
             ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
             ImageFlipVertical(&image);
