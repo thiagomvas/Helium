@@ -1,7 +1,11 @@
 #include "Application.hpp"
+#include "NoteArea.hpp"
+#include "constants.h"
 #include "raylib.h"
+#include "rlgl.h"
 #include <iostream>
-
+#include <stdio.h>
+#include <stdlib.h>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
@@ -17,7 +21,7 @@ namespace Helium {
         }
     }
 
-    void Application::Start() {
+void Application::Start() {
     if(isRunning)
         return;
     isRunning = true;
@@ -25,15 +29,20 @@ namespace Helium {
     const int screenHeight = 600;
     const int menuHeight = 50;  // Height of the menu bar
 
-    InitWindow(screenWidth, screenHeight, "Paint Application with Raygui");
+    InitWindow(screenWidth, screenHeight, "Helium");
     SetTargetFPS(60);
-
+    NoteArea area;
+    Rectangle rect;
+    rect.width = 400;
+    rect.height = 400;
+    area.SetRect(rect);
+    area.Initialize();
     // Create a RenderTexture2D to use as a canvas
     target = LoadRenderTexture(screenWidth, screenHeight);
-
+    
     // Clear render texture before entering the game loop
     BeginTextureMode(target);
-    ClearBackground(RAYWHITE);
+    ClearBackground(Colors::BACKGROUND);
     EndTextureMode();
 
     bool drawing = false;
@@ -43,77 +52,44 @@ namespace Helium {
     // Initialize raygui
     GuiLoadStyle("styles/raygui-dark");
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20); // Adjust text size
-
-    while (isRunning)    // Detect window close button or ESC key
+    
+    while(isRunning)
     {
         if(WindowShouldClose())
         {
             Stop();
         }
+
         // Update
-        //----------------------------------------------------------------------------------
-        Vector2 mousePos = GetMousePosition();
-        Vector2 adjustedMousePos = (Vector2){ mousePos.x, mousePos.y - menuHeight }; // Adjust mouse position for menu offset
-
-
-        // Start drawing
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && mousePos.y > menuHeight)
-        {
-            drawing = true;
-            previousPoint = adjustedMousePos;
-        }
-
-        // Draw on texture
-        if (drawing)
-        {
-            BeginTextureMode(target);
-            DrawLineEx(previousPoint, adjustedMousePos, brushSize, BLACK);
+        area.Update();
+        
+        if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_S)) {
+            RenderTexture2D res = LoadRenderTexture(rect.width, rect.height);
+            BeginTextureMode(res);
+            area.Draw();
             EndTextureMode();
-            previousPoint = adjustedMousePos;
+            Image image = LoadImageFromTexture(res.texture);
+            ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+            ImageFlipVertical(&image);
+            ExportImage(image, "C:/Users/Thiago/picasso.png");
+            UnloadImage(image);
         }
-
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        {
-            drawing = false;
-        }
-        //----------------------------------------------------------------------------------
 
         // Draw
-        //----------------------------------------------------------------------------------
         BeginDrawing();
-            ClearBackground(RAYWHITE);
-
-            // Draw the menu area
-            DrawRectangle(0, 0, screenWidth, menuHeight, LIGHTGRAY);
-
-            // Menu Buttons
-            if (GuiButton((Rectangle){ 10, 10, 100, 30 }, "Clear"))
-            {
-                BeginTextureMode(target);
-                ClearBackground(RAYWHITE);
-                EndTextureMode();
-            }
-
-            if (GuiButton((Rectangle){ 120, 10, 150, 30 }, TextFormat("Brush: %.1f", brushSize)))
-            {
-                brushSize += 5.0f;
-                if (brushSize > 50) brushSize = 10.0f;
-            }
-
-            // End raygui
-
-            // Draw the drawing area with vertical flip adjustment
-            DrawTextureRec(target.texture, (Rectangle){ 0, 0, (float)target.texture.width, (float)-target.texture.height }, (Vector2){ 0, menuHeight }, WHITE);
+        ClearBackground(Colors::BACKGROUND);
+        area.Draw();
         EndDrawing();
-        //----------------------------------------------------------------------------------
     }
+    return;
+}
 
-    // De-Initialization
-    //--------------------------------------------------------------------------------------
-    UnloadRenderTexture(target);    // Unload render texture
-    CloseWindow();                  // Close window and OpenGL context
-    //--------------------------------------------------------------------------------------
-
+    void Application::Save() {
+        Image image = LoadImageFromTexture(target.texture);
+        ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+        ImageFlipVertical(&image);
+        ExportImage(image, "C:/Users/Thiago/picasso.png");
+        UnloadImage(image);
     }
 
 
@@ -122,12 +98,6 @@ namespace Helium {
             isRunning = false;
             std::cout << "Application ended" << std::endl;
             // Save Image to file
-            Image image = LoadImageFromTexture(target.texture);
-            ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
-            ImageFlipVertical(&image);
-            ExportImage(image, "C:/Users/Thiago/picasso.png");
-            UnloadImage(image);
- 
         } else {
             std::cout << "Application already stopped" << std::endl;
         }

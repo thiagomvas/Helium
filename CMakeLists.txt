@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10) 
-project(MyProject) # Replace MyProject with your project name
+cmake_minimum_required(VERSION 3.10)
+project(MyProject)  # Replace MyProject with your project name
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -17,10 +17,6 @@ file(GLOB_RECURSE SOURCES
     ${CMAKE_SOURCE_DIR}/lib/**/*.cpp
 )
 
-# Group sources into different logical targets if needed (optional)
-# For example, if you have a core library, you might want to create a separate library target
-# add_library(core STATIC ${CORE_SOURCES})
-
 # Add the executable
 add_executable(out ${SOURCES})
 
@@ -34,3 +30,6 @@ target_link_libraries(out
 
 # Optional: Define compile options if needed
 # target_compile_options(out PRIVATE -Wall)
+
+# Optional: Define any additional compile definitions or flags if needed
+# add_definitions(-DDEBUG)

@@ -10,6 +10,7 @@ namespace Helium {
 			~Application();
 
 			void Start();
+			void Save();
 			void Stop();
 		private:
 			bool isRunning;

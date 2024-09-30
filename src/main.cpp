@@ -1,8 +1,9 @@
 #include "Application.hpp"
+#include "tokenizer.hpp"
+#include <iostream>
+#include "NoteArea.hpp"
 
-int main(void)
-{
+int main() {
     Helium::Application app;
     app.Start();
-    return 0;
 }
