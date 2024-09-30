@@ -37,14 +37,7 @@ void Application::Start() {
     rect.height = 400;
     area.SetRect(rect);
     area.Initialize();
-    // Create a RenderTexture2D to use as a canvas
-    target = LoadRenderTexture(screenWidth, screenHeight);
     
-    // Clear render texture before entering the game loop
-    BeginTextureMode(target);
-    ClearBackground(Colors::BACKGROUND);
-    EndTextureMode();
-
     bool drawing = false;
     Vector2 previousPoint = { 0, 0 };
     float brushSize = 10.0f;
@@ -73,15 +66,6 @@ void Application::Start() {
     }
     return;
 }
-
-    void Application::Save() {
-        Image image = LoadImageFromTexture(target.texture);
-        ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
-        ImageFlipVertical(&image);
-        ExportImage(image, "C:/Users/Thiago/picasso.png");
-        UnloadImage(image);
-    }
-
 
     void Application::Stop() {
         if (isRunning) {

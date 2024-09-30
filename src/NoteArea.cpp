@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <cmath>
+#include <sstream>
 
 
 
@@ -192,20 +194,37 @@ void NoteArea::Update() {
             break;
     }
 }
+
+
 void NoteArea::Draw() {
-    DrawRectangleRec(_rect, _mode == Helium::NoteMode::READ ? GREEN : (_mode == Helium::NoteMode::DRAW) ? BLUE : RED);
-    int y = 0, fontSize = 0;
-    switch(_mode) {
-        case Helium::NoteMode::DRAW:
-            DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, BLACK);
+    DrawRectangleRec(_rect, Colors::FOREGROUND);
+
+    int y = 0;
+    const int fontSize = 16;  // Fixed font size for all lines
+
+    std::istringstream stream(_rawText);
+    std::string line;
+    int caretX = 0, caretY = 0;  // Caret position
+
+    static bool showCaret = true;         // Flag for caret visibility (blinking)
+    static float caretBlinkTimer = 0.0f;  // Timer to control caret blinking
+
+    const float caretBlinkInterval = 0.5f;  // Blink interval for the caret
+
+    caretBlinkTimer += GetFrameTime();
+    if (caretBlinkTimer >= caretBlinkInterval) {
+        showCaret = !showCaret;  // Toggle visibility
+        caretBlinkTimer = 0.0f;  // Reset timer
+    }
+
+    switch (_mode) {
         default:
         case Helium::NoteMode::READ:
-            for(Token t : _tokens) {
+            for (const Token& t : _tokens) {
                 switch (t.type) {
                     case Helium::TokenType::HEADER:
-                        fontSize = Formatting::GetFontSizeForHeader(stoi(t.attributes["level"]));
-                        DrawText(t.value.c_str(), 0, y, fontSize, BLACK);
-                        y += fontSize;
+                        DrawText(t.value.c_str(), 0, y, Formatting::GetFontSizeForHeader(stoi(t.attributes.at("level"))), BLACK);
+                        y += Formatting::GetFontSizeForHeader(stoi(t.attributes.at("level")));
                         break;
                     default:
                         DrawText(t.value.c_str(), 0, y, Formatting::PARAGRAPH, BLACK);
@@ -214,12 +233,46 @@ void NoteArea::Draw() {
                 }
             }
             break;
-        case Helium::NoteMode::WRITE:
-            DrawText(_rawText.c_str(), 0, 0, 16, BLACK);
+
+        case Helium::NoteMode::WRITE: {
+            bool lastCharWasNewline = false;
+
+            // Loop through each line of text and draw it
+            while (std::getline(stream, line)) {
+                DrawText(line.c_str(), 0, y, fontSize, BLACK);
+
+                // Set caret position to the end of the last line
+                caretX = MeasureText(line.c_str(), fontSize);  // Calculate width of the text for X
+                caretY = y;  // Y is the current line
+
+                y += fontSize;  // Move to next line position
+            }
+
+            // Handle case where the last character is a newline
+            if (!_rawText.empty() && _rawText.back() == '\n') {
+                caretX = 0;  // Start at the new line
+                caretY += fontSize;  // Move caret down
+                lastCharWasNewline = true;
+            }
+
+            // Draw caret only if it's visible (blinking)
+            if (showCaret) {
+                DrawRectangle(caretX, caretY, 2, fontSize, BLACK);  // Thin vertical caret
+            }
             break;
+        }
     }
+
+    // Draw the texture
     DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { 0.0f, 0.0f }, WHITE);
+
+    // Handle draw mode (if applicable)
+    if (_mode == Helium::NoteMode::DRAW) {
+        DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, BLACK);
+    }
 }
+
+
 
 void NoteArea::SetRect(Rectangle rect) {
     _rect = rect;

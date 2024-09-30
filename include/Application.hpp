@@ -14,7 +14,6 @@ namespace Helium {
 			void Stop();
 		private:
 			bool isRunning;
-			RenderTexture2D target;
 	};
 }
 

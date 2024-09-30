@@ -29,6 +29,7 @@ namespace Formatting {
 
 namespace Colors {
     constexpr Color BACKGROUND = { 12, 12, 12, 255 };
+    constexpr Color FOREGROUND = { 20, 20, 20, 255 };
 }
 #endif
 
