@@ -3,9 +3,15 @@
 
 #include "raylib.h"
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <vector>
 #include "tokenizer.hpp"
+
+void SaveNote(std::string fileName, std::string text, Texture2D texture);
+
+bool LoadNote(std::string fileName, std::string& text, Texture2D& texture);
+
 namespace Helium {
 
 enum class NoteMode {

@@ -63,17 +63,7 @@ void Application::Start() {
         // Update
         area.Update();
         
-        if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_S)) {
-            RenderTexture2D res = LoadRenderTexture(rect.width, rect.height);
-            BeginTextureMode(res);
-            area.Draw();
-            EndTextureMode();
-            Image image = LoadImageFromTexture(res.texture);
-            ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
-            ImageFlipVertical(&image);
-            ExportImage(image, "C:/Users/Thiago/picasso.png");
-            UnloadImage(image);
-        }
+        
 
         // Draw
         BeginDrawing();
