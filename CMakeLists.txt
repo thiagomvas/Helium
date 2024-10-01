@@ -28,6 +28,14 @@ target_link_libraries(out
     winmm
 )
 
+# Copy resources folder to build directory
+add_custom_command(TARGET out POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/resources
+        ${CMAKE_CURRENT_BINARY_DIR}/resources
+    COMMENT "Copying resources directory to build directory"
+)
+
 # Optional: Define compile options if needed
 # target_compile_options(out PRIVATE -Wall)
 

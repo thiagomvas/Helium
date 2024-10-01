@@ -113,6 +113,9 @@ void NoteArea::Initialize() {
     else
         _texture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
     rlSetBlendFactorsSeparate(0x0302, 0x0303, 1, 0x0303, 0x8006, 0x8006);
+
+    _defaultFont = LoadFontEx("resources/Roboto-Bold.ttf", 64, 0, 250);
+    _boldFont = LoadFontEx("resources/Roboto-Black.ttf", 64, 0, 250);
 }
 
 void NoteArea::Update() {
@@ -241,7 +244,7 @@ void NoteArea::Draw() {
             for (const Token& t : _tokens) {
                 switch (t.type) {
                     case Helium::TokenType::HEADER:
-                        DrawText(t.value.c_str(), _rect.x, y, Formatting::GetFontSizeForHeader(stoi(t.attributes.at("level"))), Colors::TEXT_COLOR);
+                        DrawTextEx(_defaultFont, t.value.c_str(), { (float) _rect.x, (float) y }, Formatting::GetFontSizeForHeader(stoi(t.attributes.at("level"))), 1, Colors::TEXT_COLOR);
                         y += Formatting::GetFontSizeForHeader(stoi(t.attributes.at("level")));
                         break;
                     default:
@@ -250,13 +253,14 @@ void NoteArea::Draw() {
                         for(Token it : inlines) {
                             switch(it.type) {
                                 case TokenType::BOLD:
-                                    DrawText(it.value.c_str(), x, y, Formatting::PARAGRAPH, RED);
+                                    DrawTextEx(_boldFont, it.value.c_str(), { (float) x, (float) y }, Formatting::PARAGRAPH, 1, Colors::TEXT_COLOR);
+                                    x += MeasureTextEx(_boldFont, it.value.c_str(), Formatting::PARAGRAPH, 1).x;
                                     break;
                                 default:
-                                    DrawText(it.value.c_str(), x, y, Formatting::PARAGRAPH, Colors::TEXT_COLOR);
+                                    DrawTextEx(_defaultFont, it.value.c_str(), { (float) x, (float) y }, Formatting::PARAGRAPH, 1, Colors::TEXT_COLOR);
+                                     x += MeasureTextEx(_defaultFont, it.value.c_str(), Formatting::PARAGRAPH, 1).x;
                                     break;
                             }
-                            x += MeasureText(it.value.c_str(), Formatting::PARAGRAPH);
                         }
 
                         y += Formatting::PARAGRAPH;

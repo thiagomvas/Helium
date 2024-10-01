@@ -37,6 +37,8 @@ private:
     float _beginDeleteTime;
 	int _brushRadius = 5;
 	Helium::NoteMode _mode = Helium::NoteMode::READ;
+    Font _defaultFont;
+    Font _boldFont;
 }; 
 
 
