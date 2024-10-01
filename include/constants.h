@@ -5,6 +5,7 @@
 
 namespace Config {
     constexpr const char* APP_NAME = "Placeholder";
+    constexpr float EDITAREA_WIDTH = 600;
 }
 
 namespace Formatting {
@@ -30,6 +31,8 @@ namespace Formatting {
 namespace Colors {
     constexpr Color BACKGROUND = { 12, 12, 12, 255 };
     constexpr Color FOREGROUND = { 20, 20, 20, 255 };
+    constexpr Color TEXT_COLOR = { 200, 200, 200, 255 };
+    constexpr Color BRUSH_BORDER = { 200, 200, 200, 255 };
 }
 #endif
 

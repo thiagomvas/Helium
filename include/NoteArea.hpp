@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "tokenizer.hpp"
+#include "constants.h"
 
 void SaveNote(std::string fileName, std::string text, Texture2D texture);
 
@@ -31,7 +32,7 @@ private:
 	RenderTexture2D _texture;
     std::string _rawText;
     std::vector<Token> _tokens;
-    Rectangle _rect;
+    Rectangle _rect = { 0, 0, Config::EDITAREA_WIDTH, 0 };
     Tokenizer _tokenizer;
     float _beginDeleteTime;
 	int _brushRadius = 5;

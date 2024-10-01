@@ -6,7 +6,28 @@
 
 namespace Helium {
 
+std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
+    std::vector<Token> tokens;
+    std::string::const_iterator searchStart(line.cbegin());
+    std::smatch match;
+    std::regex boldRegex(R"(\*\*(.*?)\*\*)");
 
+    while(searchStart != line.cend()) {
+        if(std::regex_search(searchStart, line.cend(), match, boldRegex)) {
+            if(match.prefix().length() > 0) {
+                tokens.push_back(Token(TokenType::TEXT,match.prefix().str()));
+            }
+            tokens.push_back(Token(TokenType::BOLD, match[1].str()));
+            searchStart = match.suffix().first;
+        }
+        else {
+            tokens.push_back(Token(TokenType::TEXT, std::string(searchStart, line.cend())));
+            break;
+        }
+    }
+
+    return tokens;
+}
 
 std::vector<Token> Tokenizer::tokenize(const std::string& text) {
     std::vector<Token> tokens;
@@ -32,13 +53,6 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
         Token linkToken = tokenizeLink(line);
         if (linkToken.type != TokenType::UNKNOWN) {
             tokens.push_back(linkToken);
-            continue;
-        }
-
-        // Tokenize other elements like bold
-        Token boldToken = tokenizeBold(line);
-        if (boldToken.type != TokenType::UNKNOWN) {
-            tokens.push_back(boldToken);
             continue;
         }
 

@@ -28,14 +28,10 @@ void Application::Start() {
     const int screenWidth = 800;
     const int screenHeight = 600;
     const int menuHeight = 50;  // Height of the menu bar
-
+    SetConfigFlags(ConfigFlags::FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Helium");
     SetTargetFPS(60);
     NoteArea area;
-    Rectangle rect;
-    rect.width = 400;
-    rect.height = 400;
-    area.SetRect(rect);
     area.Initialize();
     
     bool drawing = false;
@@ -52,6 +48,7 @@ void Application::Start() {
         {
             Stop();
         }
+
 
         // Update
         area.Update();

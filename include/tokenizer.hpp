@@ -15,7 +15,9 @@ enum class TokenType {
     LIST,
     LINK,
     PARAGRAPH,
-    UNKNOWN
+    TEXT,
+    BOLD,
+    UNKNOWN,
 };
 
 // Token struct
@@ -24,13 +26,21 @@ struct Token {
     TokenType type;                // Type of the token (e.g., "heading", "bold", "list", etc.)
     std::string value;               // The actual content of the token
     std::map<std::string, std::string> attributes;  // Additional attributes (optional)
+    // Default constructor
+    Token() : type(TokenType::UNKNOWN), value("") {}
 
+    // Parameterized constructor
     Token(TokenType t, std::string v) : type(std::move(t)), value(std::move(v)) {}
+
+    // Constructor with attributes
+    Token(TokenType t, std::string v, std::map<std::string, std::string> attrs) 
+        : type(std::move(t)), value(std::move(v)), attributes(std::move(attrs)) {}
 };
 
 class Tokenizer {
 public:
     std::vector<Token> tokenize(const std::string& text);
+    std::vector<Token> tokenizeInline(const std::string& line);
 
 private:
     Token tokenizeHeading(const std::string& line);

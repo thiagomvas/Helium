@@ -3,6 +3,7 @@
 #include "rlgl.h"
 #include "constants.h"
 #include "tokenizer.hpp"
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -28,6 +29,7 @@ void SaveNote(std::string fileName, std::string text, Texture2D texture) {
 
     // Save texture pixel data
     Image image = LoadImageFromTexture(texture); // Extract the texture data as an Image
+    ImageFormat(&image, PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA);
     ImageFlipVertical(&image);
     file.write(reinterpret_cast<char*>(image.data), image.width * image.height * 4); // Assuming RGBA format
     
@@ -114,6 +116,14 @@ void NoteArea::Initialize() {
 }
 
 void NoteArea::Update() {
+    
+    // Change height to fit screen
+    if(IsWindowResized()) {
+        _rect.height = GetScreenHeight();
+        _rect.x = (GetScreenWidth() - _rect.width) / 2;
+    }
+
+
     int wheel;
     if (CheckCollisionPointRec(GetMousePosition(), _rect) &&
         IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -169,6 +179,19 @@ void NoteArea::Update() {
     
             break;
         case Helium::NoteMode::DRAW:
+            if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+                int reqWidth = std::max(_texture.texture.width, GetMouseX());
+                int reqHeight = std::max(_texture.texture.height, GetMouseY());
+
+                if(_texture.texture.width < reqWidth || _texture.texture.height < reqHeight) {
+                    RenderTexture2D newTexture = LoadRenderTexture(reqWidth, reqHeight);
+                    BeginTextureMode(newTexture);
+                    DrawTexture(_texture.texture, 0, 0, WHITE);
+                    EndTextureMode();
+                    UnloadRenderTexture(_texture);
+                    _texture = newTexture;
+                }
+            }
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT))
             {
                 BeginTextureMode(_texture);
@@ -184,12 +207,7 @@ void NoteArea::Update() {
                 EndTextureMode();
             }
             
-            wheel = GetMouseWheelMove();
-            if(wheel != 0)
-            {
-                _brushRadius -= wheel;
-            }
-
+            _brushRadius = std::clamp(_brushRadius + GetMouseWheelMove(), 1.0f, 99.0f);
         default:
             break;
     }
@@ -204,7 +222,7 @@ void NoteArea::Draw() {
 
     std::istringstream stream(_rawText);
     std::string line;
-    int caretX = 0, caretY = 0;  // Caret position
+    int caretX = _rect.x, caretY = 0;  // Caret position
 
     static bool showCaret = true;         // Flag for caret visibility (blinking)
     static float caretBlinkTimer = 0.0f;  // Timer to control caret blinking
@@ -223,11 +241,24 @@ void NoteArea::Draw() {
             for (const Token& t : _tokens) {
                 switch (t.type) {
                     case Helium::TokenType::HEADER:
-                        DrawText(t.value.c_str(), 0, y, Formatting::GetFontSizeForHeader(stoi(t.attributes.at("level"))), BLACK);
+                        DrawText(t.value.c_str(), _rect.x, y, Formatting::GetFontSizeForHeader(stoi(t.attributes.at("level"))), Colors::TEXT_COLOR);
                         y += Formatting::GetFontSizeForHeader(stoi(t.attributes.at("level")));
                         break;
                     default:
-                        DrawText(t.value.c_str(), 0, y, Formatting::PARAGRAPH, BLACK);
+                        int x = _rect.x;
+                        std::vector<Token> inlines = _tokenizer.tokenizeInline(t.value);
+                        for(Token it : inlines) {
+                            switch(it.type) {
+                                case TokenType::BOLD:
+                                    DrawText(it.value.c_str(), x, y, Formatting::PARAGRAPH, RED);
+                                    break;
+                                default:
+                                    DrawText(it.value.c_str(), x, y, Formatting::PARAGRAPH, Colors::TEXT_COLOR);
+                                    break;
+                            }
+                            x += MeasureText(it.value.c_str(), Formatting::PARAGRAPH);
+                        }
+
                         y += Formatting::PARAGRAPH;
                         break;
                 }
@@ -239,10 +270,10 @@ void NoteArea::Draw() {
 
             // Loop through each line of text and draw it
             while (std::getline(stream, line)) {
-                DrawText(line.c_str(), 0, y, fontSize, BLACK);
+                DrawText(line.c_str(), _rect.x, y, fontSize, Colors::TEXT_COLOR);
 
                 // Set caret position to the end of the last line
-                caretX = MeasureText(line.c_str(), fontSize);  // Calculate width of the text for X
+                caretX = MeasureText(line.c_str(), fontSize) + _rect.x;  // Calculate width of the text for X
                 caretY = y;  // Y is the current line
 
                 y += fontSize;  // Move to next line position
@@ -250,14 +281,14 @@ void NoteArea::Draw() {
 
             // Handle case where the last character is a newline
             if (!_rawText.empty() && _rawText.back() == '\n') {
-                caretX = 0;  // Start at the new line
+                caretX = _rect.x;  // Start at the new line
                 caretY += fontSize;  // Move caret down
                 lastCharWasNewline = true;
             }
 
             // Draw caret only if it's visible (blinking)
             if (showCaret) {
-                DrawRectangle(caretX, caretY, 2, fontSize, BLACK);  // Thin vertical caret
+                DrawRectangle(caretX, caretY, 2, fontSize, Colors::TEXT_COLOR);  // Thin vertical caret
             }
             break;
         }
@@ -268,10 +299,9 @@ void NoteArea::Draw() {
 
     // Handle draw mode (if applicable)
     if (_mode == Helium::NoteMode::DRAW) {
-        DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, BLACK);
+        DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, Colors::BRUSH_BORDER);
     }
 }
-
 
 
 void NoteArea::SetRect(Rectangle rect) {
