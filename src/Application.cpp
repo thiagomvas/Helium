@@ -34,6 +34,8 @@ void Application::Start() {
     NoteArea area;
     area.Initialize();
     
+    SetExitKey(KEY_NULL);
+
     bool drawing = false;
     Vector2 previousPoint = { 0, 0 };
     float brushSize = 10.0f;
@@ -52,8 +54,6 @@ void Application::Start() {
 
         // Update
         area.Update();
-        
-        
 
         // Draw
         BeginDrawing();

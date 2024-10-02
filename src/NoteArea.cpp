@@ -117,6 +117,11 @@ void NoteArea::Initialize() {
     _defaultFont = LoadFontEx("resources/Roboto-Bold.ttf", 64, 0, 250);
     _boldFont = LoadFontEx("resources/Roboto-Black.ttf", 64, 0, 250);
     _italicFont = LoadFontEx("resources/Roboto-BoldItalic.ttf", 64, 0, 250);
+
+    _rect.height = GetScreenHeight();
+    _rect.x = (GetScreenWidth() - _rect.width) / 2;
+
+    _cursor.MoveToEnd(_rawText);
 }
 
 void NoteArea::Update() {
@@ -135,13 +140,16 @@ void NoteArea::Update() {
             case Helium::NoteMode::READ:
                 _mode = Helium::NoteMode::WRITE;
                 break;
-            case Helium::NoteMode::WRITE:
-                _mode = Helium::NoteMode::READ;
-                _tokens = _tokenizer.tokenize(_rawText);
             default:
                 break;
         }
     }
+
+    if((IsKeyPressed(KEY_ESCAPE) && _mode == NoteMode::WRITE)) {
+        _mode = NoteMode::READ;
+        _tokens = _tokenizer.tokenize(_rawText);
+    }
+
     if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_S)) {
         SaveNote("C:/Users/Thiago/picasso.note", _rawText, _texture.texture);
     }
@@ -157,16 +165,18 @@ void NoteArea::Update() {
         case Helium::NoteMode::READ:
             break;
         case Helium::NoteMode::WRITE:
-            if(IsKeyPressed(KEY_BACKSPACE))
+            if(IsKeyPressed(KEY_BACKSPACE) && !_rawText.empty())
             {
                 _beginDeleteTime = 0;
                 _rawText.pop_back();
+                _cursor.MoveLeft(_rawText);
             }
 
             if(IsKeyDown(KEY_BACKSPACE) && !_rawText.empty()) {
                 _beginDeleteTime += GetFrameTime();
                 if(_beginDeleteTime >= 0.5) {
                     _rawText.pop_back();
+                    _cursor.MoveLeft(_rawText);
                 }
             }
 
@@ -178,6 +188,8 @@ void NoteArea::Update() {
             while ((key = GetCharPressed()) > 0) {
                 if (key >= 32) {
                     _rawText += (char)key;
+                    _cursor.MoveRight(_rawText);
+                    std::cout << _cursor.GetPosition() << std::endl;
                 }
             }
     

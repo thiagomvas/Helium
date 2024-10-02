@@ -1,4 +1,5 @@
 #include "Application.hpp"
+#include "Cursor.hpp"
 #include "tokenizer.hpp"
 #include <iostream>
 #include <vector>
