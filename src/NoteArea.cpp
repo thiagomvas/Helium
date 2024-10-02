@@ -180,6 +180,28 @@ void NoteArea::Update() {
                 }
             }
 
+            if(IsKeyPressed(KEY_LEFT)) {
+                _beginActionTime = 0;
+                _cursor.MoveLeft(_rawText);
+            }
+
+            if(IsKeyDown(KEY_LEFT)) {
+                _beginActionTime += GetFrameTime();
+                if(_beginActionTime >= 0.5) {
+                    _cursor.MoveLeft(_rawText);
+                }
+            }
+            if(IsKeyPressed(KEY_RIGHT)) {
+                _beginActionTime = 0;
+                _cursor.MoveRight(_rawText);
+            }
+
+            if(IsKeyDown(KEY_RIGHT)) {
+                _beginActionTime += GetFrameTime();
+                if(_beginActionTime >= 0.5) {
+                    _cursor.MoveRight(_rawText);
+                }
+            }
             if(IsKeyPressed(KEY_ENTER)) {
                 _rawText += '\n';
             }
@@ -187,7 +209,7 @@ void NoteArea::Update() {
             int key;
             while ((key = GetCharPressed()) > 0) {
                 if (key >= 32) {
-                    _rawText += (char)key;
+                    _rawText.insert(_cursor.GetPosition(), 1, (char) key);
                     _cursor.MoveRight(_rawText);
                     std::cout << _cursor.GetPosition() << std::endl;
                 }
@@ -237,6 +259,12 @@ void NoteArea::Draw() {
     const int fontSize = 16;  // Fixed font size for all lines
 
     std::istringstream stream(_rawText);
+    std::istringstream caretStream;
+    if(_cursor.GetPosition() == _rawText.length()) {
+        caretStream = std::istringstream(_rawText);
+    } else {
+        caretStream = std::istringstream(_rawText.substr(0, _cursor.GetPosition()));
+    }
     std::string line;
     int caretX = _rect.x, caretY = 0;  // Caret position
 
@@ -295,11 +323,13 @@ void NoteArea::Draw() {
 
         case Helium::NoteMode::WRITE: {
             bool lastCharWasNewline = false;
-
             // Loop through each line of text and draw it
             while (std::getline(stream, line)) {
                 DrawText(line.c_str(), _rect.x, y, fontSize, Colors::TEXT_COLOR);
-
+                y += fontSize;  // Move to next line position
+            }
+            y = 0;
+            while(std::getline(caretStream, line)) {
                 // Set caret position to the end of the last line
                 caretX = MeasureText(line.c_str(), fontSize) + _rect.x;  // Calculate width of the text for X
                 caretY = y;  // Y is the current line

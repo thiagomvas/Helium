@@ -36,6 +36,7 @@ private:
     Rectangle _rect = { 0, 0, Config::EDITAREA_WIDTH, 0 };
     Tokenizer _tokenizer;
     float _beginDeleteTime;
+    float _beginActionTime;
     int _brushRadius = 5;
     Helium::NoteMode _mode = Helium::NoteMode::READ;
     Font _defaultFont;
