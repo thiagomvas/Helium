@@ -15,6 +15,7 @@ namespace Formatting {
     constexpr int H4 = 26;
     constexpr int H5 = 22;
     constexpr int PARAGRAPH = 20;
+    constexpr int STRIKETHROUGH_WIDTH = 2;
 
     constexpr int GetFontSizeForHeader(int level) {
         switch (level) {

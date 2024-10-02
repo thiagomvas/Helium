@@ -261,6 +261,13 @@ void NoteArea::Draw() {
                                     DrawTextEx(_italicFont, it.value.c_str(), { (float) x, (float) y }, Formatting::PARAGRAPH, 1, Colors::TEXT_COLOR);
                                     x += MeasureTextEx(_italicFont, it.value.c_str(), Formatting::PARAGRAPH, 1).x;
                                     break;
+                                case TokenType::STRIKETHROUGH:
+                                    DrawTextEx(_defaultFont, it.value.c_str(), { (float) x, (float) y }, Formatting::PARAGRAPH, 1, Colors::TEXT_COLOR);
+                                    int xOffset;
+                                    xOffset = MeasureTextEx(_boldFont, it.value.c_str(), Formatting::PARAGRAPH, 1).x;
+                                    DrawLineEx({ (float) x, (float) y + Formatting::PARAGRAPH * 0.5f }, { (float) (x + xOffset), (float) y + Formatting::PARAGRAPH * 0.5f}, Formatting::STRIKETHROUGH_WIDTH, Colors::TEXT_COLOR);
+                                    x += xOffset;
+                                    break;
                                 default:
                                     DrawTextEx(_defaultFont, it.value.c_str(), { (float) x, (float) y }, Formatting::PARAGRAPH, 1, Colors::TEXT_COLOR);
                                      x += MeasureTextEx(_defaultFont, it.value.c_str(), Formatting::PARAGRAPH, 1).x;

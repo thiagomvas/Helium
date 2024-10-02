@@ -12,19 +12,31 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
     std::smatch match;
     std::regex boldRegex(R"(\*\*(.*?)\*\*)");
     std::regex italicRegex(R"(\*(.*?)\*)");
+    std::regex strikethroughRegex(R"(~(.*?)~)");
 
     while(searchStart != line.cend()) {
+        // BOLD
         if(std::regex_search(searchStart, line.cend(), match, boldRegex)) {
             if(match.prefix().length() > 0) {
                 tokens.push_back(Token(TokenType::TEXT,match.prefix().str()));
             }
             tokens.push_back(Token(TokenType::BOLD, match[1].str()));
             searchStart = match.suffix().first;
-        } else if (std::regex_search(searchStart, line.cend(), match, italicRegex)) {
+        } 
+        // ITALIC
+        else if (std::regex_search(searchStart, line.cend(), match, italicRegex)) {
             if(match.prefix().length() > 0 ) {
                 tokens.push_back(Token(TokenType::TEXT, match.prefix().str()));
             }
             tokens.push_back(Token(TokenType::ITALIC, match[1].str()));
+            searchStart = match.suffix().first;
+        } 
+        // STRIKETHROUGH
+        else if (std::regex_search(searchStart, line.cend(), match, strikethroughRegex)) {
+            if(match.prefix().length() > 0 ) {
+                tokens.push_back(Token(TokenType::TEXT, match.prefix().str()));
+            }
+            tokens.push_back(Token(TokenType::STRIKETHROUGH, match[1].str()));
             searchStart = match.suffix().first;
         } else {
             tokens.push_back(Token(TokenType::TEXT, std::string(searchStart, line.cend())));

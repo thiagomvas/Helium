@@ -18,6 +18,7 @@ enum class TokenType {
     TEXT,
     BOLD,
     ITALIC,
+    STRIKETHROUGH,
     UNKNOWN,
 };
 
