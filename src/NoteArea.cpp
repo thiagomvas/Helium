@@ -167,14 +167,14 @@ void NoteArea::Update() {
         case Helium::NoteMode::WRITE:
             if(IsKeyPressed(KEY_BACKSPACE) && !_rawText.empty())
             {
-                _beginDeleteTime = 0;
+                _beginActionTime = 0;
                 _rawText.pop_back();
                 _cursor.MoveLeft(_rawText);
             }
 
             if(IsKeyDown(KEY_BACKSPACE) && !_rawText.empty()) {
-                _beginDeleteTime += GetFrameTime();
-                if(_beginDeleteTime >= 0.5) {
+                _beginActionTime += GetFrameTime();
+                if(_beginActionTime >= Config::ACTION_REPEAT_DELAY_SECONDS) {
                     _rawText.pop_back();
                     _cursor.MoveLeft(_rawText);
                 }
@@ -187,7 +187,7 @@ void NoteArea::Update() {
 
             if(IsKeyDown(KEY_LEFT)) {
                 _beginActionTime += GetFrameTime();
-                if(_beginActionTime >= 0.5) {
+                if(_beginActionTime >= Config::ACTION_REPEAT_DELAY_SECONDS) {
                     _cursor.MoveLeft(_rawText);
                 }
             }
@@ -198,7 +198,7 @@ void NoteArea::Update() {
 
             if(IsKeyDown(KEY_RIGHT)) {
                 _beginActionTime += GetFrameTime();
-                if(_beginActionTime >= 0.5) {
+                if(_beginActionTime >= Config::ACTION_REPEAT_DELAY_SECONDS) {
                     _cursor.MoveRight(_rawText);
                 }
             }

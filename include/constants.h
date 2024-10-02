@@ -6,6 +6,7 @@
 namespace Config {
     constexpr const char* APP_NAME = "Placeholder";
     constexpr float EDITAREA_WIDTH = 600;
+    constexpr float ACTION_REPEAT_DELAY_SECONDS = 0.5;
 }
 
 namespace Formatting {
