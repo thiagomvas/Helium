@@ -17,6 +17,7 @@ enum class TokenType {
     PARAGRAPH,
     TEXT,
     BOLD,
+    ITALIC,
     UNKNOWN,
 };
 

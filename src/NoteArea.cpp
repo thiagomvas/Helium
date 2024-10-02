@@ -116,6 +116,7 @@ void NoteArea::Initialize() {
 
     _defaultFont = LoadFontEx("resources/Roboto-Bold.ttf", 64, 0, 250);
     _boldFont = LoadFontEx("resources/Roboto-Black.ttf", 64, 0, 250);
+    _italicFont = LoadFontEx("resources/Roboto-BoldItalic.ttf", 64, 0, 250);
 }
 
 void NoteArea::Update() {
@@ -255,6 +256,10 @@ void NoteArea::Draw() {
                                 case TokenType::BOLD:
                                     DrawTextEx(_boldFont, it.value.c_str(), { (float) x, (float) y }, Formatting::PARAGRAPH, 1, Colors::TEXT_COLOR);
                                     x += MeasureTextEx(_boldFont, it.value.c_str(), Formatting::PARAGRAPH, 1).x;
+                                    break;
+                                case TokenType::ITALIC:
+                                    DrawTextEx(_italicFont, it.value.c_str(), { (float) x, (float) y }, Formatting::PARAGRAPH, 1, Colors::TEXT_COLOR);
+                                    x += MeasureTextEx(_italicFont, it.value.c_str(), Formatting::PARAGRAPH, 1).x;
                                     break;
                                 default:
                                     DrawTextEx(_defaultFont, it.value.c_str(), { (float) x, (float) y }, Formatting::PARAGRAPH, 1, Colors::TEXT_COLOR);

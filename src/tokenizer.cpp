@@ -11,6 +11,7 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
     std::string::const_iterator searchStart(line.cbegin());
     std::smatch match;
     std::regex boldRegex(R"(\*\*(.*?)\*\*)");
+    std::regex italicRegex(R"(\*(.*?)\*)");
 
     while(searchStart != line.cend()) {
         if(std::regex_search(searchStart, line.cend(), match, boldRegex)) {
@@ -19,8 +20,13 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
             }
             tokens.push_back(Token(TokenType::BOLD, match[1].str()));
             searchStart = match.suffix().first;
-        }
-        else {
+        } else if (std::regex_search(searchStart, line.cend(), match, italicRegex)) {
+            if(match.prefix().length() > 0 ) {
+                tokens.push_back(Token(TokenType::TEXT, match.prefix().str()));
+            }
+            tokens.push_back(Token(TokenType::ITALIC, match[1].str()));
+            searchStart = match.suffix().first;
+        } else {
             tokens.push_back(Token(TokenType::TEXT, std::string(searchStart, line.cend())));
             break;
         }

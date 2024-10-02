@@ -39,6 +39,7 @@ private:
 	Helium::NoteMode _mode = Helium::NoteMode::READ;
     Font _defaultFont;
     Font _boldFont;
+    Font _italicFont;
 }; 
 
 
