@@ -225,10 +225,12 @@ void NoteArea::Update() {
     
             break;
         case Helium::NoteMode::DRAW:
+            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+                _prevCursorPos = GetMousePosition();
+            }
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
                 int reqWidth = std::max(_texture.texture.width, GetMouseX());
                 int reqHeight = std::max(_texture.texture.height, GetMouseY());
-
                 if(_texture.texture.width < reqWidth || _texture.texture.height < reqHeight) {
                     RenderTexture2D newTexture = LoadRenderTexture(reqWidth, reqHeight);
                     BeginTextureMode(newTexture);
@@ -242,18 +244,23 @@ void NoteArea::Update() {
             {
                 BeginTextureMode(_texture);
                 DrawCircle(GetMouseX(), GetMouseY(), _brushRadius, PINK);
+                DrawLineEx(_prevCursorPos, GetMousePosition(), _brushRadius * 2, PINK);
                 EndTextureMode();
+                _prevCursorPos = GetMousePosition();
             }
             if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
             {
                 BeginTextureMode(_texture);
                 BeginBlendMode(BLEND_CUSTOM);
                 DrawCircle(GetMouseX(), GetMouseY(), _brushRadius, BLANK);
+                DrawLineEx(_prevCursorPos, GetMousePosition(), _brushRadius * 2, PINK);
                 EndBlendMode();
                 EndTextureMode();
+                _prevCursorPos = GetMousePosition();
             }
             
             _brushRadius = std::clamp(_brushRadius + GetMouseWheelMove(), 1.0f, 99.0f);
+            break;
         default:
             break;
     }
