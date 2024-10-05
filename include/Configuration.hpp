@@ -12,9 +12,11 @@ class Configuration {
 public:
 	Configuration() {}
 	const std::string AppName = "Helium";
+	const int TopMenuBarHeight = 25;
+
 	int MaxNoteWidth = 600;
 	float ActionRepeatDelaySeconds = 0.5f;
-	
+	int ScrollLineCount = 4;
 	Formatting Formatting;
 	ColorTheme ColorTheme;
 
@@ -23,6 +25,7 @@ public:
 
 		oss << "MaxNoteWidth:" << std::to_string(MaxNoteWidth) << '\n';
 		oss << "ActionRepeatDelaySeconds:" << std::to_string(ActionRepeatDelaySeconds) << '\n';
+		oss << "ScrollLineCount:" << std::to_string(ScrollLineCount) << '\n';
 
 		oss << "FORMATTING" << '\n';
 		oss << Formatting.serialize() << '\n';
@@ -40,6 +43,7 @@ public:
 		std::unordered_map<std::string, std::function<void(const std::string&)>> handlers{
 			{"MaxNoteWidth", [this](const std::string& value) { MaxNoteWidth = std::stoi(value); }},
 			{"ActionRepeatDelaySeconds", [this](const std::string& value) { ActionRepeatDelaySeconds = std::stof(value); }},
+			{"ScrollLineCount", [this](const std::string& value) {ScrollLineCount = std::stoi(value); }}
 		};
 
 		// Variables to hold serialized blocks of Formatting and ColorTheme

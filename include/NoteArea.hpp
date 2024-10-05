@@ -26,7 +26,7 @@ enum class NoteMode {
 class NoteArea {
 public:
     NoteArea(std::shared_ptr<Configuration> config);
-    void Initialize();
+    void Initialize(int heightOffset);
     void Update();
     void UpdateText();
     void Draw();

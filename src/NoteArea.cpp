@@ -19,18 +19,17 @@ namespace Helium {
 
 NoteArea::NoteArea(std::shared_ptr<Configuration> config) {
     _config = config;
-    _rect = { 0, 0, static_cast<float>(_config->MaxNoteWidth), 0 };
 }
 
 
-void NoteArea::Initialize() {
+void NoteArea::Initialize(int heightOffset) {
     Texture2D temp;
     if(Utils::LoadNote("C:/Users/Thiago/picasso.note", _rawText, temp))
     {
         _tokens = _tokenizer.tokenize(_rawText);
         _texture = LoadRenderTexture(temp.width, temp.height);
         BeginTextureMode(_texture);
-        DrawTextureV(temp, {_rect.x, 0}, WHITE);
+        DrawTextureV(temp, {0, 0}, WHITE);
         EndTextureMode();
         UnloadTexture(temp);
     }
@@ -38,10 +37,10 @@ void NoteArea::Initialize() {
         _texture = LoadRenderTexture(_config->MaxNoteWidth, GetScreenHeight());
 
     rlSetBlendFactorsSeparate(0x0302, 0x0303, 1, 0x0303, 0x8006, 0x8006); // Required configuration to be able to erase on the texture!
-    _config->Formatting.loadFonts();
     _rect.width = _config->MaxNoteWidth;
     _rect.height = GetScreenHeight();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
+    _rect.y = heightOffset;
 
    _cursor.MoveToEnd(_rawText);
 }
@@ -168,7 +167,7 @@ void NoteArea::Update() {
             {
                 BeginTextureMode(_texture);
                 BeginBlendMode(BLEND_CUSTOM);
-                DrawCircle(GetMouseX() + _rect.x, GetMouseY(), _brushRadius, BLANK);
+                DrawCircle(GetMouseX() + _rect.x, GetMouseY() + _rect.y, _brushRadius, BLANK);
                 DrawLineEx(_prevCursorPos, GetMousePosition(), _brushRadius * 2, PINK);
                 EndBlendMode();
                 EndTextureMode();
@@ -186,7 +185,7 @@ void NoteArea::Update() {
 void NoteArea::Draw() {
     DrawRectangleRec(_rect, _config->ColorTheme.Foreground);
 
-    int y = 0;
+    int y = _rect.y;
     const int fontSize = 16;  // Fixed font size for all lines
 
     std::istringstream stream(_rawText);
@@ -259,7 +258,7 @@ void NoteArea::Draw() {
                 DrawText(line.c_str(), _rect.x, y, fontSize, _config->ColorTheme.TextColor);
                 y += fontSize;  // Move to next line position
             }
-            y = 0;
+            y = _rect.y;
             while(std::getline(caretStream, line)) {
                 // Set caret position to the end of the last line
                 caretX = MeasureText(line.c_str(), fontSize) + _rect.x;  // Calculate width of the text for X
@@ -293,8 +292,8 @@ void NoteArea::Draw() {
         }
     }
     // Draw the texture
-    DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { _rect.x, 0.0f }, WHITE);
-    DrawRectangleLinesEx({_rect.x, 0, static_cast<float>(_texture.texture.width), static_cast<float>(_texture.texture.height)}, 3, RED);
+    DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { _rect.x, _rect.y }, WHITE);
+    DrawRectangleLinesEx({_rect.x, _rect.y, static_cast<float>(_texture.texture.width), static_cast<float>(_texture.texture.height)}, 3, RED);
     // Handle draw mode (if applicable)
     if (_mode == Helium::NoteMode::DRAW) {
         DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, _config->ColorTheme.BrushBorder);
