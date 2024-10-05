@@ -209,6 +209,7 @@ void NoteArea::Update() {
             }
             if(IsKeyPressed(KEY_ENTER)) {
                 _rawText += '\n';
+                _cursor.MoveRight(_rawText);
             }
             // Read characters instead of individual key presses
             int key;
@@ -353,6 +354,21 @@ void NoteArea::Draw() {
             }
 
             
+            // Handle case where the last character(s) are newlines
+            if (!_rawText.empty()) {
+                int newlineCount = 0;
+
+                // Count the number of consecutive trailing newlines
+                for (int i = _rawText.length() - 1; i >= 0 && _rawText[i] == '\n'; --i) {
+                    newlineCount++;
+                }
+
+                if (newlineCount > 0) {
+                    caretX = _rect.x;  // Move caret to the start of the line
+                    caretY += fontSize * newlineCount;  // Move caret down by the number of newlines
+                    lastCharWasNewline = true;
+                }
+            }
 
             // Draw caret only if it's visible (blinking)
             if (showCaret) {
