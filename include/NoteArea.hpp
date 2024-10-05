@@ -41,9 +41,6 @@ private:
     float _beginActionTime;
     int _brushRadius = 5;
     Helium::NoteMode _mode = Helium::NoteMode::READ;
-    Font _defaultFont;
-    Font _boldFont;
-    Font _italicFont;
     Cursor _cursor;
     std::shared_ptr<Configuration> _config;
     Vector2 _prevCursorPos;

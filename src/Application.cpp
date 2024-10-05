@@ -62,6 +62,7 @@ void Application::Start() {
         BeginDrawing();
         ClearBackground(_config->ColorTheme.Background);
         area.Draw();
+        DrawFPS(0,0); 
         EndDrawing();
     }
     CloseWindow();
@@ -71,6 +72,7 @@ void Application::Start() {
     void Application::Stop() {
         if (isRunning) {
             isRunning = false;
+            _config->unloadResources();
             std::cout << "Application ended" << std::endl;
             // Save Image to file
         } else {

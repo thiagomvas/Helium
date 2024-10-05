@@ -78,6 +78,10 @@ public:
 			}
 		}
 	}
+
+	void unloadResources() {
+		Formatting.unloadResources();
+	}
 };
 }
 

@@ -122,10 +122,7 @@ void NoteArea::Initialize() {
     else
         _texture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
     rlSetBlendFactorsSeparate(0x0302, 0x0303, 1, 0x0303, 0x8006, 0x8006);
-
-    _defaultFont = LoadFontEx("resources/Roboto-Bold.ttf", 64, 0, 250);
-    _boldFont = LoadFontEx("resources/Roboto-Black.ttf", 64, 0, 250);
-    _italicFont = LoadFontEx("resources/Roboto-BoldItalic.ttf", 64, 0, 250);
+    _config->Formatting.loadFonts();
 
     _rect.height = GetScreenHeight();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
@@ -303,7 +300,7 @@ void NoteArea::Draw() {
             for (const Token& t : _tokens) {
                 switch (t.type) {
                     case Helium::TokenType::HEADER:
-                        DrawTextEx(_defaultFont, t.value.c_str(), { (float) _rect.x, (float) y }, _config->Formatting.GetFontSizeForHeader(stoi(t.attributes.at("level"))), 1, _config->ColorTheme.TextColor);
+                        DrawTextEx(_config->Formatting.DefaultFont, t.value.c_str(), { (float) _rect.x, (float) y }, _config->Formatting.GetFontSizeForHeader(stoi(t.attributes.at("level"))), 1, _config->ColorTheme.TextColor);
                         y += _config->Formatting.GetFontSizeForHeader(stoi(t.attributes.at("level")));
                         break;
                     default:
@@ -312,23 +309,23 @@ void NoteArea::Draw() {
                         for(Token it : inlines) {
                             switch(it.type) {
                                 case TokenType::BOLD:
-                                    DrawTextEx(_boldFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, 1, _config->ColorTheme.TextColor);
-                                    x += MeasureTextEx(_boldFont, it.value.c_str(), _config->Formatting.Paragraph, 1).x;
+                                    DrawTextEx(_config->Formatting.BoldFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
+                                    x += MeasureTextEx(_config->Formatting.BoldFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
                                     break;
                                 case TokenType::ITALIC:
-                                    DrawTextEx(_italicFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, 1, _config->ColorTheme.TextColor);
-                                    x += MeasureTextEx(_italicFont, it.value.c_str(), _config->Formatting.Paragraph, 1).x;
+                                    DrawTextEx(_config->Formatting.ItalicFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
+                                    x += MeasureTextEx(_config->Formatting.ItalicFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
                                     break;
                                 case TokenType::STRIKETHROUGH:
-                                    DrawTextEx(_defaultFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, 1, _config->ColorTheme.TextColor);
+                                    DrawTextEx(_config->Formatting.DefaultFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
                                     int xOffset;
-                                    xOffset = MeasureTextEx(_boldFont, it.value.c_str(), _config->Formatting.Paragraph, 1).x;
+                                    xOffset = MeasureTextEx(_config->Formatting.BoldFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
                                     DrawLineEx({ (float) x, (float) y + _config->Formatting.Paragraph * 0.5f }, { (float) (x + xOffset), (float) y + _config->Formatting.Paragraph * 0.5f}, _config->Formatting.StrikethroughWidth, _config->ColorTheme.TextColor);
                                     x += xOffset;
                                     break;
                                 default:
-                                    DrawTextEx(_defaultFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, 1, _config->ColorTheme.TextColor);
-                                     x += MeasureTextEx(_defaultFont, it.value.c_str(), _config->Formatting.Paragraph, 1).x;
+                                    DrawTextEx(_config->Formatting.DefaultFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
+                                     x += MeasureTextEx(_config->Formatting.DefaultFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
                                     break;
                             }
                         }
@@ -355,12 +352,7 @@ void NoteArea::Draw() {
                 y += fontSize;  // Move to next line position
             }
 
-            // Handle case where the last character is a newline
-            if (!_rawText.empty() && _rawText.back() == '\n') {
-                caretX = _rect.x;  // Start at the new line
-                caretY += fontSize;  // Move caret down
-                lastCharWasNewline = true;
-            }
+            
 
             // Draw caret only if it's visible (blinking)
             if (showCaret) {
@@ -384,4 +376,4 @@ void NoteArea::SetRect(Rectangle rect) {
     _rect = rect;
 }
 void NoteArea::UpdateText() {}
-} // namespace Helium
+}

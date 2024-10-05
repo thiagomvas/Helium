@@ -1,6 +1,7 @@
 #ifndef FORMATTING_HPP
 #define FORMATTING_HPP
 
+#include "raylib.h"
 #include <functional>
 #include <sstream>
 #include <string>
@@ -16,6 +17,16 @@ public:
 	int H5 = 22;
 	int Paragraph = 20;
 	int StrikethroughWidth = 2;
+	std::string DefaultFontPath = "resources/Roboto-Bold.ttf";
+	std::string BoldFontPath = "resources/Roboto-Black.ttf";
+	std::string ItalicFontPath = "resources/Roboto-BoldItalic.ttf";
+	float CharSpacing = 1;
+
+	// Loaded during runtime
+	// !! DO NOT SERIALIZE !!
+	Font DefaultFont;
+	Font BoldFont;
+	Font ItalicFont;
 	
 	int GetFontSizeForHeader(int level) {
 		switch(level) {
@@ -28,6 +39,12 @@ public:
 		}
 	}
 	
+	void loadFonts() {
+		DefaultFont = LoadFontEx(DefaultFontPath.c_str(), 64, 0, 250);
+		BoldFont = LoadFontEx(BoldFontPath.c_str(), 64, 0, 250);
+		ItalicFont = LoadFontEx(ItalicFontPath.c_str(), 64, 0, 250);
+	}
+
 	std::string serialize() const {
 		std::ostringstream oss;
 
@@ -38,6 +55,10 @@ public:
 		oss << "H5:" << std::to_string(H5) << '\n';
 		oss << "Paragraph:" << std::to_string(Paragraph) << '\n';
 		oss << "StrikethroughWidth:" << std::to_string(StrikethroughWidth) << '\n';
+		oss << "CharSpacing:" << std::to_string(CharSpacing) << '\n';
+		oss << "DefaultFontPath:" << DefaultFontPath << '\n';
+		oss << "BoldFontPath:" << BoldFontPath << '\n';
+		oss << "ItalicFontPath:" << ItalicFontPath << '\n';
 
 		return oss.str();
 	}
@@ -53,7 +74,11 @@ public:
 			{"H4", [this](const std::string& value) { H4 = std::stoi(value); }},
 			{"H5", [this](const std::string& value) { H5 = std::stoi(value); }},
 			{"Paragraph", [this](const std::string& value) { Paragraph = std::stoi(value); }},
-			{"StrikethroughWidth", [this](const std::string& value) { StrikethroughWidth = std::stoi(value); }}
+			{"StrikethroughWidth", [this](const std::string& value) { StrikethroughWidth = std::stoi(value); }},
+			{"CharSpacing", [this](const std::string&value) {CharSpacing = std::stoi(value); }},
+			{"DefaultFontPath", [this](const std::string& value) { DefaultFontPath = value; }},
+			{"BoldFontPath", [this](const std::string& value) {BoldFontPath = value;}},
+			{"ItalicFontPath", [this](const std::string& value) {ItalicFontPath = value;}}
 		};
 
 		while (std::getline(iss, line)) {
@@ -68,6 +93,11 @@ public:
 				}
 			}
 		}
+	}
+	void unloadResources() {
+		UnloadFont(DefaultFont);
+		UnloadFont(BoldFont);
+		UnloadFont(ItalicFont);
 	}
 }; 
 }
