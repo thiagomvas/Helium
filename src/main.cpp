@@ -14,5 +14,4 @@ int main() {
     app.Start();
     
     app.Stop();
-    system("pause");
 }

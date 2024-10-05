@@ -105,7 +105,7 @@ bool LoadNote(std::string fileName, std::string& text, Texture2D& texture) {
     // Clean up
     delete[] pixelData;
     file.close();
-
+    std::cout << "Loaded note data successfully" << std::endl;
     return true;
 }
 

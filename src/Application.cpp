@@ -35,7 +35,6 @@ void Application::Start() {
     InitWindow(screenWidth, screenHeight, "Helium");
     SetTargetFPS(60);
     NoteArea area(_config);
-    area.Initialize();
     
     SetExitKey(KEY_NULL);
 
@@ -47,6 +46,7 @@ void Application::Start() {
     GuiLoadStyle("styles/raygui-dark");
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20); // Adjust text size
     
+    area.Initialize();
     while(isRunning)
     {
         if(WindowShouldClose())

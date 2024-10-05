@@ -29,26 +29,21 @@ void NoteArea::Initialize() {
     {
         _tokens = _tokenizer.tokenize(_rawText);
         _texture = LoadRenderTexture(temp.width, temp.height);
-
-        Image image = LoadImageFromTexture(temp);
-        ImageFlipVertical(&image);
-        ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
-
-        UpdateTexture(_texture.texture, image.data);
-
-        UnloadImage(image);
+        BeginTextureMode(_texture);
+        DrawTextureV(temp, {_rect.x, 0}, WHITE);
+        EndTextureMode();
         UnloadTexture(temp);
     }
     else
-        _texture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+        _texture = LoadRenderTexture(_config->MaxNoteWidth, GetScreenHeight());
 
     rlSetBlendFactorsSeparate(0x0302, 0x0303, 1, 0x0303, 0x8006, 0x8006); // Required configuration to be able to erase on the texture!
     _config->Formatting.loadFonts();
-
+    _rect.width = _config->MaxNoteWidth;
     _rect.height = GetScreenHeight();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
 
-    _cursor.MoveToEnd(_rawText);
+   _cursor.MoveToEnd(_rawText);
 }
 
 void NoteArea::Update() {
@@ -148,10 +143,9 @@ void NoteArea::Update() {
                 _prevCursorPos = GetMousePosition();
             }
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-                int reqWidth = std::max(_texture.texture.width, GetMouseX());
                 int reqHeight = std::max(_texture.texture.height, GetMouseY());
-                if(_texture.texture.width < reqWidth || _texture.texture.height < reqHeight) {
-                    RenderTexture2D newTexture = LoadRenderTexture(reqWidth, reqHeight);
+                if( _texture.texture.height < reqHeight) {
+                    RenderTexture2D newTexture = LoadRenderTexture(_config->MaxNoteWidth, reqHeight);
                     BeginTextureMode(newTexture);
                     BeginBlendMode(BLEND_CUSTOM);
                     ClearBackground(BLANK);
@@ -165,8 +159,8 @@ void NoteArea::Update() {
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT))
             {
                 BeginTextureMode(_texture);
-                DrawCircle(GetMouseX(), GetMouseY(), _brushRadius, PINK);
-                DrawLineEx(_prevCursorPos, GetMousePosition(), _brushRadius * 2, PINK);
+                DrawCircleV({GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius, PINK);
+                DrawLineEx({_prevCursorPos.x - _rect.x, _prevCursorPos.y - _rect.y}, {GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius * 2, PINK);
                 EndTextureMode();
                 _prevCursorPos = GetMousePosition();
             }
@@ -174,7 +168,7 @@ void NoteArea::Update() {
             {
                 BeginTextureMode(_texture);
                 BeginBlendMode(BLEND_CUSTOM);
-                DrawCircle(GetMouseX(), GetMouseY(), _brushRadius, BLANK);
+                DrawCircle(GetMouseX() + _rect.x, GetMouseY(), _brushRadius, BLANK);
                 DrawLineEx(_prevCursorPos, GetMousePosition(), _brushRadius * 2, PINK);
                 EndBlendMode();
                 EndTextureMode();
@@ -183,8 +177,8 @@ void NoteArea::Update() {
             
             _brushRadius = std::clamp(_brushRadius + GetMouseWheelMove(), 1.0f, 99.0f);
             break;
-        default:
-            break;
+            default:
+                break;
     }
 }
 
@@ -298,10 +292,9 @@ void NoteArea::Draw() {
             break;
         }
     }
-
     // Draw the texture
-    DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { 0.0f, 0.0f }, WHITE);
-
+    DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { _rect.x, 0.0f }, WHITE);
+    DrawRectangleLinesEx({_rect.x, 0, static_cast<float>(_texture.texture.width), static_cast<float>(_texture.texture.height)}, 3, RED);
     // Handle draw mode (if applicable)
     if (_mode == Helium::NoteMode::DRAW) {
         DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, _config->ColorTheme.BrushBorder);
