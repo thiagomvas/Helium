@@ -1,11 +1,14 @@
 #include "Application.hpp"
-#include "Cursor.hpp"
-#include "tokenizer.hpp"
+#include "Configuration.hpp"
 #include <iostream>
-#include <vector>
-#include "NoteArea.hpp"
+#include <memory>
 
 int main() {
-    Helium::Application app;
+
+    std::shared_ptr<Helium::Configuration> config = std::make_shared<Helium::Configuration>();
+    
+    config->deserialize(config->serialize());
+    std::cout << "Loaded config:" << '\n' << config->serialize() << '\n';
+    Helium::Application app(config);
     app.Start();
 }

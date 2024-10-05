@@ -5,10 +5,12 @@
 #include "raylib.h"
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 #include "tokenizer.hpp"
 #include "constants.h"
+#include "Configuration.hpp"
 
 void SaveNote(std::string fileName, std::string text, Texture2D texture);
 
@@ -23,6 +25,7 @@ enum class NoteMode {
 };
 class NoteArea {
 public:
+    NoteArea(std::shared_ptr<Configuration> config);
     void Initialize();
     void Update();
     void UpdateText();
@@ -33,7 +36,7 @@ private:
     RenderTexture2D _texture;
     std::string _rawText;
     std::vector<Token> _tokens;
-    Rectangle _rect = { 0, 0, Config::EDITAREA_WIDTH, 0 };
+    Rectangle _rect;
     Tokenizer _tokenizer;
     float _beginActionTime;
     int _brushRadius = 5;
@@ -42,6 +45,7 @@ private:
     Font _boldFont;
     Font _italicFont;
     Cursor _cursor;
+    std::shared_ptr<Configuration> _config;
 }; 
 
 

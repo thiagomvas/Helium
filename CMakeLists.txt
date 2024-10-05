@@ -5,6 +5,10 @@ project(Helium)  # Replace MyProject with your project name
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Hide Warnings
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+
 # Include directories
 include_directories(
     ${CMAKE_SOURCE_DIR}/include

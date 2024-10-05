@@ -1,9 +1,11 @@
 #include "Application.hpp"
+#include "Configuration.hpp"
 #include "NoteArea.hpp"
 #include "constants.h"
 #include "raylib.h"
 #include "rlgl.h"
 #include <iostream>
+#include <memory>
 #include <stdio.h>
 #include <stdlib.h>
 #define RAYGUI_IMPLEMENTATION
@@ -11,8 +13,9 @@
 
 namespace Helium {
 
-    Application::Application() : isRunning(false) {
+    Application::Application(std::shared_ptr<Configuration> config) : isRunning(false) {
         std::cout << "Application created" << std::endl;
+        _config = config;
     }
 
     Application::~Application() {
@@ -31,7 +34,7 @@ void Application::Start() {
     SetConfigFlags(ConfigFlags::FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Helium");
     SetTargetFPS(60);
-    NoteArea area;
+    NoteArea area(_config);
     area.Initialize();
     
     SetExitKey(KEY_NULL);
@@ -57,10 +60,11 @@ void Application::Start() {
 
         // Draw
         BeginDrawing();
-        ClearBackground(Colors::BACKGROUND);
+        ClearBackground(_config->ColorTheme.Background);
         area.Draw();
         EndDrawing();
     }
+    CloseWindow();
     return;
 }
 
