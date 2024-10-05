@@ -72,7 +72,7 @@ void NoteArea::Update() {
     }
 
     if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_S)) {
-        Utils::SaveNote("C:/Users/Thiago/picasso.note", _rawText, _texture.texture);
+        Save();
     }
     if(IsKeyPressed(KEY_LEFT_ALT))
     {
@@ -304,5 +304,7 @@ void NoteArea::Draw() {
 void NoteArea::SetRect(Rectangle rect) {
     _rect = rect;
 }
-void NoteArea::UpdateText() {}
+void NoteArea::Save() {
+    Utils::SaveNote("C:/Users/Thiago/picasso.note", _rawText, _texture.texture);
+}
 }

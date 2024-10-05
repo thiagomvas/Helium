@@ -4,10 +4,13 @@
 #include "constants.h"
 #include "raylib.h"
 #include "rlgl.h"
+#include "UiUtils.hpp"
+#include "utils.hpp"
 #include <iostream>
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
@@ -52,14 +55,15 @@ void Application::Start() {
     float menuHeight = _config->TopMenuBarHeight;
     Vector2 scroll = {0,0};
     int fileDropdownActive = 0;
-    int dropdownEditMode = 0;
+    int fileDropdownValue = 0;
     _config->Formatting.loadFonts();
-
+    bool innerClicked;
     GuiSetFont(_config->Formatting.DefaultFont);
 
     area.Initialize(_config->TopMenuBarHeight); // Offset the NoteArea 50px down
     while(isRunning)
     {
+        innerClicked = false;  // Reset innerClicked flag each frame
         if(WindowShouldClose())
         {
             Stop();
@@ -91,10 +95,11 @@ void Application::Start() {
        // UI
         // ------------------------------------------ 
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(_config->TopMenuBarHeight)}, _config->ColorTheme.Foreground);
-        if(GuiDropdownBox({0, 0, 125, 25}, "#01#ONE;#02#TWO;#03#THREE;#04#FOUR", &fileDropdownActive, dropdownEditMode)) {
-            dropdownEditMode = !dropdownEditMode;
+       
+        if(fileDropdownValue > 0) {
+            std::cout << std::to_string(fileDropdownValue) << std::endl;
         }
-
+        fileDropdownValue = UiUtils::Dropdown({0, 0, 150, 20}, _config->ColorTheme.Foreground, "File;Open;Save#CTRL+S", _config, &fileDropdownActive);
         EndDrawing(); 
     }
     CloseWindow();

@@ -13,6 +13,7 @@ public:
 	Color Background = { 12, 12, 12, 255 };
 	Color Foreground = { 20, 20, 20, 255 };
 	Color TextColor = { 200, 200, 200, 255 };
+	Color SecondaryTextColor = { 150, 150, 150, 255};
 	Color BrushBorder = { 200, 200, 200, 255 };
 
 	std::string serialize() {
@@ -21,6 +22,7 @@ public:
 		oss << "Foreground:" << Utils::Serialize(Foreground) << '\n';
 		oss << "TextColor:" << Utils::Serialize(TextColor) << '\n';
 		oss << "BrushBorder:" << Utils::Serialize(BrushBorder) << '\n';
+		oss << "SecondaryTextColor:" << Utils::Serialize(SecondaryTextColor) << '\n';
 
 		return oss.str();
 	}
@@ -33,7 +35,8 @@ public:
 		{"Background", [this](std::string& value) { Background = Utils::DeserializeRaylibColor(value); }},
 		{"Foreground", [this](std::string& value) { Foreground = Utils::DeserializeRaylibColor(value); }},
 		{"TextColor", [this](std::string& value) { TextColor = Utils::DeserializeRaylibColor(value); }},
-		{"BrushBorder", [this](std::string& value) { BrushBorder = Utils::DeserializeRaylibColor(value); }}
+		{"BrushBorder", [this](std::string& value) { BrushBorder = Utils::DeserializeRaylibColor(value); }}, 
+		{"SecondaryTextColor", [this](std::string& value) {SecondaryTextColor = Utils::DeserializeRaylibColor(value); }}
 	    };
 
 	    while (std::getline(iss, line)) {

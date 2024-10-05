@@ -28,7 +28,7 @@ public:
     NoteArea(std::shared_ptr<Configuration> config);
     void Initialize(int heightOffset);
     void Update();
-    void UpdateText();
+    void Save();
     void Draw();
     std::string GetFormattedText();
     void SetRect(Rectangle rect);
