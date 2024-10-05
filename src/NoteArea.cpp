@@ -234,7 +234,10 @@ void NoteArea::Update() {
                 if(_texture.texture.width < reqWidth || _texture.texture.height < reqHeight) {
                     RenderTexture2D newTexture = LoadRenderTexture(reqWidth, reqHeight);
                     BeginTextureMode(newTexture);
-                    DrawTexture(_texture.texture, 0, 0, WHITE);
+                    BeginBlendMode(BLEND_CUSTOM);
+                    ClearBackground(BLANK);
+                    EndBlendMode();
+                    DrawTextureRec(_texture.texture, {0, 0, (float)_texture.texture.width, (float)-_texture.texture.height }, {0, 0}, WHITE);
                     EndTextureMode();
                     UnloadRenderTexture(_texture);
                     _texture = newTexture;
