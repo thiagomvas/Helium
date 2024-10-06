@@ -1,5 +1,6 @@
 #include "NoteArea.hpp"
 #include "Configuration.hpp"
+#include "InputHandler.hpp"
 #include "raylib.h"
 #include "rlgl.h"
 #include "constants.h"
@@ -17,8 +18,8 @@
 
 namespace Helium {
 
-NoteArea::NoteArea(std::shared_ptr<Configuration> config) {
-    _config = config;
+NoteArea::NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<Helium::InputHandler> input) : _config(config), _inputHandler(input) {
+    
 }
 
 
@@ -45,6 +46,13 @@ void NoteArea::Initialize(int heightOffset) {
    _cursor.MoveToEnd(_rawText);
 }
 
+void NoteArea::SetMode(NoteMode mode) {
+    _mode = mode;
+    if(mode == NoteMode::READ) {
+        _tokenizer.tokenize(_rawText);
+    }
+}
+
 void NoteArea::Update() {
     
     // Change height to fit screen
@@ -59,27 +67,17 @@ void NoteArea::Update() {
         IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         switch(_mode) {
             case Helium::NoteMode::READ:
-                _mode = Helium::NoteMode::WRITE;
-                break;
-            default:
+                SetMode(NoteMode::WRITE);
+                _inputHandler->SetMode(NoteMode::WRITE);
                 break;
         }
     }
 
-    if((IsKeyPressed(KEY_ESCAPE) && _mode == NoteMode::WRITE)) {
-        _mode = NoteMode::READ;
-        _tokens = _tokenizer.tokenize(_rawText);
-    }
 
-    if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_S)) {
-        Save();
-    }
     if(IsKeyPressed(KEY_LEFT_ALT))
     {
-        if(_mode == Helium::NoteMode::DRAW)
-            _mode = Helium::NoteMode::READ;
-        else
-            _mode = Helium::NoteMode::DRAW;
+        SetMode(NoteMode::DRAW);
+        _inputHandler->SetMode(NoteMode::DRAW);
     }
 
     switch(_mode) {

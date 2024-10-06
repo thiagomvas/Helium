@@ -1,5 +1,6 @@
 #include "Application.hpp"
 #include "Configuration.hpp"
+#include "InputCombo.hpp"
 #include "NoteArea.hpp"
 #include "constants.h"
 #include "raylib.h"
@@ -16,10 +17,28 @@
 
 namespace Helium {
 
-    Application::Application(std::shared_ptr<Configuration> config) : isRunning(false) {
-        std::cout << "Application created" << std::endl;
-        _config = config;
+    Application::Application(std::shared_ptr<Configuration> config) : _config(config), isRunning(false), _inputHandler(std::make_unique<InputHandler>()), _noteArea(std::make_unique<NoteArea>(_config, _inputHandler)) {
+        _noteArea->SetMode(NoteMode::READ);
+        _inputHandler->SetMode(NoteMode::READ);
+
+        // GLOBAL ACTIONS
+        _inputHandler->AddGlobalAction(InputCombo(KEY_ESCAPE), [this]() {
+            _noteArea->SetMode(NoteMode::READ);
+            _inputHandler->SetMode(NoteMode::READ);
+        });
+
+        _inputHandler->AddGlobalAction(InputCombo(KEY_S, KEY_LEFT_CONTROL), [this]() {
+            _noteArea->Save();
+        });
+
+        _inputHandler->AddGlobalAction(InputCombo(KEY_F1), [this]() { std::cout << _config->serialize(); });
+
+        // READ MODE
+         
+        // WRITE MODE
+        // DRAW MODE
     }
+
 
     Application::~Application() {
         if (isRunning) {
@@ -38,9 +57,7 @@ void Application::Start() {
     SetConfigFlags(ConfigFlags::FLAG_WINDOW_RESIZABLE |
                     ConfigFlags::FLAG_BORDERLESS_WINDOWED_MODE);
     InitWindow(screenWidth, screenHeight, "Helium");
-    SetTargetFPS(60);
-    NoteArea area(_config);
-    
+    SetTargetFPS(60); 
     SetExitKey(KEY_NULL);
 
     Camera2D camera = {0};
@@ -60,7 +77,7 @@ void Application::Start() {
     bool innerClicked;
     GuiSetFont(_config->Formatting.DefaultFont);
 
-    area.Initialize(_config->TopMenuBarHeight); // Offset the NoteArea 50px down
+    _noteArea->Initialize(_config->TopMenuBarHeight); // Offset the NoteArea 50px down
     while(isRunning)
     {
         innerClicked = false;  // Reset innerClicked flag each frame
@@ -71,7 +88,8 @@ void Application::Start() {
 
 
         // Update
-        area.Update();
+        _inputHandler->Update();
+        _noteArea->Update();
         
         scroll.y -= GetMouseWheelMove() * _config->Formatting.Paragraph * _config->ScrollLineCount;
         if(scroll.y < 0) scroll.y = 0;
@@ -88,7 +106,7 @@ void Application::Start() {
         // NOTE AREA
         // ------------------------------------------
         BeginMode2D(camera);
-        area.Draw();
+        _noteArea->Draw();
         EndMode2D();
         DrawFPS(0,0); 
        
