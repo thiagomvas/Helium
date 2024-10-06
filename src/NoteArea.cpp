@@ -49,7 +49,7 @@ void NoteArea::Initialize(int heightOffset) {
 void NoteArea::SetMode(NoteMode mode) {
     _mode = mode;
     if(mode == NoteMode::READ) {
-        _tokenizer.tokenize(_rawText);
+        _tokens = _tokenizer.tokenize(_rawText);
     }
 }
 
@@ -96,6 +96,14 @@ void NoteArea::Update() {
                 if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
                     _rawText.pop_back();
                     _cursor.MoveLeft(_rawText);
+                }
+            }
+
+            if(IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
+                std::string clipboard(GetClipboardText());
+                _rawText += clipboard;
+                for(int i = 0; i < clipboard.length(); i++) {
+                    _cursor.MoveRight(_rawText);
                 }
             }
 
@@ -165,8 +173,8 @@ void NoteArea::Update() {
             {
                 BeginTextureMode(_texture);
                 BeginBlendMode(BLEND_CUSTOM);
-                DrawCircle(GetMouseX() + _rect.x, GetMouseY() + _rect.y, _brushRadius, BLANK);
-                DrawLineEx(_prevCursorPos, GetMousePosition(), _brushRadius * 2, PINK);
+                DrawCircleV({GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius, BLANK);
+                DrawLineEx({_prevCursorPos.x - _rect.x, _prevCursorPos.y - _rect.y}, {GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius * 2, BLANK);
                 EndBlendMode();
                 EndTextureMode();
                 _prevCursorPos = GetMousePosition();
@@ -251,18 +259,19 @@ void NoteArea::Draw() {
 
         case Helium::NoteMode::WRITE: {
             bool lastCharWasNewline = false;
-            // Loop through each line of text and draw it
-            while (std::getline(stream, line)) {
-                DrawText(line.c_str(), _rect.x, y, fontSize, _config->ColorTheme.TextColor);
-                y += fontSize;  // Move to next line position
-            }
+
+            DrawTextEx(_config->Formatting.DefaultFont, _rawText.c_str(), {_rect.x, _rect.y}, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
+
+            // Subtract one line to align caret.
+            int textHeight = MeasureTextEx(_config->Formatting.DefaultFont, _rawText.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y - MeasureTextEx(_config->Formatting.DefaultFont, "a", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
+            // Loop through each line of text and draw it 
             y = _rect.y;
             while(std::getline(caretStream, line)) {
                 // Set caret position to the end of the last line
-                caretX = MeasureText(line.c_str(), fontSize) + _rect.x;  // Calculate width of the text for X
+                caretX = MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x + _rect.x;  // Calculate width of the text for X
                 caretY = y;  // Y is the current line
 
-                y += fontSize;  // Move to next line position
+                y += _config->Formatting.Paragraph;  // Move to next line position
             }
 
             
@@ -277,11 +286,12 @@ void NoteArea::Draw() {
 
                 if (newlineCount > 0) {
                     caretX = _rect.x;  // Move caret to the start of the line
-                    caretY += fontSize * newlineCount;  // Move caret down by the number of newlines
+                    caretY += _config->Formatting.Paragraph * newlineCount;  // Move caret down by the number of newlines
                     lastCharWasNewline = true;
                 }
             }
 
+            caretY = _rect.y + textHeight;
             // Draw caret only if it's visible (blinking)
             if (showCaret) {
                 DrawRectangle(caretX, caretY, 2, fontSize, _config->ColorTheme.TextColor);  // Thin vertical caret
@@ -291,7 +301,6 @@ void NoteArea::Draw() {
     }
     // Draw the texture
     DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { _rect.x, _rect.y }, WHITE);
-    DrawRectangleLinesEx({_rect.x, _rect.y, static_cast<float>(_texture.texture.width), static_cast<float>(_texture.texture.height)}, 3, RED);
     // Handle draw mode (if applicable)
     if (_mode == Helium::NoteMode::DRAW) {
         DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, _config->ColorTheme.BrushBorder);
