@@ -14,8 +14,15 @@ public:
 	void MoveUp(const std::string& text);
 	void MoveDown(const std::string& text);
 	int GetPosition();
+	std::string GetHighlightedText(const std::string& text);
+	bool IsHighlighting();
+	void BeginHighlight();
+	void EndHighlight();
 private:
 	int _position = 0;
+	bool _highlightMode = false;
+	int _highlightStart = -1;
+	int _highlightEnd = -1;
 };
 
 }

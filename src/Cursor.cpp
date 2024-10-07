@@ -22,6 +22,10 @@ void Cursor::MoveLeft(const std::string& text) {
         _position--;
 }
 
+bool Cursor::IsHighlighting() {
+    return _highlightMode;
+}
+
 void Cursor::MoveRight(const std::string& text) {
     if(_position < text.length())
         _position++;
@@ -68,6 +72,24 @@ void Cursor::MoveDown(const std::string& text) {
     size_t currColumn = _position - (text.rfind('\n', _position - 1) + 1);
 
     _position = nextLineStart + std::min(currColumn, nextLineEnd - nextLineStart);
+}
+
+void Cursor::BeginHighlight() {
+    _highlightStart = _position;
+    _highlightMode = true;
+}
+
+void Cursor::EndHighlight() {
+    _highlightEnd = _position;
+    _highlightMode = false;
+}
+
+std::string Cursor::GetHighlightedText(const std::string& text) {
+    if(_highlightStart < 0 || _highlightEnd < 0) return "";
+    if(_highlightStart > _highlightEnd)
+        return text.substr(_highlightEnd, _highlightStart - _highlightEnd);
+    else
+        return text.substr(_highlightStart, _highlightEnd - _highlightStart);
 }
 int Cursor::GetPosition() {
     return _position;

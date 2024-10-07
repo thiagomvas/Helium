@@ -59,7 +59,6 @@ void Application::Start() {
     InitWindow(screenWidth, screenHeight, "Helium");
     SetTargetFPS(60); 
     SetExitKey(KEY_NULL);
-
     Camera2D camera = {0};
     camera.target = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
     camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
@@ -104,7 +103,8 @@ void Application::Start() {
 
        DrawRectangleRec({(GetScreenWidth() - _config->MaxNoteWidth) * 0.5f, 0, static_cast<float>(_config->MaxNoteWidth), static_cast<float>(GetScreenHeight())}, _config->ColorTheme.Foreground);
         // NOTE AREA
-        // ------------------------------------------
+        // -------------------------------------s
+        // ----
         BeginMode2D(camera);
         _noteArea->Draw();
         EndMode2D();

@@ -99,6 +99,15 @@ void NoteArea::Update() {
                 }
             }
 
+            if(IsKeyPressed(KEY_LEFT_SHIFT)) {
+                _cursor.BeginHighlight();
+            }
+
+            if(IsKeyReleased(KEY_LEFT_SHIFT)) {
+                _cursor.EndHighlight();
+                std::cout << "Highlight text: \"" << _cursor.GetHighlightedText(_rawText) << "\"" << std::endl;
+            }
+
             if(IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
                 std::string clipboard(GetClipboardText());
                 _rawText += clipboard;
@@ -299,7 +308,6 @@ void NoteArea::Draw() {
                     caretX = MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x + _rect.x;  // Calculate width of the text for X
                 }
             }
-            
             int charHeight =  MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
             caretY = MeasureTextEx(_config->Formatting.DefaultFont, caretStream.str().c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y + _rect.y - charHeight;
 
