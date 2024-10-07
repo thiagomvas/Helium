@@ -11,6 +11,8 @@ public:
 	void MoveToEnd(const std::string& text);
 	void MoveLeft(const std::string& text);
 	void MoveRight(const std::string& text);
+	void MoveUp(const std::string& text);
+	void MoveDown(const std::string& text);
 	int GetPosition();
 private:
 	int _position = 0;

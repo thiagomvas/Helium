@@ -128,6 +128,34 @@ void NoteArea::Update() {
                     _cursor.MoveRight(_rawText);
                 }
             }
+
+            if(IsKeyPressed(KEY_UP)) {
+                _beginActionTime = 0;
+                _cursor.MoveUp(_rawText);
+            }
+            if(IsKeyDown(KEY_UP)) {
+                _beginActionTime += GetFrameTime();
+                if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                    _cursor.MoveUp(_rawText);
+                }
+            }
+
+            if(IsKeyPressed(KEY_DOWN)) {
+                _beginActionTime = 0;
+                _cursor.MoveDown(_rawText);
+            }
+            if(IsKeyDown(KEY_DOWN)) {
+                _beginActionTime += GetFrameTime();
+                if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                    _cursor.MoveDown(_rawText);
+                }
+            }
+
+            if(IsKeyPressed(KEY_HOME))
+                _cursor.MoveToStart();
+            if(IsKeyPressed(KEY_END))
+                _cursor.MoveToEnd(_rawText);
+
             if(IsKeyPressed(KEY_ENTER)) {
                 _rawText += '\n';
                 _cursor.MoveRight(_rawText);
@@ -192,9 +220,9 @@ void NoteArea::Draw() {
     DrawRectangleRec(_rect, _config->ColorTheme.Foreground);
 
     int y = _rect.y;
-    const int fontSize = 16;  // Fixed font size for all lines
 
     std::istringstream stream(_rawText);
+    std::string caretString;
     std::istringstream caretStream;
     if(_cursor.GetPosition() == _rawText.length()) {
         caretStream = std::istringstream(_rawText);
@@ -261,40 +289,23 @@ void NoteArea::Draw() {
             bool lastCharWasNewline = false;
 
             DrawTextEx(_config->Formatting.DefaultFont, _rawText.c_str(), {_rect.x, _rect.y}, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-
             // Subtract one line to align caret.
-            int textHeight = MeasureTextEx(_config->Formatting.DefaultFont, _rawText.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y - MeasureTextEx(_config->Formatting.DefaultFont, "a", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
-            // Loop through each line of text and draw it 
-            y = _rect.y;
-            while(std::getline(caretStream, line)) {
-                // Set caret position to the end of the last line
-                caretX = MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x + _rect.x;  // Calculate width of the text for X
-                caretY = y;  // Y is the current line
-
-                y += _config->Formatting.Paragraph;  // Move to next line position
+            y = _rect.y;            
+            if(_rawText[_cursor.GetPosition() - 1] == '\n') {
+                caretX = _rect.x;
+            } else {
+                while(std::getline(caretStream, line)) {
+                    // Set caret position to the end of the last line
+                    caretX = MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x + _rect.x;  // Calculate width of the text for X
+                }
             }
-
             
-            // Handle case where the last character(s) are newlines
-            if (!_rawText.empty()) {
-                int newlineCount = 0;
+            int charHeight =  MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
+            caretY = MeasureTextEx(_config->Formatting.DefaultFont, caretStream.str().c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y + _rect.y - charHeight;
 
-                // Count the number of consecutive trailing newlines
-                for (int i = _rawText.length() - 1; i >= 0 && _rawText[i] == '\n'; --i) {
-                    newlineCount++;
-                }
-
-                if (newlineCount > 0) {
-                    caretX = _rect.x;  // Move caret to the start of the line
-                    caretY += _config->Formatting.Paragraph * newlineCount;  // Move caret down by the number of newlines
-                    lastCharWasNewline = true;
-                }
-            }
-
-            caretY = _rect.y + textHeight;
-            // Draw caret only if it's visible (blinking)
+           // Draw caret only if it's visible (blinking)
             if (showCaret) {
-                DrawRectangle(caretX, caretY, 2, fontSize, _config->ColorTheme.TextColor);  // Thin vertical caret
+                DrawRectangle(caretX, caretY, 2, charHeight, _config->ColorTheme.TextColor);  // Thin vertical caret
             }
             break;
         }
