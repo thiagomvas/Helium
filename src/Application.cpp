@@ -36,6 +36,12 @@ namespace Helium {
         // READ MODE
          
         // WRITE MODE
+        _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_C, KEY_LEFT_CONTROL), [this]() {
+            if(this->_noteArea->GetCursor()->IsHighlighting()) {
+                SetClipboardText(_noteArea->GetCursor()->GetHighlightedText(_noteArea->GetText()).c_str());
+                _noteArea->GetCursor()->Deselect();
+            }
+        });
         // DRAW MODE
     }
 

@@ -25,9 +25,10 @@ public:
     void Update();
     void Save();
     void Draw();
-    std::string GetFormattedText();
+    std::string GetText();
     void SetRect(Rectangle rect);
     void SetMode(NoteMode mode);
+	Cursor* GetCursor();
 private:
     RenderTexture2D _texture;
     std::string _rawText;

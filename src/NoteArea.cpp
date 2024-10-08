@@ -294,29 +294,63 @@ void NoteArea::Draw() {
             }
             break;
 
-        case Helium::NoteMode::WRITE: {
-            bool lastCharWasNewline = false;
+        
 
-            DrawTextEx(_config->Formatting.DefaultFont, _rawText.c_str(), {_rect.x, _rect.y}, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            // Subtract one line to align caret.
-            y = _rect.y;            
-            if(_rawText[_cursor.GetPosition() - 1] == '\n') {
-                caretX = _rect.x;
-            } else {
-                while(std::getline(caretStream, line)) {
-                    // Set caret position to the end of the last line
-                    caretX = MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x + _rect.x;  // Calculate width of the text for X
-                }
-            }
-            int charHeight =  MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
-            caretY = MeasureTextEx(_config->Formatting.DefaultFont, caretStream.str().c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y + _rect.y - charHeight;
+case Helium::NoteMode::WRITE: {
+    bool lastCharWasNewline = false;
+    int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
+    float currentY = _rect.y;
+    float lineHeight = MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
 
-           // Draw caret only if it's visible (blinking)
-            if (showCaret) {
-                DrawRectangle(caretX, caretY, 2, charHeight, _config->ColorTheme.TextColor);  // Thin vertical caret
-            }
-            break;
+    int textLength = _rawText.length();
+    int cursorPos = _cursor.GetPosition();
+    
+    float currentX = _rect.x;
+    std::string line;
+    std::istringstream textStream(_rawText);
+
+    int processedChars = 0;
+
+    float caretX = _rect.x;
+    float caretY = _rect.y;
+
+    while (std::getline(textStream, line)) {
+        float lineWidth = MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+        
+        if (_cursor.IsHighlighting() && highlightEnd > processedChars && highlightStart < processedChars + line.size()) {
+            int startInLine = std::max(0, highlightStart - processedChars);
+            int endInLine = std::min(static_cast<int>(line.size()), highlightEnd - processedChars);
+            
+            std::string beforeHighlight = line.substr(0, startInLine);
+            std::string highlightedText = line.substr(startInLine, endInLine - startInLine);
+            
+            float highlightStartX = currentX + MeasureTextEx(_config->Formatting.DefaultFont, beforeHighlight.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+            float highlightWidth = MeasureTextEx(_config->Formatting.DefaultFont, highlightedText.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+
+            DrawRectangle(highlightStartX, currentY, highlightWidth, lineHeight, RED );
         }
+
+        DrawTextEx(_config->Formatting.DefaultFont, line.c_str(), {currentX, currentY}, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
+
+        if (cursorPos >= processedChars && cursorPos <= processedChars + line.size()) {
+            std::string beforeCaret = line.substr(0, cursorPos - processedChars);
+            caretX = currentX + MeasureTextEx(_config->Formatting.DefaultFont, beforeCaret.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+            caretY = currentY;  // Caret should be aligned with the current line
+        }
+
+        currentY += lineHeight;
+        processedChars += line.size() + 1;  // Include the newline character
+    }
+
+    // Draw caret only if it's visible (blinking)
+    if (showCaret) {
+        DrawRectangle(caretX, caretY, 2, lineHeight, _config->ColorTheme.TextColor);  // Thin vertical caret
+    }
+
+    break;
+}
+
+
     }
     // Draw the texture
     DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { _rect.x, _rect.y }, WHITE);
@@ -332,5 +366,13 @@ void NoteArea::SetRect(Rectangle rect) {
 }
 void NoteArea::Save() {
     Utils::SaveNote("C:/Users/Thiago/picasso.note", _rawText, _texture.texture);
+}
+
+std::string NoteArea::GetText() {
+    return _rawText;
+}
+
+Cursor* NoteArea::GetCursor() {
+    return &_cursor;
 }
 }

@@ -1,47 +1,61 @@
+
 #include "Cursor.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <string>
 
-
 namespace Helium {
 
-Cursor::Cursor() : _position(0) {}
+Cursor::Cursor() : _position(0), _highlightMode(false), _highlightActive(false) {}
 
 void Cursor::MoveToStart() {
     _position = 0;
+    if (!_highlightMode) _highlightActive = false;  // Stop highlighting if not in highlight mode
 }
 
 void Cursor::MoveToEnd(const std::string& text) {
     _position = text.length();
+    if (!_highlightMode) _highlightActive = false;  // Stop highlighting if not in highlight mode
 }
 
 void Cursor::MoveLeft(const std::string& text) {
-    if(_position > 0)
+    if (_position > 0)
         _position--;
+    
+    if (_highlightMode) {
+        _highlightEnd = _position;  // Update highlight range
+    } else {
+        _highlightActive = false;   // Stop highlighting after movement if not in highlight mode
+    }
 }
 
 bool Cursor::IsHighlighting() {
-    return _highlightMode;
+    return _highlightMode || _highlightActive;
 }
 
 void Cursor::MoveRight(const std::string& text) {
-    if(_position < text.length())
+    if (_position < text.length())
         _position++;
+    
+    if (_highlightMode) {
+        _highlightEnd = _position;  // Update highlight range
+    } else {
+        _highlightActive = false;   // Stop highlighting after movement if not in highlight mode
+    }
 }
 
 void Cursor::MoveUp(const std::string& text) {
     size_t currLineStart = text.rfind('\n', _position - 1);
 
-    if(currLineStart == std::string::npos) {
+    if (currLineStart == std::string::npos) {
         currLineStart = 0;
     } else {
         currLineStart++;
     }
 
     size_t prevLineStart = text.rfind('\n', currLineStart - 2);
-    if(prevLineStart == std::string::npos) {
+    if (prevLineStart == std::string::npos) {
         prevLineStart = 0;
     } else {
         prevLineStart++;
@@ -49,11 +63,17 @@ void Cursor::MoveUp(const std::string& text) {
 
     size_t currColumn = _position - currLineStart;
     size_t prevLineEnd = text.find('\n', prevLineStart);
-    if(prevLineEnd == std::string::npos) {
+    if (prevLineEnd == std::string::npos) {
         prevLineEnd = text.length();
     }
 
     _position = prevLineStart + std::min(currColumn, prevLineEnd - prevLineStart);
+
+    if (_highlightMode) {
+        _highlightEnd = _position;
+    } else {
+        _highlightActive = false;
+    }
 }
 
 void Cursor::MoveDown(const std::string& text) {
@@ -72,29 +92,56 @@ void Cursor::MoveDown(const std::string& text) {
     size_t currColumn = _position - (text.rfind('\n', _position - 1) + 1);
 
     _position = nextLineStart + std::min(currColumn, nextLineEnd - nextLineStart);
+
+    if (_highlightMode) {
+        _highlightEnd = _position;
+    } else {
+        _highlightActive = false;
+    }
 }
 
 void Cursor::BeginHighlight() {
     _highlightStart = _position;
     _highlightMode = true;
+    _highlightActive = true;  // Start highlighting actively
 }
 
 void Cursor::EndHighlight() {
     _highlightEnd = _position;
     _highlightMode = false;
+    // Keep the highlight active after ending the highlight mode until movement occurs
 }
 
 std::string Cursor::GetHighlightedText(const std::string& text) {
-    if(_highlightStart < 0 || _highlightEnd < 0) return "";
-    if(_highlightStart > _highlightEnd)
+    if (_highlightStart < 0 || _highlightEnd < 0) return "";
+    if (_highlightStart > _highlightEnd)
         return text.substr(_highlightEnd, _highlightStart - _highlightEnd);
     else
         return text.substr(_highlightStart, _highlightEnd - _highlightStart);
 }
+
 int Cursor::GetPosition() {
     return _position;
 }
 
-
-
+int Cursor::GetHighlightStart() {
+    if (_highlightStart < _highlightEnd)
+        return _highlightStart;
+    else return _highlightEnd;
 }
+
+int Cursor::GetHighlightEnd() {
+    if (_highlightEnd < _highlightStart)
+        return _highlightStart;
+    else return _highlightEnd;
+}
+
+void Cursor::Deselect() {
+    _highlightStart = -1;
+    _highlightEnd = -1;
+    _highlightActive = false;
+    _highlightMode = false;
+}
+
+} // namespace Helium
+
