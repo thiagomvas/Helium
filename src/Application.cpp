@@ -17,40 +17,40 @@
 
 namespace Helium {
 
-    Application::Application(std::shared_ptr<Configuration> config) : _config(config), isRunning(false), _inputHandler(std::make_unique<InputHandler>()), _noteArea(std::make_unique<NoteArea>(_config, _inputHandler)) {
+Application::Application(std::shared_ptr<Configuration> config) : _config(config), isRunning(false), _inputHandler(std::make_unique<InputHandler>()), _noteArea(std::make_unique<NoteArea>(_config, _inputHandler)) {
+    _noteArea->SetMode(NoteMode::READ);
+    _inputHandler->SetMode(NoteMode::READ);
+
+    // GLOBAL ACTIONS
+    _inputHandler->AddGlobalAction(InputCombo(KEY_ESCAPE), [this]() {
         _noteArea->SetMode(NoteMode::READ);
         _inputHandler->SetMode(NoteMode::READ);
+    });
 
-        // GLOBAL ACTIONS
-        _inputHandler->AddGlobalAction(InputCombo(KEY_ESCAPE), [this]() {
-            _noteArea->SetMode(NoteMode::READ);
-            _inputHandler->SetMode(NoteMode::READ);
-        });
+    _inputHandler->AddGlobalAction(InputCombo(KEY_S, KEY_LEFT_CONTROL), [this]() {
+        _noteArea->Save();
+    });
 
-        _inputHandler->AddGlobalAction(InputCombo(KEY_S, KEY_LEFT_CONTROL), [this]() {
-            _noteArea->Save();
-        });
+    _inputHandler->AddGlobalAction(InputCombo(KEY_F1), [this]() { std::cout << _config->serialize(); });
 
-        _inputHandler->AddGlobalAction(InputCombo(KEY_F1), [this]() { std::cout << _config->serialize(); });
-
-        // READ MODE
-         
-        // WRITE MODE
-        _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_C, KEY_LEFT_CONTROL), [this]() {
-            if(this->_noteArea->GetCursor()->IsHighlighting()) {
-                SetClipboardText(_noteArea->GetCursor()->GetHighlightedText(_noteArea->GetText()).c_str());
-                _noteArea->GetCursor()->Deselect();
-            }
-        });
-        // DRAW MODE
-    }
-
-
-    Application::~Application() {
-        if (isRunning) {
-            Stop();
+    // READ MODE
+     
+    // WRITE MODE
+    _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_C, KEY_LEFT_CONTROL), [this]() {
+        if(this->_noteArea->GetCursor()->IsHighlighting()) {
+            SetClipboardText(_noteArea->GetCursor()->GetHighlightedText(_noteArea->GetText()).c_str());
+            _noteArea->GetCursor()->Deselect();
         }
+    });
+    // DRAW MODE
+}
+
+
+Application::~Application() {
+    if (isRunning) {
+        Stop();
     }
+}
 
 void Application::Start() {
     if(isRunning)
@@ -119,9 +119,13 @@ void Application::Start() {
        // UI
         // ------------------------------------------ 
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(_config->TopMenuBarHeight)}, _config->ColorTheme.Foreground);
-       
-        if(fileDropdownValue > 0) {
-            std::cout << std::to_string(fileDropdownValue) << std::endl;
+    
+        switch(fileDropdownValue) {
+            case 1: // Open
+            break;
+            case 2: // Save
+                _noteArea->Save();
+            default: break;
         }
         fileDropdownValue = UiUtils::Dropdown({0, 0, 150, 20}, _config->ColorTheme.Foreground, "File;Open;Save#CTRL+S", _config, &fileDropdownActive);
         EndDrawing(); 
