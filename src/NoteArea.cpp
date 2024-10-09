@@ -327,7 +327,7 @@ case Helium::NoteMode::WRITE: {
             float highlightStartX = currentX + MeasureTextEx(_config->Formatting.DefaultFont, beforeHighlight.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
             float highlightWidth = MeasureTextEx(_config->Formatting.DefaultFont, highlightedText.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
 
-            DrawRectangle(highlightStartX, currentY, highlightWidth, lineHeight, RED );
+            DrawRectangle(highlightStartX, currentY, highlightWidth, lineHeight, _config->ColorTheme.TextHighlight );
         }
 
         DrawTextEx(_config->Formatting.DefaultFont, line.c_str(), {currentX, currentY}, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
