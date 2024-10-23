@@ -42,6 +42,8 @@ private:
     std::shared_ptr<Configuration> _config;
     std::shared_ptr<InputHandler> _inputHandler;
     Vector2 _prevCursorPos;
+    std::vector<std::string> wrappedLines;
+    bool isDirty;
 }; 
 
 

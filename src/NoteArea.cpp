@@ -89,6 +89,7 @@ void NoteArea::Update() {
                 _beginActionTime = 0;
                 _rawText.pop_back();
                 _cursor.MoveLeft(_rawText);
+                isDirty = true;
             }
 
             if(IsKeyDown(KEY_BACKSPACE) && !_rawText.empty()) {
@@ -96,6 +97,7 @@ void NoteArea::Update() {
                 if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
                     _rawText.pop_back();
                     _cursor.MoveLeft(_rawText);
+                    isDirty = true;
                 }
             }
 
@@ -176,6 +178,7 @@ void NoteArea::Update() {
                     _rawText.insert(_cursor.GetPosition(), 1, (char) key);
                     _cursor.MoveRight(_rawText);
                     std::cout << _cursor.GetPosition() << std::endl;
+                    isDirty = true;
                 }
             }
     
@@ -296,59 +299,78 @@ void NoteArea::Draw() {
 
         
 
-case Helium::NoteMode::WRITE: {
-    bool lastCharWasNewline = false;
-    int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
-    float currentY = _rect.y;
-    float lineHeight = MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
+        case Helium::NoteMode::WRITE: {
+            bool lastCharWasNewline = false;
+            int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
+            float currentY = _rect.y;
+            float lineHeight = MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
 
-    int textLength = _rawText.length();
-    int cursorPos = _cursor.GetPosition();
-    
-    float currentX = _rect.x;
-    std::string line;
-    std::istringstream textStream(_rawText);
-
-    int processedChars = 0;
-
-    float caretX = _rect.x;
-    float caretY = _rect.y;
-
-    while (std::getline(textStream, line)) {
-        float lineWidth = MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-        
-        if (_cursor.IsHighlighting() && highlightEnd > processedChars && highlightStart < processedChars + line.size()) {
-            int startInLine = std::max(0, highlightStart - processedChars);
-            int endInLine = std::min(static_cast<int>(line.size()), highlightEnd - processedChars);
+            int textLength = _rawText.length();
+            int cursorPos = _cursor.GetPosition();
             
-            std::string beforeHighlight = line.substr(0, startInLine);
-            std::string highlightedText = line.substr(startInLine, endInLine - startInLine);
-            
-            float highlightStartX = currentX + MeasureTextEx(_config->Formatting.DefaultFont, beforeHighlight.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-            float highlightWidth = MeasureTextEx(_config->Formatting.DefaultFont, highlightedText.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+            float currentX = _rect.x;
+            std::string line;
+            std::istringstream textStream(_rawText);
 
-            DrawRectangle(highlightStartX, currentY, highlightWidth, lineHeight, _config->ColorTheme.TextHighlight );
+            int processedChars = 0;
+
+            float caretX = _rect.x;
+            float caretY = _rect.y;
+                        
+            if (isDirty) {
+                wrappedLines.clear();
+                isDirty = false;
+                while (std::getline(textStream, line)) {
+                    if (MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x < _config->MaxNoteWidth) { 
+                        wrappedLines.push_back(line);  // Line fits without wrapping
+                        continue;
+                    }
+
+                    std::istringstream wordStream(line);
+                    std::string word;
+                    std::string currLine;
+                    int currWidth = 0;
+
+                    while (wordStream >> word) {
+                        // Measure the word (with a space appended, except for the first word in a new line)
+                        int width = MeasureTextEx(_config->Formatting.DefaultFont, (currLine.empty() ? word : word + " ").c_str(), 
+                                                  _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+
+                        // If the word doesn't fit, wrap to the next line
+                        if (currWidth + width > _config->MaxNoteWidth) {
+                            wrappedLines.push_back(currLine);
+                            currLine = word + " ";  // Start the new line with the current word
+                            currWidth = width;
+                        } else {
+                            currLine.append(word).append(" ");
+                            currWidth += width;
+                        }
+                    }
+
+                    // Handle the last line after all words are processed
+                    if (!currLine.empty()) {
+                        wrappedLines.push_back(currLine);
+                    }
+                }
+            }
+
+            // Render wrapped lines
+            for (const std::string& wrappedLine : wrappedLines) {
+                DrawTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), {currentX, currentY}, 
+                           _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
+                currentY += lineHeight;
+            }
+
+            caretX = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLines.back().c_str(), 
+                                                  _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x + _rect.x;
+
+            // Draw caret only if it's visible (blinking)
+            if (showCaret) {
+                DrawRectangle(caretX, currentY - lineHeight, 2, lineHeight, _config->ColorTheme.TextColor);  // Thin vertical caret
+            }
+
+            break;
         }
-
-        DrawTextEx(_config->Formatting.DefaultFont, line.c_str(), {currentX, currentY}, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-
-        if (cursorPos >= processedChars && cursorPos <= processedChars + line.size()) {
-            std::string beforeCaret = line.substr(0, cursorPos - processedChars);
-            caretX = currentX + MeasureTextEx(_config->Formatting.DefaultFont, beforeCaret.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-            caretY = currentY;  // Caret should be aligned with the current line
-        }
-
-        currentY += lineHeight;
-        processedChars += line.size() + 1;  // Include the newline character
-    }
-
-    // Draw caret only if it's visible (blinking)
-    if (showCaret) {
-        DrawRectangle(caretX, caretY, 2, lineHeight, _config->ColorTheme.TextColor);  // Thin vertical caret
-    }
-
-    break;
-}
 
 
     }
