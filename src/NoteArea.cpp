@@ -166,7 +166,7 @@ void NoteArea::Update() {
                 _cursor.MoveToEnd(_rawText);
 
             if(IsKeyPressed(KEY_ENTER)) {
-                _rawText += '\n';
+                _rawText.insert(_cursor.GetPosition(), 1, '\n');
                 _cursor.MoveRight(_rawText);
             }
             // Read characters instead of individual key presses

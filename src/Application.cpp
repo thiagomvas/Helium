@@ -65,6 +65,9 @@ void Application::Start() {
     InitWindow(screenWidth, screenHeight, "Helium");
     SetTargetFPS(60); 
     SetExitKey(KEY_NULL);
+    
+    MaximizeWindow();
+
     Camera2D camera = {0};
     camera.target = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
     camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
@@ -95,8 +98,8 @@ void Application::Start() {
         // Update
         _inputHandler->Update();
         _noteArea->Update();
-        
-        scroll.y -= GetMouseWheelMove() * _config->Formatting.Paragraph * _config->ScrollLineCount;
+        if(!IsKeyDown(KEY_LEFT_SHIFT))
+            scroll.y -= GetMouseWheelMove() * _config->Formatting.Paragraph * _config->ScrollLineCount;
         if(scroll.y < 0) scroll.y = 0;
         camera.target = {
             GetScreenWidth() * 0.5f + scroll.x,
