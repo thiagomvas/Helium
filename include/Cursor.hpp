@@ -24,6 +24,7 @@ public:
 	void EndHighlight();
 	void Deselect();
 	void SetTextPter(std::shared_ptr<std::string> text, std::shared_ptr<std::vector<std::string>> wrappedLines);
+	void Goto(int position);
 	int GetCurrentLineIndex() const;
 	int GetCurrentLineColumn() const;
 	int GetColumn(int position) const;

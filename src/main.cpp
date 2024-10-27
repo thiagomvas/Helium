@@ -11,6 +11,5 @@ int main() {
     config->deserialize(config->serialize());
     Helium::Application app(config);
     app.Start();
-    
     app.Stop();
 }

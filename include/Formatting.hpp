@@ -33,7 +33,7 @@ public:
 		if(it != lineHeightMap.end()) {
 			return it->second;
 		} else {
-			int height = MeasureTextEx(DefaultFont, "|", fontSize, 1).x;
+			int height = MeasureTextEx(DefaultFont, "|", fontSize, 1).y;
 			lineHeightMap[fontSize] = height;
 			return height;
 		}

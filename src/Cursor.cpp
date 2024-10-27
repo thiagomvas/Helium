@@ -11,6 +11,11 @@ namespace Helium {
 
 Cursor::Cursor() : _position(0), _highlightMode(false), _highlightActive(false) {}
 
+void Cursor::Goto(int position) {
+    _position = position;
+    if(_highlightMode) _highlightEnd = _position;
+}
+
 void Cursor::MoveToStart() {
     _position = 0;
     if (!_highlightMode) _highlightActive = false;  // Stop highlighting if not in highlight mode

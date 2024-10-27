@@ -25,6 +25,7 @@ void safeErase(std::shared_ptr<std::string> text, int start, int end) {
 
 
 
+
 namespace Helium {
 
 NoteArea::NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<Helium::InputHandler> input) : _config(config), _inputHandler(input), _rawText(std::make_shared<std::string>()), wrappedLines(std::make_shared<std::vector<std::string>>()), readModeLines(std::make_shared<std::vector<std::string>>()) {
@@ -92,7 +93,8 @@ void NoteArea::Update() {
     switch(_mode) {
         case Helium::NoteMode::READ:
             break;
-        case Helium::NoteMode::WRITE:
+        case Helium::NoteMode::WRITE: {
+            
             
             if (IsKeyPressed(KEY_LEFT_SHIFT)) {
                 _cursor.BeginHighlight();
@@ -224,13 +226,54 @@ void NoteArea::Update() {
                 }
             }
 
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), _rect)) {
+                Vector2 mousePosition = GetMousePosition();
+                
+                int lineIndex = (mousePosition.y - _rect.y) / _config->Formatting.GetLineHeight(_config->Formatting.Paragraph);
+                
+                if (lineIndex < wrappedLines->size()) {
+                    float currentY = _rect.y; 
+                    int totalChars = 0;
+                    int width = mousePosition.x - _rect.x;
+
+                    for(int i = 0; i < lineIndex; i++)
+                        totalChars += wrappedLines->at(i).size() + 1;
+                    std::string line = wrappedLines->at(lineIndex); 
+                    bool moved = false;
+                    for (size_t i = 0; i < line.size(); i++) {
+                        char c = line[i];
+                        int charWidth = MeasureTextEx(_config->Formatting.DefaultFont, &c, _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+
+                        if (width <= charWidth) {
+                            _cursor.Goto(totalChars + i); 
+                            moved = true;
+                            break;
+                        }
+                        
+                        width -= charWidth + _config->Formatting.CharSpacing;
+                    }
+                    if(!moved) {
+                        _cursor.Goto(totalChars + line.size());
+                    }
+                }
+                else {
+                    _cursor.MoveToEnd();
+                }
+            }
+            if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                _cursor.BeginHighlight();
+            if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+                _cursor.EndHighlight();
+
+
             if(isDirty) {
                 isDirty = false;
                 Utils::WrapText(*_rawText, wrappedLines, _config);
             }
     
             break;
-        case Helium::NoteMode::DRAW:
+        }
+        case Helium::NoteMode::DRAW: {
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
                 _prevCursorPos = GetMousePosition();
             }
@@ -251,8 +294,8 @@ void NoteArea::Update() {
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT))
             {
                 BeginTextureMode(_texture);
-                DrawCircleV({GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius, PINK);
-                DrawLineEx({_prevCursorPos.x - _rect.x, _prevCursorPos.y - _rect.y}, {GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius * 2, PINK);
+                DrawCircleV({GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius, RED);
+                DrawLineEx({_prevCursorPos.x - _rect.x, _prevCursorPos.y - _rect.y}, {GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius * 2, RED);
                 EndTextureMode();
                 _prevCursorPos = GetMousePosition();
             }
@@ -269,6 +312,7 @@ void NoteArea::Update() {
             
             _brushRadius = std::clamp(_brushRadius + GetMouseWheelMove(), 1.0f, 99.0f);
             break;
+        }
             default:
                 break;
     }
