@@ -31,7 +31,7 @@ public:
 	Cursor* GetCursor();
 private:
     RenderTexture2D _texture;
-    std::string _rawText;
+    std::shared_ptr<std::string> _rawText;
     std::vector<Token> _tokens;
     Rectangle _rect;
     Tokenizer _tokenizer;
@@ -42,7 +42,7 @@ private:
     std::shared_ptr<Configuration> _config;
     std::shared_ptr<InputHandler> _inputHandler;
     Vector2 _prevCursorPos;
-    std::vector<std::string> wrappedLines;
+    std::shared_ptr<std::vector<std::string>> wrappedLines;
     bool isDirty;
 }; 
 

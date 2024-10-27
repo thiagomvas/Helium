@@ -18,16 +18,16 @@
 
 namespace Helium {
 
-NoteArea::NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<Helium::InputHandler> input) : _config(config), _inputHandler(input) {
+NoteArea::NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<Helium::InputHandler> input) : _config(config), _inputHandler(input), _rawText(std::make_shared<std::string>()), wrappedLines(std::make_shared<std::vector<std::string>>()) {
     
 }
 
 
 void NoteArea::Initialize(int heightOffset) {
     Texture2D temp;
-    if(Utils::LoadNote("C:/Users/Thiago/picasso.note", _rawText, temp))
+    if(Utils::LoadNote("C:/Users/Thiago/picasso.note", *_rawText, temp))
     {
-        _tokens = _tokenizer.tokenize(_rawText);
+        _tokens = _tokenizer.tokenize(*_rawText);
         _texture = LoadRenderTexture(temp.width, temp.height);
         BeginTextureMode(_texture);
         DrawTextureV(temp, {0, 0}, WHITE);
@@ -42,14 +42,14 @@ void NoteArea::Initialize(int heightOffset) {
     _rect.height = GetScreenHeight();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
     _rect.y = heightOffset;
-    _cursor.SetTextPter(&_rawText, &wrappedLines);
+    _cursor.SetTextPter(_rawText, wrappedLines);
    _cursor.MoveToEnd();
 }
 
 void NoteArea::SetMode(NoteMode mode) {
     _mode = mode;
     if(mode == NoteMode::READ) {
-        _tokens = _tokenizer.tokenize(_rawText);
+        _tokens = _tokenizer.tokenize(*_rawText);
     }
 }
 
@@ -84,19 +84,32 @@ void NoteArea::Update() {
         case Helium::NoteMode::READ:
             break;
         case Helium::NoteMode::WRITE:
-            if(IsKeyPressed(KEY_BACKSPACE) && !_rawText.empty())
+            if(IsKeyPressed(KEY_BACKSPACE) && !_rawText->empty())
             {
                 _beginActionTime = 0;
                 _cursor.MoveLeft();
-                _rawText.erase(_cursor.GetPosition(), 1);
+                _rawText->erase(_cursor.GetPosition(), 1);
                 isDirty = true;
             }
 
-            if(IsKeyDown(KEY_BACKSPACE) && !_rawText.empty()) {
+            
+        if (IsKeyPressed(KEY_RIGHT_CONTROL)) {
+            std::cout << "Cursor - (" << _cursor.GetCurrentLineColumn() << "," << _cursor.GetCurrentLineIndex() << ")[" << _cursor.GetPosition() << "]" << std::endl;
+            int index = 0;
+
+            for (auto line : *wrappedLines) {
+
+                std::cout << index << "(" << line.length() <<  ") : " << line << std::endl;
+                index++;
+            }
+        }
+
+
+            if(IsKeyDown(KEY_BACKSPACE) && !_rawText->empty()) {
                 _beginActionTime += GetFrameTime();
                 if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
                     _cursor.MoveLeft();
-                    _rawText.erase(_cursor.GetPosition(), 1);
+                    _rawText->erase(_cursor.GetPosition(), 1);
                     isDirty = true;
                 }
             }
@@ -112,7 +125,7 @@ void NoteArea::Update() {
 
             if(IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
                 std::string clipboard(GetClipboardText());
-                _rawText += clipboard;
+                _rawText->insert(_cursor.GetPosition(), clipboard);
                 isDirty = true;
                 for(int i = 0; i < clipboard.length(); i++) {
                     _cursor.MoveRight();
@@ -169,7 +182,7 @@ void NoteArea::Update() {
                 _cursor.MoveToEnd();
 
             if(IsKeyPressed(KEY_ENTER)) {
-                _rawText.insert(_cursor.GetPosition(), 1, '\n');
+                _rawText->insert(_cursor.GetPosition(), 1, '\n');
                 _cursor.MoveRight();
                 isDirty = true;
             }
@@ -177,9 +190,8 @@ void NoteArea::Update() {
             int key;
             while ((key = GetCharPressed()) > 0) {
                 if (key >= 32) {
-                    _rawText.insert(_cursor.GetPosition(), 1, (char) key);
+                    _rawText->insert(_cursor.GetPosition(), 1, (char) key);
                     _cursor.MoveRight();
-                    std::cout << _cursor.GetPosition() << std::endl;
                     isDirty = true;
                 }
             }
@@ -235,13 +247,13 @@ void NoteArea::Draw() {
 
     int y = _rect.y;
 
-    std::istringstream stream(_rawText);
+    std::istringstream stream(*_rawText);
     std::string caretString;
     std::istringstream caretStream;
-    if(_cursor.GetPosition() == _rawText.length()) {
-        caretStream = std::istringstream(_rawText);
+    if(_cursor.GetPosition() == _rawText->length()) {
+        caretStream = std::istringstream(*_rawText);
     } else {
-        caretStream = std::istringstream(_rawText.substr(0, _cursor.GetPosition()));
+        caretStream = std::istringstream(_rawText->substr(0, _cursor.GetPosition()));
     }
     std::string line;
     int caretX = _rect.x, caretY = 0;  // Caret position
@@ -307,66 +319,95 @@ void NoteArea::Draw() {
 case Helium::NoteMode::WRITE: {
     int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
     float currentY = _rect.y;
+
     float lineHeight = MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
 
     int cursorPos = _cursor.GetPosition();
     float currentX = _rect.x;
     int totalChars = 0;  // Tracks total characters processed in all lines
     bool caretPositioned = false;  // Ensures caret is set only once
+    std::istringstream textStream(*_rawText);
 
-    if (isDirty) {
-        wrappedLines.clear();
-        isDirty = false;
+    
 
-        // Process and wrap lines while explicitly handling empty lines for newlines
-        std::string line;
-        for (size_t i = 0; i < _rawText.size(); ++i) {
-            if (_rawText[i] == '\n') {
-                // If we have text in `line`, add it; otherwise, add an empty line
-                if (!line.empty()) {
-                    wrappedLines.push_back(line);
-                    line.clear();
-                } else {
-                    wrappedLines.push_back(""); // Handle empty line for consecutive newlines
+if (isDirty) {
+    // Clear wrapped lines
+    wrappedLines->clear();
+    isDirty = false;
+
+    // Process the raw text line by line
+    while (std::getline(textStream, line)) {
+        // Check if the entire line fits without wrapping
+        if (MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x < _config->MaxNoteWidth) { 
+            wrappedLines->push_back(line);  // Line fits without wrapping
+            continue;
+        }
+
+        std::istringstream wordStream(line);
+        std::string word;
+        std::string currLine;
+        int currWidth = 0;
+
+        while (wordStream >> word) {
+            // Measure the width of the word with a space appended, except for the first word in the line
+            int width = MeasureTextEx(_config->Formatting.DefaultFont, word.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+
+            // If currLine is not empty, we need to consider the space before adding the word
+            if (!currLine.empty()) {
+                width += MeasureTextEx(_config->Formatting.DefaultFont, " ", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x; // Width of a space
+            }
+
+            // If the word doesn't fit, wrap to the next line
+            if (currWidth + width > _config->MaxNoteWidth) {
+                if (!currLine.empty()) {
+                    wrappedLines->push_back(currLine);  // Only push if there's content in currLine
                 }
+                currLine = word;  // Start a new line with the current word
+                currWidth = MeasureTextEx(_config->Formatting.DefaultFont, word.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x; // Update width to current word
             } else {
-                line += _rawText[i];
+                // Append the word to currLine
+                if (!currLine.empty()) {
+                    currLine.append(" ");  // Add a space before the next word if currLine is not empty
+                }
+                currLine.append(word);  // Add the word to the current line
+                currWidth += width;  // Update the width
             }
         }
-        // Add any remaining line text after the last newline
-        if (!line.empty()) {
-            wrappedLines.push_back(line);
+
+        // Push any remaining line after processing all words
+        if (!currLine.empty()) {
+            wrappedLines->push_back(currLine);
         }
     }
+}
+
+
 
     // Calculate caret position and render each line
-    for (const std::string& wrappedLine : wrappedLines) {
-        int lineLength = wrappedLine.length();
-        int lineEndChar = totalChars + lineLength;
-
-        if (!caretPositioned && cursorPos >= totalChars && cursorPos <= lineEndChar) {
-            int charsInLine = cursorPos - totalChars;
-
-            // Calculate `caretX` based on cursor's position within the current line
-            std::string subStr = wrappedLine.substr(0, charsInLine);
-            caretX = MeasureTextEx(_config->Formatting.DefaultFont, subStr.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x + _rect.x;
-            caretY = currentY;
-
-            caretPositioned = true;
-        }
-
-        // Render each wrapped line, including empty lines
-        DrawTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), {currentX, currentY}, 
-                   _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-        currentY += lineHeight;
-        totalChars += lineLength + 1;
+        
+    for (const std::string& wrappedLine : *wrappedLines) {
+        // Render the wrapped line
+        DrawTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), 
+                   {currentX, currentY}, 
+                   _config->Formatting.Paragraph, 
+                   _config->Formatting.CharSpacing, 
+                   _config->ColorTheme.TextColor);
+        currentY += lineHeight;  // Move down to the next line
     }
+    if(_cursor.GetCurrentLineColumn() == 0) 
+        caretX = _rect.x;
+    else
+        caretX = MeasureTextEx(_config->Formatting.DefaultFont,
+                               wrappedLines->at(_cursor.GetCurrentLineIndex()).substr(0, _cursor.GetCurrentLineColumn()).c_str(),
+                               _config->Formatting.Paragraph,
+                               _config->Formatting.CharSpacing).x + _rect.x ;
 
-    // Draw caret only if it's visible (blinking)
+    caretY = _rect.y + lineHeight * _cursor.GetCurrentLineIndex();
+    // Draw the caret if it’s visible
     if (showCaret) {
-        DrawRectangle(caretX, caretY, 2, lineHeight, _config->ColorTheme.TextColor);  // Thin vertical caret
+        DrawRectangle(caretX, caretY, 2, lineHeight, _config->ColorTheme.TextColor);
     }
-    
+
     break;
 }
 
@@ -385,11 +426,11 @@ void NoteArea::SetRect(Rectangle rect) {
     _rect = rect;
 }
 void NoteArea::Save() {
-    Utils::SaveNote("C:/Users/Thiago/picasso.note", _rawText, _texture.texture);
+    Utils::SaveNote("C:/Users/Thiago/picasso.note", *_rawText, _texture.texture);
 }
 
 std::string NoteArea::GetText() {
-    return _rawText;
+    return *_rawText;
 }
 
 Cursor* NoteArea::GetCursor() {

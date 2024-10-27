@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 namespace Helium {
 
 class Cursor {
@@ -22,10 +23,12 @@ public:
 	void BeginHighlight();
 	void EndHighlight();
 	void Deselect();
-	void SetTextPter(std::string* text, std::vector<std::string>* wrappedLines);
+	void SetTextPter(std::shared_ptr<std::string> text, std::shared_ptr<std::vector<std::string>> wrappedLines);
+	int GetCurrentLineIndex() const;
+	int GetCurrentLineColumn() const;
 private:
-	std::string* text;
-	std::vector<std::string>* wrappedLines;
+	std::shared_ptr<std::string> text;
+	std::shared_ptr<std::vector<std::string>> wrappedLines;
 	int _position = 0;
 	bool _highlightMode = false;
 	bool _highlightActive = false;

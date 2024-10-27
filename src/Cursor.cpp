@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -46,30 +47,76 @@ void Cursor::MoveRight() {
     }
 }
 
+
+
+
+int Cursor::GetCurrentLineIndex() const {
+    int totalChars = 0;
+
+    if (wrappedLines->empty())
+        return 0;
+
+    for (int lineIndex = 0; lineIndex < wrappedLines->size(); lineIndex++) {
+        int lineLength = wrappedLines->at(lineIndex).size();
+        // Calculate the end of the current line with the newline character
+        int lineEndChar = totalChars + lineLength + 1; // Add 1 for the newline
+
+        if (_position >= totalChars && _position < lineEndChar) {
+            return lineIndex; // Use < to avoid including the newline in the last line
+        }
+
+        totalChars += lineLength + 1; // Increment totalChars by lineLength + 1 (for newline)
+    }
+    return wrappedLines->size() - 1; // If position is out of bounds, return last line index
+}
+
+
+
+int Cursor::GetCurrentLineColumn() const {
+    if (wrappedLines->empty())
+        return 0;
+
+    int totalChars = 0;
+
+    for (const std::string& wrappedLine : *wrappedLines) {
+        int lineLength = wrappedLine.length();
+        int lineEndChar = totalChars + lineLength + 1; // Add 1 for the newline
+
+        if (_position >= totalChars && _position < lineEndChar) {
+            return _position - totalChars; // Calculate the column correctly
+        }
+
+        totalChars += lineLength + 1; // Increment totalChars by lineLength + 1 (for newline)
+    }
+
+    // If position is out of bounds, return the length of the last line
+    return wrappedLines->back().length();
+}
+
+
+
+
 void Cursor::MoveUp() {
-    size_t currLineStart = text->rfind('\n', _position - 1);
+    int lineIndex = GetCurrentLineIndex(); // Get the current line index
+    if (lineIndex > 0) {
+        // Get the length of the current line
+        size_t currLineLength = wrappedLines->at(lineIndex).size();
+        size_t currColumn = _position - (lineIndex > 0 ? std::accumulate(wrappedLines->begin(), wrappedLines->begin() + lineIndex, 0, 
+            [](size_t sum, const std::string& line) { return sum + line.size(); }) : 0);
 
-    if (currLineStart == std::string::npos) {
-        currLineStart = 0;
-    } else {
-        currLineStart++;
+        // Move to the previous line
+        --lineIndex;
+
+        // Get the length of the previous line
+        size_t prevLineLength = wrappedLines->at(lineIndex).size();
+        
+        // Update cursor position
+        _position = std::min(currColumn, prevLineLength);
+        _position += std::accumulate(wrappedLines->begin(), wrappedLines->begin() + lineIndex, 0, 
+            [](size_t sum, const std::string& line) { return sum + line.size(); });
     }
 
-    size_t prevLineStart = text->rfind('\n', currLineStart - 2);
-    if (prevLineStart == std::string::npos) {
-        prevLineStart = 0;
-    } else {
-        prevLineStart++;
-    }
-
-    size_t currColumn = _position - currLineStart;
-    size_t prevLineEnd = text->find('\n', prevLineStart);
-    if (prevLineEnd == std::string::npos) {
-        prevLineEnd = text->length();
-    }
-
-    _position = prevLineStart + std::min(currColumn, prevLineEnd - prevLineStart);
-
+    // Update highlighting
     if (_highlightMode) {
         _highlightEnd = _position;
     } else {
@@ -78,29 +125,29 @@ void Cursor::MoveUp() {
 }
 
 void Cursor::MoveDown() {
-    size_t currLineEnd = text->find('\n', _position);
-    if (currLineEnd == std::string::npos) {
-        _position = text->length();
-        return;
+    int lineIndex = GetCurrentLineIndex(); // Get the current line index
+    if (lineIndex < wrappedLines->size() - 1) {
+        // Get the length of the current line
+        size_t currLineLength = wrappedLines->at(lineIndex).size();
+        size_t currColumn = _position - (lineIndex > 0 ? std::accumulate(wrappedLines->begin(), wrappedLines->begin() + lineIndex, 0, 
+            [](size_t sum, const std::string& line) { return sum + line.size(); }) : 0);
+
+        // Move to the next line
+        ++lineIndex;
+
+        // Update cursor position
+        _position = std::min(currColumn, wrappedLines->at(lineIndex).size());
+        _position += std::accumulate(wrappedLines->begin(), wrappedLines->begin() + lineIndex, 0, 
+            [](size_t sum, const std::string& line) { return sum + line.size(); });
     }
 
-    size_t nextLineStart = currLineEnd + 1;
-    size_t nextLineEnd = text->find('\n', nextLineStart);
-    if (nextLineEnd == std::string::npos) {
-        nextLineEnd = text->length();
-    }
-
-    size_t currColumn = _position - (text->rfind('\n', _position - 1) + 1);
-
-    _position = nextLineStart + std::min(currColumn, nextLineEnd - nextLineStart);
-
+    // Update highlighting
     if (_highlightMode) {
         _highlightEnd = _position;
     } else {
         _highlightActive = false;
     }
 }
-
 void Cursor::BeginHighlight() {
     _highlightStart = _position;
     _highlightMode = true;
@@ -144,7 +191,7 @@ void Cursor::Deselect() {
     _highlightMode = false;
 }
 
-void Cursor::SetTextPter(std::string* text, std::vector<std::string>* wrappedLines) {
+void Cursor::SetTextPter(std::shared_ptr<std::string> text, std::shared_ptr<std::vector<std::string>> wrappedLines) {
     this->text = text;
     this->wrappedLines = wrappedLines;
 }
