@@ -42,8 +42,8 @@ void NoteArea::Initialize(int heightOffset) {
     _rect.height = GetScreenHeight();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
     _rect.y = heightOffset;
-
-   _cursor.MoveToEnd(_rawText);
+    _cursor.SetTextPter(&_rawText, &wrappedLines);
+   _cursor.MoveToEnd();
 }
 
 void NoteArea::SetMode(NoteMode mode) {
@@ -87,7 +87,7 @@ void NoteArea::Update() {
             if(IsKeyPressed(KEY_BACKSPACE) && !_rawText.empty())
             {
                 _beginActionTime = 0;
-                _cursor.MoveLeft(_rawText);
+                _cursor.MoveLeft();
                 _rawText.erase(_cursor.GetPosition(), 1);
                 isDirty = true;
             }
@@ -95,7 +95,7 @@ void NoteArea::Update() {
             if(IsKeyDown(KEY_BACKSPACE) && !_rawText.empty()) {
                 _beginActionTime += GetFrameTime();
                 if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
-                    _cursor.MoveLeft(_rawText);
+                    _cursor.MoveLeft();
                     _rawText.erase(_cursor.GetPosition(), 1);
                     isDirty = true;
                 }
@@ -107,7 +107,7 @@ void NoteArea::Update() {
 
             if(IsKeyReleased(KEY_LEFT_SHIFT)) {
                 _cursor.EndHighlight();
-                std::cout << "Highlight text: \"" << _cursor.GetHighlightedText(_rawText) << "\"" << std::endl;
+                std::cout << "Highlight text: \"" << _cursor.GetHighlightedText() << "\"" << std::endl;
             }
 
             if(IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
@@ -115,62 +115,62 @@ void NoteArea::Update() {
                 _rawText += clipboard;
                 isDirty = true;
                 for(int i = 0; i < clipboard.length(); i++) {
-                    _cursor.MoveRight(_rawText);
+                    _cursor.MoveRight();
                 }
             }
 
             if(IsKeyPressed(KEY_LEFT)) {
                 _beginActionTime = 0;
-                _cursor.MoveLeft(_rawText);
+                _cursor.MoveLeft();
             }
             if(IsKeyDown(KEY_LEFT)) {
                 _beginActionTime += GetFrameTime();
                 if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
-                    _cursor.MoveLeft(_rawText);
+                    _cursor.MoveLeft();
                 }
             }
             if(IsKeyPressed(KEY_RIGHT)) {
                 _beginActionTime = 0;
-                _cursor.MoveRight(_rawText);
+                _cursor.MoveRight();
             }
 
             if(IsKeyDown(KEY_RIGHT)) {
                 _beginActionTime += GetFrameTime();
                 if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
-                    _cursor.MoveRight(_rawText);
+                    _cursor.MoveRight();
                 }
             }
 
             if(IsKeyPressed(KEY_UP)) {
                 _beginActionTime = 0;
-                _cursor.MoveUp(_rawText);
+                _cursor.MoveUp();
             }
             if(IsKeyDown(KEY_UP)) {
                 _beginActionTime += GetFrameTime();
                 if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
-                    _cursor.MoveUp(_rawText);
+                    _cursor.MoveUp();
                 }
             }
 
             if(IsKeyPressed(KEY_DOWN)) {
                 _beginActionTime = 0;
-                _cursor.MoveDown(_rawText);
+                _cursor.MoveDown();
             }
             if(IsKeyDown(KEY_DOWN)) {
                 _beginActionTime += GetFrameTime();
                 if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
-                    _cursor.MoveDown(_rawText);
+                    _cursor.MoveDown();
                 }
             }
 
             if(IsKeyPressed(KEY_HOME))
                 _cursor.MoveToStart();
             if(IsKeyPressed(KEY_END))
-                _cursor.MoveToEnd(_rawText);
+                _cursor.MoveToEnd();
 
             if(IsKeyPressed(KEY_ENTER)) {
                 _rawText.insert(_cursor.GetPosition(), 1, '\n');
-                _cursor.MoveRight(_rawText);
+                _cursor.MoveRight();
                 isDirty = true;
             }
             // Read characters instead of individual key presses
@@ -178,7 +178,7 @@ void NoteArea::Update() {
             while ((key = GetCharPressed()) > 0) {
                 if (key >= 32) {
                     _rawText.insert(_cursor.GetPosition(), 1, (char) key);
-                    _cursor.MoveRight(_rawText);
+                    _cursor.MoveRight();
                     std::cout << _cursor.GetPosition() << std::endl;
                     isDirty = true;
                 }
