@@ -316,53 +316,100 @@ void NoteArea::Draw() {
                 }
             }
             break;
+        case Helium::NoteMode::WRITE: {
+            int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
+            float currentY = _rect.y;
 
-        
+            float lineHeight = MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
 
-        
+            int cursorPos = _cursor.GetPosition();
+            float currentX = _rect.x;
+            int totalChars = 0;  // Tracks total characters processed in all lines
+            bool caretPositioned = false;  // Ensures caret is set only once
+            std::istringstream textStream(*_rawText);
 
+            int lineIndex = 0;
+            for (const std::string& wrappedLine : *wrappedLines) {
+                int lineLength = wrappedLine.length();
+                int lineEnd = totalChars + lineLength;
+                int lineWidth = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                
+                if(_cursor.IsHighlighting()) {
+                    
+int hlStart = _cursor.GetHighlightStart(), hlEnd = _cursor.GetHighlightEnd();
+int hlsc = _cursor.GetColumn(hlStart), hlsl = _cursor.GetLine(hlStart);
+int hlec = _cursor.GetColumn(hlEnd), hlel = _cursor.GetLine(hlEnd);
 
-case Helium::NoteMode::WRITE: {
-    int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
-    float currentY = _rect.y;
-
-    float lineHeight = MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
-
-    int cursorPos = _cursor.GetPosition();
-    float currentX = _rect.x;
-    int totalChars = 0;  // Tracks total characters processed in all lines
-    bool caretPositioned = false;  // Ensures caret is set only once
-    std::istringstream textStream(*_rawText);
-
-    // Calculate caret position and render each line
-        
-    for (const std::string& wrappedLine : *wrappedLines) {
-        // Render the wrapped line
-        DrawTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), 
-                   {currentX, currentY}, 
-                   _config->Formatting.Paragraph, 
-                   _config->Formatting.CharSpacing, 
-                   _config->ColorTheme.TextColor);
-        currentY += lineHeight;  // Move down to the next line
-    }
-    if(_cursor.GetCurrentLineColumn() == 0) 
-        caretX = _rect.x;
-    else
-        caretX = MeasureTextEx(_config->Formatting.DefaultFont,
-                               wrappedLines->at(_cursor.GetCurrentLineIndex()).substr(0, _cursor.GetCurrentLineColumn()).c_str(),
-                               _config->Formatting.Paragraph,
-                               _config->Formatting.CharSpacing).x + _rect.x ;
-
-    caretY = _rect.y + lineHeight * _cursor.GetCurrentLineIndex();
-    // Draw the caret if it’s visible
-    if (showCaret) {
-        DrawRectangle(caretX, caretY, 2, lineHeight, _config->ColorTheme.TextColor);
-    }
-
-    break;
+// Case 1: Highlighting begins before line and ends after line
+if (hlsl < lineIndex && hlel > lineIndex) {
+    DrawRectangle(_rect.x, currentY, lineWidth, lineHeight, _config->ColorTheme.TextHighlight);
 }
+// Case 2: Highlighting starts in this line but ends after line
+else if (hlsl == lineIndex && hlel > lineIndex && hlsc >= 0 && hlsc < lineLength) {
+    // Calculate the offset of the start of highlighting in this line
+    int offset = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
+                                _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
 
+    // Draw rectangle from offset to end of line
+    DrawRectangle(_rect.x + offset, currentY, lineWidth - offset, lineHeight, _config->ColorTheme.TextHighlight);
+}
+// Case 3: Highlighting starts before this line but ends in this line
+else if (hlsl < lineIndex && hlel == lineIndex && hlec <= lineLength) {
+    // Calculate the offset to the end of the highlight in this line
+    int offset = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlec).c_str(), 
+                                _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
 
+    // Draw rectangle from the beginning of the line to the highlight end
+    DrawRectangle(_rect.x, currentY, offset, lineHeight, _config->ColorTheme.TextHighlight);
+}
+// Case 4: Highlighting starts and ends in the same line
+else if (hlsl == hlel && hlsl == lineIndex && hlsc >= 0 && hlsc < lineLength && hlec > hlsc && hlec <= lineLength) {
+    // Get the highlighted text from the wrapped line
+    std::string highlightedText = wrappedLine.substr(hlsc, hlec - hlsc);
+    
+    if (!highlightedText.empty()) {
+        // Calculate the start position of the highlight
+        float highlightStartX = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
+                                               _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+
+        // Calculate the width of the highlighted text
+        float highlightWidth = MeasureTextEx(_config->Formatting.DefaultFont, highlightedText.c_str(), 
+                                              _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+
+        // Draw rectangle for the highlighted portion
+        DrawRectangle(_rect.x + highlightStartX, currentY, highlightWidth, lineHeight, _config->ColorTheme.TextHighlight);
+    }
+}
+                }
+
+                
+                // Render the wrapped line
+                DrawTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), 
+                           {currentX, currentY}, 
+                           _config->Formatting.Paragraph, 
+                           _config->Formatting.CharSpacing, 
+                           _config->ColorTheme.TextColor);
+
+                currentY += lineHeight;  // Move down to the next line
+                totalChars += wrappedLine.length();
+                lineIndex++;
+            }            
+            if(_cursor.GetCurrentLineColumn() == 0) 
+                caretX = _rect.x;
+            else
+                caretX = MeasureTextEx(_config->Formatting.DefaultFont,
+                                       wrappedLines->at(_cursor.GetCurrentLineIndex()).substr(0, _cursor.GetCurrentLineColumn()).c_str(),
+                                       _config->Formatting.Paragraph,
+                                       _config->Formatting.CharSpacing).x + _rect.x ;
+
+            caretY = _rect.y + lineHeight * _cursor.GetCurrentLineIndex();
+            // Draw the caret if it’s visible
+            if (showCaret) {
+                DrawRectangle(caretX, caretY, 2, lineHeight, _config->ColorTheme.TextColor);
+            }
+
+            break;
+        }
     }
     // Draw the texture
     DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { _rect.x, _rect.y }, WHITE);

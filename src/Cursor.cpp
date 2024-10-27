@@ -69,6 +69,25 @@ int Cursor::GetCurrentLineIndex() const {
     }
     return wrappedLines->size() - 1; // If position is out of bounds, return last line index
 }
+int Cursor::GetLine(int position) const {
+    int totalChars = 0;
+
+    if (wrappedLines->empty())
+        return 0;
+
+    for (int lineIndex = 0; lineIndex < wrappedLines->size(); lineIndex++) {
+        int lineLength = wrappedLines->at(lineIndex).size();
+        int lineEndChar = totalChars + lineLength + 1; 
+
+        if (_position >= totalChars && position < lineEndChar) {
+            return lineIndex; 
+        }
+
+        totalChars += lineLength + 1; 
+    }
+    return wrappedLines->size() - 1; 
+}
+
 
 
 
@@ -90,6 +109,25 @@ int Cursor::GetCurrentLineColumn() const {
     }
 
     // If position is out of bounds, return the length of the last line
+    return wrappedLines->back().length();
+}
+int Cursor::GetColumn(int position) const {
+    if (wrappedLines->empty())
+        return 0;
+
+    int totalChars = 0;
+
+    for (const std::string& wrappedLine : *wrappedLines) {
+        int lineLength = wrappedLine.length();
+        int lineEndChar = totalChars + lineLength + 1; 
+
+        if (position >= totalChars && position < lineEndChar) {
+            return position - totalChars; 
+        }
+
+        totalChars += lineLength + 1; 
+    }
+
     return wrappedLines->back().length();
 }
 

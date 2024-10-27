@@ -10,6 +10,7 @@ namespace Utils {
 void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output, std::shared_ptr<Helium::Configuration> _config) {
     std::string line;
     std::istringstream textStream(text);
+    output->clear();
     
     // Process the raw text line by line
     while (std::getline(textStream, line)) {

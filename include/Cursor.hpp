@@ -26,6 +26,8 @@ public:
 	void SetTextPter(std::shared_ptr<std::string> text, std::shared_ptr<std::vector<std::string>> wrappedLines);
 	int GetCurrentLineIndex() const;
 	int GetCurrentLineColumn() const;
+	int GetColumn(int position) const;
+	int GetLine(int position) const;
 private:
 	std::shared_ptr<std::string> text;
 	std::shared_ptr<std::vector<std::string>> wrappedLines;
