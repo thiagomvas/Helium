@@ -43,6 +43,7 @@ private:
     std::shared_ptr<InputHandler> _inputHandler;
     Vector2 _prevCursorPos;
     std::shared_ptr<std::vector<std::string>> wrappedLines;
+    std::shared_ptr<std::vector<std::string>> readModeLines;
     bool isDirty;
 }; 
 

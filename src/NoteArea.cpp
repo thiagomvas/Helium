@@ -22,9 +22,12 @@ void safeErase(std::shared_ptr<std::string> text, int start, int end) {
     text->erase(start, std::min(static_cast<int>(end - start + 1), static_cast<int>(text->length() - start)));
 }
 
+
+
+
 namespace Helium {
 
-NoteArea::NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<Helium::InputHandler> input) : _config(config), _inputHandler(input), _rawText(std::make_shared<std::string>()), wrappedLines(std::make_shared<std::vector<std::string>>()) {
+NoteArea::NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<Helium::InputHandler> input) : _config(config), _inputHandler(input), _rawText(std::make_shared<std::string>()), wrappedLines(std::make_shared<std::vector<std::string>>()), readModeLines(std::make_shared<std::vector<std::string>>()) {
     
 }
 
@@ -287,7 +290,6 @@ void NoteArea::Draw() {
     }
     std::string line;
     int caretX = _rect.x, caretY = 0;  // Caret position
-
     static bool showCaret = true;         // Flag for caret visibility (blinking)
     static float caretBlinkTimer = 0.0f;  // Timer to control caret blinking
 
@@ -298,44 +300,36 @@ void NoteArea::Draw() {
         showCaret = !showCaret;  // Toggle visibility
         caretBlinkTimer = 0.0f;  // Reset timer
     }
-
     switch (_mode) {
         default:
         case Helium::NoteMode::READ:
             for (const Token& t : _tokens) {
+                int x = _rect.x;
                 switch (t.type) {
-                    case Helium::TokenType::HEADER:
-                        DrawTextEx(_config->Formatting.DefaultFont, t.value.c_str(), { (float) _rect.x, (float) y }, _config->Formatting.GetFontSizeForHeader(stoi(t.attributes.at("level"))), 1, _config->ColorTheme.TextColor);
-                        y += _config->Formatting.GetFontSizeForHeader(stoi(t.attributes.at("level")));
-                        break;
-                    default:
-                        int x = _rect.x;
-                        std::vector<Token> inlines = _tokenizer.tokenizeInline(t.value);
-                        for(Token it : inlines) {
-                            switch(it.type) {
-                                case TokenType::BOLD:
-                                    DrawTextEx(_config->Formatting.BoldFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-                                    x += MeasureTextEx(_config->Formatting.BoldFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-                                    break;
-                                case TokenType::ITALIC:
-                                    DrawTextEx(_config->Formatting.ItalicFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-                                    x += MeasureTextEx(_config->Formatting.ItalicFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-                                    break;
-                                case TokenType::STRIKETHROUGH:
-                                    DrawTextEx(_config->Formatting.DefaultFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-                                    int xOffset;
-                                    xOffset = MeasureTextEx(_config->Formatting.BoldFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-                                    DrawLineEx({ (float) x, (float) y + _config->Formatting.Paragraph * 0.5f }, { (float) (x + xOffset), (float) y + _config->Formatting.Paragraph * 0.5f}, _config->Formatting.StrikethroughWidth, _config->ColorTheme.TextColor);
-                                    x += xOffset;
-                                    break;
-                                default:
-                                    DrawTextEx(_config->Formatting.DefaultFont, it.value.c_str(), { (float) x, (float) y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-                                     x += MeasureTextEx(_config->Formatting.DefaultFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-                                    break;
+                    case Helium::TokenType::HEADER: {
+                        int headerFontSize = _config->Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at("level")));
+                        Utils::WrapText(t.value, readModeLines, headerFontSize, _config);
+                        for(std::string line : *readModeLines) {
+                            std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
+                            for(Token it : inlines) {
+                                x += Utils::DrawInlineToken(it, x, y, _config, headerFontSize);
                             }
+                            x = _rect.x;
+                            y += Utils::GetLineHeight(_config->Formatting.DefaultFont, headerFontSize); 
                         }
-
-                        y += _config->Formatting.Paragraph;
+                        break;
+                    }
+                    default:
+                        Utils::WrapText(t.value, readModeLines, _config->Formatting.Paragraph, _config);
+                        for(std::string line : *readModeLines) {
+                            std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
+                            for(Token it : inlines) {
+                                x += Utils::DrawInlineToken(it, x, y, _config);
+                            }
+                            x = _rect.x;
+                            y += Utils::GetLineHeight(_config->Formatting.DefaultFont, _config->Formatting.Paragraph); 
+                        }
+                        
                         break;
                 }
             }
