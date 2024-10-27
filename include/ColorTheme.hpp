@@ -2,7 +2,7 @@
 #define COLORTHEME_HPP
 
 #include "raylib.h"
-#include "utils.hpp"
+#include "Serializer.hpp"
 #include <functional>
 #include <sstream>
 #include <string>
@@ -19,12 +19,12 @@ public:
 
 	std::string serialize() {
 	std::ostringstream oss;
-		oss << "Background:" << Utils::Serialize(Background) << '\n';
-		oss << "Foreground:" << Utils::Serialize(Foreground) << '\n';
-		oss << "TextColor:" << Utils::Serialize(TextColor) << '\n';
-		oss << "BrushBorder:" << Utils::Serialize(BrushBorder) << '\n';
-		oss << "SecondaryTextColor:" << Utils::Serialize(SecondaryTextColor) << '\n';
-		oss << "TextHighlight:" << Utils::Serialize(TextHighlight) << '\n';
+		oss << "Background:" << Serializer::Serialize(Background) << '\n';
+		oss << "Foreground:" << Serializer::Serialize(Foreground) << '\n';
+		oss << "TextColor:" << Serializer::Serialize(TextColor) << '\n';
+		oss << "BrushBorder:" << Serializer::Serialize(BrushBorder) << '\n';
+		oss << "SecondaryTextColor:" << Serializer::Serialize(SecondaryTextColor) << '\n';
+		oss << "TextHighlight:" << Serializer::Serialize(TextHighlight) << '\n';
 
 		return oss.str();
 	}
@@ -34,12 +34,12 @@ public:
 	    std::istringstream iss(data);
 	    std::string line;
 	    std::unordered_map<std::string, std::function<void(std::string&)>> handlers{
-		{"Background", [this](std::string& value) { Background = Utils::DeserializeRaylibColor(value); }},
-		{"Foreground", [this](std::string& value) { Foreground = Utils::DeserializeRaylibColor(value); }},
-		{"TextColor", [this](std::string& value) { TextColor = Utils::DeserializeRaylibColor(value); }},
-		{"BrushBorder", [this](std::string& value) { BrushBorder = Utils::DeserializeRaylibColor(value); }}, 
-		{"SecondaryTextColor", [this](std::string& value) {SecondaryTextColor = Utils::DeserializeRaylibColor(value); }},
-		{"TextHighlight", [this](std::string& value) {TextHighlight = Utils::DeserializeRaylibColor(value); }},
+		{"Background", [this](std::string& value) { Background = Serializer::DeserializeRaylibColor(value); }},
+		{"Foreground", [this](std::string& value) { Foreground = Serializer::DeserializeRaylibColor(value); }},
+		{"TextColor", [this](std::string& value) { TextColor = Serializer::DeserializeRaylibColor(value); }},
+		{"BrushBorder", [this](std::string& value) { BrushBorder = Serializer::DeserializeRaylibColor(value); }}, 
+		{"SecondaryTextColor", [this](std::string& value) {SecondaryTextColor = Serializer::DeserializeRaylibColor(value); }},
+		{"TextHighlight", [this](std::string& value) {TextHighlight = Serializer::DeserializeRaylibColor(value); }},
 	    };
 
 	    while (std::getline(iss, line)) {

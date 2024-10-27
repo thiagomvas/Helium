@@ -1,14 +1,12 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include "raylib.h"
+#include "Configuration.hpp"
+#include <memory>
 #include <string>
+#include <vector>
 namespace Utils {
-
-std::string Serialize(Color color);
-Color DeserializeRaylibColor(std::string& colorString);
-bool LoadNote(std::string fileName, std::string& text, Texture2D& texture);
-void SaveNote(std::string fileName, std::string text, Texture2D texture);
+void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output, std::shared_ptr<Helium::Configuration> _config);
 }
 
 #endif
