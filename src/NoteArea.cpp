@@ -311,23 +311,24 @@ void NoteArea::Draw() {
                         Utils::WrapText(t.value, readModeLines, headerFontSize, _config);
                         for(std::string line : *readModeLines) {
                             std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
-                            for(Token it : inlines) {
+                            for(const Token& it : inlines) {
                                 x += Utils::DrawInlineToken(it, x, y, _config, headerFontSize);
                             }
                             x = _rect.x;
-                            y += Utils::GetLineHeight(_config->Formatting.DefaultFont, headerFontSize); 
+                            y += _config->Formatting.GetLineHeight(headerFontSize);
                         }
                         break;
                     }
                     default:
                         Utils::WrapText(t.value, readModeLines, _config->Formatting.Paragraph, _config);
-                        for(std::string line : *readModeLines) {
+                        for(const std::string& line : *readModeLines) {
                             std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
-                            for(Token it : inlines) {
+                            for(const Token& it : inlines) {
                                 x += Utils::DrawInlineToken(it, x, y, _config);
                             }
                             x = _rect.x;
-                            y += Utils::GetLineHeight(_config->Formatting.DefaultFont, _config->Formatting.Paragraph); 
+                            
+                            y += _config->Formatting.GetLineHeight(_config->Formatting.Paragraph);
                         }
                         
                         break;
@@ -338,12 +339,11 @@ void NoteArea::Draw() {
             int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
             float currentY = _rect.y;
 
-            float lineHeight = MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
+            float lineHeight = _config->Formatting.GetLineHeight(_config->Formatting.Paragraph);
 
             int cursorPos = _cursor.GetPosition();
             float currentX = _rect.x;
             int totalChars = 0;  // Tracks total characters processed in all lines
-            bool caretPositioned = false;  // Ensures caret is set only once
             std::istringstream textStream(*_rawText);
 
             int lineIndex = 0;

@@ -28,6 +28,18 @@ public:
 	Font BoldFont;
 	Font ItalicFont;
 	
+	int GetLineHeight(int fontSize) {
+		auto it = lineHeightMap.find(fontSize);
+		if(it != lineHeightMap.end()) {
+			return it->second;
+		} else {
+			int height = MeasureTextEx(DefaultFont, "|", fontSize, 1).x;
+			lineHeightMap[fontSize] = height;
+			return height;
+		}
+	}
+	
+
 	int GetFontSizeForHeader(int level) {
 		switch(level) {
 			case 1: return H1;
@@ -99,6 +111,10 @@ public:
 		UnloadFont(BoldFont);
 		UnloadFont(ItalicFont);
 	}
+
+private:
+	std::unordered_map<int, int> lineHeightMap;
+
 }; 
 }
 
