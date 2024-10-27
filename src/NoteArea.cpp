@@ -113,6 +113,7 @@ void NoteArea::Update() {
             if(IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
                 std::string clipboard(GetClipboardText());
                 _rawText += clipboard;
+                isDirty = true;
                 for(int i = 0; i < clipboard.length(); i++) {
                     _cursor.MoveRight(_rawText);
                 }
@@ -170,6 +171,7 @@ void NoteArea::Update() {
             if(IsKeyPressed(KEY_ENTER)) {
                 _rawText.insert(_cursor.GetPosition(), 1, '\n');
                 _cursor.MoveRight(_rawText);
+                isDirty = true;
             }
             // Read characters instead of individual key presses
             int key;
@@ -300,55 +302,44 @@ void NoteArea::Draw() {
         
 
         
+
+
 case Helium::NoteMode::WRITE: {
-    bool lastCharWasNewline = false;
     int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
     float currentY = _rect.y;
     float lineHeight = MeasureTextEx(_config->Formatting.DefaultFont, "A", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).y;
 
     int cursorPos = _cursor.GetPosition();
     float currentX = _rect.x;
-    std::string line;
-    std::istringstream textStream(_rawText);
-
     int totalChars = 0;  // Tracks total characters processed in all lines
-    bool caretPositioned = false;  // To ensure caret is set only once
+    bool caretPositioned = false;  // Ensures caret is set only once
 
     if (isDirty) {
         wrappedLines.clear();
         isDirty = false;
-        while (std::getline(textStream, line)) {
-            if (MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x < _config->MaxNoteWidth) { 
-                wrappedLines.push_back(line);  // Line fits without wrapping
-                continue;
-            }
 
-            // Wrap long lines into multiple lines within MaxNoteWidth
-            std::istringstream wordStream(line);
-            std::string word;
-            std::string currLine;
-            int currWidth = 0;
-
-            while (wordStream >> word) {
-                int width = MeasureTextEx(_config->Formatting.DefaultFont, (currLine.empty() ? word : word + " ").c_str(), 
-                                          _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-
-                if (currWidth + width > _config->MaxNoteWidth) {
-                    wrappedLines.push_back(currLine);
-                    currLine = word + " ";
-                    currWidth = width;
+        // Process and wrap lines while explicitly handling empty lines for newlines
+        std::string line;
+        for (size_t i = 0; i < _rawText.size(); ++i) {
+            if (_rawText[i] == '\n') {
+                // If we have text in `line`, add it; otherwise, add an empty line
+                if (!line.empty()) {
+                    wrappedLines.push_back(line);
+                    line.clear();
                 } else {
-                    currLine.append(word).append(" ");
-                    currWidth += width;
+                    wrappedLines.push_back(""); // Handle empty line for consecutive newlines
                 }
+            } else {
+                line += _rawText[i];
             }
-
-            if (!currLine.empty()) {
-                wrappedLines.push_back(currLine);
-            }
+        }
+        // Add any remaining line text after the last newline
+        if (!line.empty()) {
+            wrappedLines.push_back(line);
         }
     }
 
+    // Calculate caret position and render each line
     for (const std::string& wrappedLine : wrappedLines) {
         int lineLength = wrappedLine.length();
         int lineEndChar = totalChars + lineLength;
@@ -364,11 +355,11 @@ case Helium::NoteMode::WRITE: {
             caretPositioned = true;
         }
 
-        // Render each wrapped line
+        // Render each wrapped line, including empty lines
         DrawTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), {currentX, currentY}, 
                    _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
         currentY += lineHeight;
-        totalChars += lineLength;
+        totalChars += lineLength + 1;
     }
 
     // Draw caret only if it's visible (blinking)
