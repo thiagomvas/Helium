@@ -188,6 +188,7 @@ void Cursor::MoveDown() {
 }
 void Cursor::BeginHighlight() {
     _highlightStart = _position;
+    _highlightEnd = _position;
     _highlightMode = true;
     _highlightActive = true;  // Start highlighting actively
 }

@@ -14,8 +14,13 @@
 #include <sstream>
 
 
-
-
+void safeErase(std::shared_ptr<std::string> text, int start, int end) {
+    if (!text || start < 0 || end < 0 || start >= text->length() || end > text->length() || start > end) {
+        std::cerr << "Invalid indices. No changes made." << std::endl;
+        return;
+    }
+    text->erase(start, std::min(static_cast<int>(end - start + 1), static_cast<int>(text->length() - start)));
+}
 
 namespace Helium {
 
@@ -85,114 +90,133 @@ void NoteArea::Update() {
         case Helium::NoteMode::READ:
             break;
         case Helium::NoteMode::WRITE:
-            if(IsKeyPressed(KEY_BACKSPACE) && !_rawText->empty())
-            {
-                _beginActionTime = 0;
-                _cursor.MoveLeft();
-                _rawText->erase(_cursor.GetPosition(), 1);
-                isDirty = true;
-            }
-
             
-        if (IsKeyPressed(KEY_RIGHT_CONTROL)) {
-            std::cout << "Cursor - (" << _cursor.GetCurrentLineColumn() << "," << _cursor.GetCurrentLineIndex() << ")[" << _cursor.GetPosition() << "]" << std::endl;
-            int index = 0;
-
-            for (auto line : *wrappedLines) {
-
-                std::cout << index << "(" << line.length() <<  ") : " << line << std::endl;
-                index++;
-            }
-        }
-
-
-            if(IsKeyDown(KEY_BACKSPACE) && !_rawText->empty()) {
-                _beginActionTime += GetFrameTime();
-                if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
-                    _cursor.MoveLeft();
-                    _rawText->erase(_cursor.GetPosition(), 1);
-                    isDirty = true;
-                }
-            }
-
-            if(IsKeyPressed(KEY_LEFT_SHIFT)) {
+            if (IsKeyPressed(KEY_LEFT_SHIFT)) {
                 _cursor.BeginHighlight();
             }
 
-            if(IsKeyReleased(KEY_LEFT_SHIFT)) {
+            if (IsKeyReleased(KEY_LEFT_SHIFT)) {
                 _cursor.EndHighlight();
                 std::cout << "Highlight text: \"" << _cursor.GetHighlightedText() << "\"" << std::endl;
             }
 
-            if(IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
+            // Handle Backspace key
+            if (IsKeyPressed(KEY_BACKSPACE) && !_rawText->empty()) {
+                _beginActionTime = 0;
+                if (_cursor.IsHighlighting()) {
+                    // Erase highlighted text
+                    safeErase(_rawText, _cursor.GetHighlightStart(), _cursor.GetHighlightEnd());
+                    _cursor.Deselect();
+                } else {
+                    // Erase one character to the left of the cursor
+                    safeErase(_rawText, _cursor.GetPosition() - 1, _cursor.GetPosition() - 1);
+                    _cursor.MoveLeft();
+                }
+                isDirty = true;
+            }
+
+            // Handle repeating backspace action
+            if (IsKeyDown(KEY_BACKSPACE) && !_rawText->empty()) {
+                _beginActionTime += GetFrameTime();
+                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                    _cursor.MoveLeft();
+                    safeErase(_rawText, _cursor.GetPosition() - 1, _cursor.GetPosition() - 1);
+                    isDirty = true;
+                }
+            }
+
+            // Handle Control key for debug output
+            if (IsKeyPressed(KEY_RIGHT_CONTROL)) {
+                std::cout << "Cursor - (" << _cursor.GetCurrentLineColumn() << "," << _cursor.GetCurrentLineIndex() << ")[" << _cursor.GetPosition() << "]" << std::endl;
+                int index = 0;
+
+                for (auto line : *wrappedLines) {
+                    std::cout << index << "(" << line.length() <<  ") : " << line << std::endl;
+                    index++;
+                }
+            }
+
+            // Handle paste operation
+            if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
+                if (_cursor.IsHighlighting()) {
+                    safeErase(_rawText, _cursor.GetHighlightStart(), _cursor.GetHighlightEnd());
+                    _cursor.Deselect();
+                }
                 std::string clipboard(GetClipboardText());
                 _rawText->insert(_cursor.GetPosition(), clipboard);
                 isDirty = true;
-                for(int i = 0; i < clipboard.length(); i++) {
-                    _cursor.MoveRight();
-                }
+                _cursor.MoveRight(); // Move cursor to the end of pasted text
             }
 
-            if(IsKeyPressed(KEY_LEFT)) {
+            // Handle cursor movement
+            if (IsKeyPressed(KEY_LEFT)) {
                 _beginActionTime = 0;
                 _cursor.MoveLeft();
             }
-            if(IsKeyDown(KEY_LEFT)) {
+            if (IsKeyDown(KEY_LEFT)) {
                 _beginActionTime += GetFrameTime();
-                if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
                     _cursor.MoveLeft();
                 }
             }
-            if(IsKeyPressed(KEY_RIGHT)) {
+            if (IsKeyPressed(KEY_RIGHT)) {
                 _beginActionTime = 0;
                 _cursor.MoveRight();
             }
-
-            if(IsKeyDown(KEY_RIGHT)) {
+            if (IsKeyDown(KEY_RIGHT)) {
                 _beginActionTime += GetFrameTime();
-                if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
                     _cursor.MoveRight();
                 }
             }
-
-            if(IsKeyPressed(KEY_UP)) {
+            if (IsKeyPressed(KEY_UP)) {
                 _beginActionTime = 0;
                 _cursor.MoveUp();
             }
-            if(IsKeyDown(KEY_UP)) {
+            if (IsKeyDown(KEY_UP)) {
                 _beginActionTime += GetFrameTime();
-                if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
                     _cursor.MoveUp();
                 }
             }
-
-            if(IsKeyPressed(KEY_DOWN)) {
+            if (IsKeyPressed(KEY_DOWN)) {
                 _beginActionTime = 0;
                 _cursor.MoveDown();
             }
-            if(IsKeyDown(KEY_DOWN)) {
+            if (IsKeyDown(KEY_DOWN)) {
                 _beginActionTime += GetFrameTime();
-                if(_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
                     _cursor.MoveDown();
                 }
             }
 
-            if(IsKeyPressed(KEY_HOME))
+            // Handle Home and End keys
+            if (IsKeyPressed(KEY_HOME))
                 _cursor.MoveToStart();
-            if(IsKeyPressed(KEY_END))
+            if (IsKeyPressed(KEY_END))
                 _cursor.MoveToEnd();
 
-            if(IsKeyPressed(KEY_ENTER)) {
+            // Handle Enter key
+            if (IsKeyPressed(KEY_ENTER)) {
+                if (_cursor.IsHighlighting()) {
+                    safeErase(_rawText, _cursor.GetHighlightStart(), _cursor.GetHighlightEnd());
+                    _cursor.Deselect(); // Deselect after erasing
+                }
                 _rawText->insert(_cursor.GetPosition(), 1, '\n');
                 _cursor.MoveRight();
                 isDirty = true;
             }
+
             // Read characters instead of individual key presses
             int key;
             while ((key = GetCharPressed()) > 0) {
-                if (key >= 32) {
-                    _rawText->insert(_cursor.GetPosition(), 1, (char) key);
-                    _cursor.MoveRight();
+                if (key >= 32) { // Valid character range
+                    if (_cursor.IsHighlighting()) {
+                        safeErase(_rawText, _cursor.GetHighlightStart(), _cursor.GetHighlightEnd());
+                        _cursor.Deselect();
+                    }
+                    _rawText->insert(_cursor.GetPosition(), 1, (char)key);
+                    _cursor.MoveRight(); // Move the cursor after inserting
                     isDirty = true;
                 }
             }
@@ -335,51 +359,42 @@ void NoteArea::Draw() {
                 int lineWidth = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
                 
                 if(_cursor.IsHighlighting()) {
-                    
-int hlStart = _cursor.GetHighlightStart(), hlEnd = _cursor.GetHighlightEnd();
-int hlsc = _cursor.GetColumn(hlStart), hlsl = _cursor.GetLine(hlStart);
-int hlec = _cursor.GetColumn(hlEnd), hlel = _cursor.GetLine(hlEnd);
+                    int hlStart = _cursor.GetHighlightStart(), hlEnd = _cursor.GetHighlightEnd();
+                    int hlsc = _cursor.GetColumn(hlStart), hlsl = _cursor.GetLine(hlStart);
+                    int hlec = _cursor.GetColumn(hlEnd), hlel = _cursor.GetLine(hlEnd);
 
-// Case 1: Highlighting begins before line and ends after line
-if (hlsl < lineIndex && hlel > lineIndex) {
-    DrawRectangle(_rect.x, currentY, lineWidth, lineHeight, _config->ColorTheme.TextHighlight);
-}
-// Case 2: Highlighting starts in this line but ends after line
-else if (hlsl == lineIndex && hlel > lineIndex && hlsc >= 0 && hlsc < lineLength) {
-    // Calculate the offset of the start of highlighting in this line
-    int offset = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
-                                _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                    // Case 1: Highlighting begins before line and ends after line
+                    if (hlsl < lineIndex && hlel > lineIndex) {
+                        DrawRectangle(_rect.x, currentY, lineWidth, lineHeight, _config->ColorTheme.TextHighlight);
+                    }
+                    // Case 2: Highlighting starts in this line but ends after line
+                    else if (hlsl == lineIndex && hlel > lineIndex && hlsc >= 0 && hlsc < lineLength) {
+                        int offset = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
+                                                    _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
 
-    // Draw rectangle from offset to end of line
-    DrawRectangle(_rect.x + offset, currentY, lineWidth - offset, lineHeight, _config->ColorTheme.TextHighlight);
-}
-// Case 3: Highlighting starts before this line but ends in this line
-else if (hlsl < lineIndex && hlel == lineIndex && hlec <= lineLength) {
-    // Calculate the offset to the end of the highlight in this line
-    int offset = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlec).c_str(), 
-                                _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                        DrawRectangle(_rect.x + offset, currentY, lineWidth - offset, lineHeight, _config->ColorTheme.TextHighlight);
+                    }
+                    // Case 3: Highlighting starts before this line but ends in this line
+                    else if (hlsl < lineIndex && hlel == lineIndex && hlec <= lineLength) {
+                        int offset = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlec).c_str(), 
+                                                    _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
 
-    // Draw rectangle from the beginning of the line to the highlight end
-    DrawRectangle(_rect.x, currentY, offset, lineHeight, _config->ColorTheme.TextHighlight);
-}
-// Case 4: Highlighting starts and ends in the same line
-else if (hlsl == hlel && hlsl == lineIndex && hlsc >= 0 && hlsc < lineLength && hlec > hlsc && hlec <= lineLength) {
-    // Get the highlighted text from the wrapped line
-    std::string highlightedText = wrappedLine.substr(hlsc, hlec - hlsc);
-    
-    if (!highlightedText.empty()) {
-        // Calculate the start position of the highlight
-        float highlightStartX = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
-                                               _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                        DrawRectangle(_rect.x, currentY, offset, lineHeight, _config->ColorTheme.TextHighlight);
+                    }
+                    // Case 4: Highlighting starts and ends in the same line
+                    else if (hlsl == hlel && hlsl == lineIndex && hlsc >= 0 && hlsc < lineLength && hlec > hlsc && hlec <= lineLength) {
+                        std::string highlightedText = wrappedLine.substr(hlsc, hlec - hlsc);
+                        
+                        if (!highlightedText.empty()) {
+                            float highlightStartX = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
+                                                                   _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
 
-        // Calculate the width of the highlighted text
-        float highlightWidth = MeasureTextEx(_config->Formatting.DefaultFont, highlightedText.c_str(), 
-                                              _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                            float highlightWidth = MeasureTextEx(_config->Formatting.DefaultFont, highlightedText.c_str(), 
+                                                                  _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
 
-        // Draw rectangle for the highlighted portion
-        DrawRectangle(_rect.x + highlightStartX, currentY, highlightWidth, lineHeight, _config->ColorTheme.TextHighlight);
-    }
-}
+                            DrawRectangle(_rect.x + highlightStartX, currentY, highlightWidth, lineHeight, _config->ColorTheme.TextHighlight);
+                        }
+                    }
                 }
 
                 
