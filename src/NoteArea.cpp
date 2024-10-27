@@ -330,6 +330,7 @@ case Helium::NoteMode::WRITE: {
 
     
 
+
 if (isDirty) {
     // Clear wrapped lines
     wrappedLines->clear();
@@ -338,48 +339,61 @@ if (isDirty) {
     // Process the raw text line by line
     while (std::getline(textStream, line)) {
         // Check if the entire line fits without wrapping
-        if (MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x < _config->MaxNoteWidth) { 
+        if (MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x < _config->MaxNoteWidth) {
             wrappedLines->push_back(line);  // Line fits without wrapping
             continue;
         }
 
-        std::istringstream wordStream(line);
-        std::string word;
         std::string currLine;
         int currWidth = 0;
+        size_t start = 0;
 
-        while (wordStream >> word) {
-            // Measure the width of the word with a space appended, except for the first word in the line
-            int width = MeasureTextEx(_config->Formatting.DefaultFont, word.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+        while (start < line.length()) {
+            // Find the next space or the end of the string
+            size_t end = line.find_first_of(' ', start);
 
-            // If currLine is not empty, we need to consider the space before adding the word
+            // If no more spaces are found, take the rest of the line
+            if (end == std::string::npos) {
+                end = line.length();
+            }
+
+            // Extract the word including spaces
+            std::string segment = line.substr(start, end - start);
+            // Measure width including the segment's width and a space if currLine is not empty
+            int width = MeasureTextEx(_config->Formatting.DefaultFont, segment.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+
+            // If currLine is not empty, we need to consider the space before adding the segment
             if (!currLine.empty()) {
                 width += MeasureTextEx(_config->Formatting.DefaultFont, " ", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x; // Width of a space
             }
 
-            // If the word doesn't fit, wrap to the next line
+            // If the segment doesn't fit, wrap to the next line
             if (currWidth + width > _config->MaxNoteWidth) {
                 if (!currLine.empty()) {
                     wrappedLines->push_back(currLine);  // Only push if there's content in currLine
                 }
-                currLine = word;  // Start a new line with the current word
-                currWidth = MeasureTextEx(_config->Formatting.DefaultFont, word.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x; // Update width to current word
+                currLine = segment;  // Start a new line with the current segment
+                currWidth = width;  // Update width to the current segment
             } else {
-                // Append the word to currLine
+                // Append the segment to currLine
                 if (!currLine.empty()) {
-                    currLine.append(" ");  // Add a space before the next word if currLine is not empty
+                    currLine.append(" ");  // Add a space before the next segment if currLine is not empty
                 }
-                currLine.append(word);  // Add the word to the current line
+                currLine.append(segment);  // Add the segment to the current line
                 currWidth += width;  // Update the width
             }
+
+            // Move to the next character after the space
+            start = end + 1;  // Skip the space character
         }
 
-        // Push any remaining line after processing all words
+        // Push any remaining line after processing all segments
         if (!currLine.empty()) {
             wrappedLines->push_back(currLine);
         }
     }
 }
+
 
 
 
