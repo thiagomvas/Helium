@@ -31,6 +31,7 @@ public:
 	Cursor* GetCursor();
     void TryLoadNote(const std::string& path);
 private:
+    std::string path;
     RenderTexture2D _texture;
     std::shared_ptr<std::string> _rawText;
     std::vector<Token> _tokens;

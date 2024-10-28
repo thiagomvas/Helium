@@ -469,7 +469,10 @@ void NoteArea::SetRect(Rectangle rect) {
     _rect = rect;
 }
 void NoteArea::Save() {
-    Serializer::SaveNote("C:/Users/Thiago/picasso.note", *_rawText, _texture.texture);
+    if(path.empty())
+        std::cerr << "No valid path to save note" << std::endl;
+    else
+        Serializer::SaveNote(path, *_rawText, _texture.texture);
 }
 
 std::string NoteArea::GetText() {
@@ -534,5 +537,6 @@ void NoteArea::TryLoadNote(const std::string &path) {
         std::cout << "Raw text loaded successfully as a note from: " << path << std::endl;
     }
     SetMode(Helium::NoteMode::READ);
+    this->path = path;
 }
 }
