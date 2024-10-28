@@ -79,6 +79,7 @@ void Application::Start() {
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20); // Adjust text size
 
     bool isModalOpen = false;
+    bool wasModalClosed = false;
 
     float menuHeight = _config->TopMenuBarHeight;
     Vector2 scroll = {0,0};
@@ -93,7 +94,10 @@ void Application::Start() {
     _noteArea->Initialize(_config->TopMenuBarHeight); // Offset the NoteArea 50px down
     while(isRunning)
     {
+        wasModalClosed = isModalOpen;   // Assume this as a temporary value
         isModalOpen = fileOpenModal.IsVisible();
+        wasModalClosed = !isModalOpen && wasModalClosed; // Check if the modal is closed but was open
+
         innerClicked = false;  // Reset innerClicked flag each frame
         if(WindowShouldClose())
         {
@@ -149,6 +153,14 @@ void Application::Start() {
         }
         fileDropdownValue = UiUtils::Dropdown({0, 0, 150, 20}, _config->ColorTheme.Foreground, "File;Open;Save#CTRL+S", _config, &fileDropdownActive);
         EndDrawing(); 
+
+        if(wasModalClosed) {
+            if(!fileOpenModal.IsVisible() && !fileOpenModal.GetSelectedFile().empty()) {
+                if(Utils::IsFile(fileOpenModal.GetSelectedFile())) {
+                    std::cout << "File: " << fileOpenModal.GetSelectedFile() << std::endl;
+                } 
+            }           
+        }
     }
     CloseWindow();
     return;
