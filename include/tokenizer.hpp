@@ -19,6 +19,9 @@ enum class TokenType {
     BOLD,
     ITALIC,
     STRIKETHROUGH,
+    QUOTE,
+    CODE,
+    INLINECODE,
     UNKNOWN,
 };
 
@@ -55,6 +58,8 @@ private:
     Token tokenizeBold(const std::string& text);
 	Token tokenizeLink(const std::string& text);
 	Token tokenizeList(const std::string& line);
+    Token tokenizeQuote(const std::string& text);
+    Token tokenizeCode(const std::string& text);
     // Add more helper functions for other Markdown elements as needed
 };
 // Tokenizer class

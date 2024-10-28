@@ -242,6 +242,14 @@ int DrawInlineToken(const Helium::Token& it, int& x, int y) {
             break;
         }
 
+        case Helium::TokenType::INLINECODE: { 
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+            DrawRectangle(x - 2, y - 2, width + 4, Helium::Configuration::getInstance().Formatting.Paragraph + 4, Helium::Configuration::getInstance().ColorTheme.CodeBackgroundColor);
+
+            // Draw code text
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.CodeTextColor);
+            break;
+        }
         default: {
             DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
             width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;

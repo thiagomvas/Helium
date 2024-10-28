@@ -13,6 +13,7 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
     std::regex boldRegex(R"(\*\*(.*?)\*\*)");
     std::regex italicRegex(R"(\*(.*?)\*)");
     std::regex strikethroughRegex(R"(~(.*?)~)");
+    std::regex codeRegex(R"(`(.*?)`)");  
 
     while(searchStart != line.cend()) {
         // BOLD
@@ -38,7 +39,17 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
             }
             tokens.push_back(Token(TokenType::STRIKETHROUGH, match[1].str()));
             searchStart = match.suffix().first;
-        } else {
+        }
+        // INLINE CODE 
+        else if (std::regex_search(searchStart, line.cend(), match, codeRegex)) {
+            if (match.prefix().length() > 0) {
+                tokens.push_back(Token(TokenType::TEXT, match.prefix().str()));
+            }
+            tokens.push_back(Token(TokenType::INLINECODE, match[1].str()));
+            searchStart = match.suffix().first;
+        }
+        
+        else {
             tokens.push_back(Token(TokenType::TEXT, std::string(searchStart, line.cend())));
             break;
         }
@@ -57,15 +68,20 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
             continue;
         }
 
-        // Try to tokenize headings, lists, and links in order of precedence
-        if (Token headingToken = tokenizeHeading(line); headingToken.type != TokenType::UNKNOWN) {
-            headingToken.children = tokenizeInline(headingToken.value);
-            tokens.push_back(headingToken);
-        } else if (Token listToken = tokenizeList(line); listToken.type != TokenType::UNKNOWN) {
-            listToken.children = tokenizeInline(listToken.value);
-            tokens.push_back(listToken);
-        } else if (Token linkToken = tokenizeLink(line); linkToken.type != TokenType::UNKNOWN) {
-            tokens.push_back(linkToken);
+        Token token;
+        if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
+            token.children = tokenizeInline(token.value);
+            tokens.push_back(token);
+        } else if (token = tokenizeList(line); token.type != TokenType::UNKNOWN) {
+            token.children = tokenizeInline(token.value);
+            tokens.push_back(token);
+        } else if (token = tokenizeLink(line); token.type != TokenType::UNKNOWN) {
+            tokens.push_back(token);
+        } else if (token = tokenizeQuote(line); token.type != TokenType::UNKNOWN) { 
+            token.children = tokenizeInline(token.value);
+            tokens.push_back(token);
+        } else if(token = tokenizeCode(line); token.type != TokenType::UNKNOWN) { 
+            tokens.push_back(token);
         } else {
             tokens.emplace_back(TokenType::PARAGRAPH, line);
         }
@@ -132,5 +148,21 @@ Token Tokenizer::tokenizeList(const std::string& line) {
     }
 
     return Token(TokenType::UNKNOWN, "");
+}
+
+Token Tokenizer::tokenizeQuote(const std::string& text) {
+    if (text.rfind(">", 0) == 0) { // Check if line starts with '>'
+        std::string quoteContent = text.substr(1); // Remove the '>'
+        return Token(TokenType::QUOTE, quoteContent);
+    }
+    return Token();
+}
+
+Token Tokenizer::tokenizeCode(const std::string& text) {
+    if (text.starts_with("`") && text.ends_with("`")) { // Check for inline code
+        std::string codeContent = text.substr(1, text.size() - 2); // Remove backticks
+        return Token(TokenType::CODE, codeContent);
+    }
+    return Token();
 }
 }// Constructor for Tokenizer

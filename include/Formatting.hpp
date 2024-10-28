@@ -20,6 +20,7 @@ public:
 	std::string DefaultFontPath = "resources/Roboto-Bold.ttf";
 	std::string BoldFontPath = "resources/Roboto-Black.ttf";
 	std::string ItalicFontPath = "resources/Roboto-BoldItalic.ttf";
+	std::string CodeFontPath = "resources/Roboto-Regular.ttf";
 	float CharSpacing = 1;
 
 	// Loaded during runtime
@@ -27,6 +28,7 @@ public:
 	Font DefaultFont;
 	Font BoldFont;
 	Font ItalicFont;
+	Font CodeFont;
 	
 	int GetLineHeight(int fontSize) {
 		auto it = lineHeightMap.find(fontSize);
@@ -55,6 +57,7 @@ public:
 		DefaultFont = LoadFontEx(DefaultFontPath.c_str(), 64, 0, 250);
 		BoldFont = LoadFontEx(BoldFontPath.c_str(), 64, 0, 250);
 		ItalicFont = LoadFontEx(ItalicFontPath.c_str(), 64, 0, 250);
+		CodeFont = LoadFontEx(CodeFontPath.c_str(), 64, 0, 250);
 	}
 
 	std::string serialize() const {
@@ -71,6 +74,7 @@ public:
 		oss << "DefaultFontPath:" << DefaultFontPath << '\n';
 		oss << "BoldFontPath:" << BoldFontPath << '\n';
 		oss << "ItalicFontPath:" << ItalicFontPath << '\n';
+		oss << "CodeFontPath:" << CodeFontPath << '\n';
 
 		return oss.str();
 	}
@@ -90,7 +94,8 @@ public:
 			{"CharSpacing", [this](const std::string&value) {CharSpacing = std::stoi(value); }},
 			{"DefaultFontPath", [this](const std::string& value) { DefaultFontPath = value; }},
 			{"BoldFontPath", [this](const std::string& value) {BoldFontPath = value;}},
-			{"ItalicFontPath", [this](const std::string& value) {ItalicFontPath = value;}}
+			{"ItalicFontPath", [this](const std::string& value) {ItalicFontPath = value;}},
+			{"CodeFontPath", [this](const std::string& value) {CodeFontPath = value;}}
 		};
 
 		while (std::getline(iss, line)) {
@@ -110,6 +115,7 @@ public:
 		UnloadFont(DefaultFont);
 		UnloadFont(BoldFont);
 		UnloadFont(ItalicFont);
+		UnloadFont(CodeFont);
 	}
 
 private:
