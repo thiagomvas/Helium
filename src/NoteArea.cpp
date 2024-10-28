@@ -52,6 +52,29 @@ void NoteArea::SetMode(NoteMode mode) {
     _mode = mode;
     if(mode == NoteMode::READ) {
         _tokens = _tokenizer.tokenize(*_rawText);
+        std::vector<Helium::Token> temp;
+        for (const Token& t : _tokens) {
+            switch (t.type) {
+                case Helium::TokenType::HEADER: {
+                    int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at("level")));
+                    Utils::WrapText(t.value, readModeLines, headerFontSize);
+                    for(std::string line : *readModeLines) {
+                        Helium::Token token(t.type, t.value, _tokenizer.tokenizeInline(line));
+                        token.attributes["level"] = t.attributes.at("level");
+                        temp.push_back(token);
+                    }
+                    break;
+                }
+                default:
+                    Utils::WrapText(t.value, readModeLines, Helium::Configuration::getInstance().Formatting.Paragraph);
+                    for(const std::string& line : *readModeLines) {
+                        Helium::Token token(t.type, t.value, _tokenizer.tokenizeInline(line));
+                        temp.push_back(token);
+                    }
+                    break;
+            }
+        }
+        _tokens = std::move(temp);
     }
 }
 
@@ -344,28 +367,19 @@ void NoteArea::Draw() {
                 switch (t.type) {
                     case Helium::TokenType::HEADER: {
                         int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at("level")));
-                        Utils::WrapText(t.value, readModeLines, headerFontSize);
-                        for(std::string line : *readModeLines) {
-                            std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
-                            for(const Token& it : inlines) {
-                                x += Utils::DrawInlineToken(it, x, y, headerFontSize);
-                            }
-                            x = _rect.x;
-                            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(headerFontSize);
+                        for(const Token& it : t.children) {
+                            x += Utils::DrawInlineToken(it, x, y, headerFontSize);
                         }
+                        x = _rect.x;
+                        y += Helium::Configuration::getInstance().Formatting.GetLineHeight(headerFontSize);
                         break;
                     }
                     default:
-                        Utils::WrapText(t.value, readModeLines, Helium::Configuration::getInstance().Formatting.Paragraph);
-                        for(const std::string& line : *readModeLines) {
-                            std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
-                            for(const Token& it : inlines) {
-                                x += Utils::DrawInlineToken(it, x, y);
-                            }
-                            x = _rect.x;
-                            
-                            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+                        for(const Token& it : t.children) {
+                            x += Utils::DrawInlineToken(it, x, y);
                         }
+                        x = _rect.x;
+                        y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
                         
                         break;
                 }
