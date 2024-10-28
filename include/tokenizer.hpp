@@ -25,9 +25,11 @@ enum class TokenType {
 // Token struct
 
 struct Token {
-    TokenType type;                // Type of the token (e.g., "heading", "bold", "list", etc.)
-    std::string value;               // The actual content of the token
+    TokenType type;                                 // Type of the token
+    std::string value;                              // The actual content of the token
     std::map<std::string, std::string> attributes;  // Additional attributes (optional)
+    std::vector<Token> children;                    // Nested tokens (inline tokens) if supported
+
     // Default constructor
     Token() : type(TokenType::UNKNOWN), value("") {}
 
@@ -37,6 +39,10 @@ struct Token {
     // Constructor with attributes
     Token(TokenType t, std::string v, std::map<std::string, std::string> attrs) 
         : type(std::move(t)), value(std::move(v)), attributes(std::move(attrs)) {}
+
+    // Constructor for nested tokens
+    Token(TokenType t, std::string v, std::vector<Token> childTokens) 
+        : type(std::move(t)), value(std::move(v)), children(std::move(childTokens)) {}
 };
 
 class Tokenizer {

@@ -53,35 +53,27 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
     std::string line;
 
     while (std::getline(stream, line)) {
-        // Tokenize headings
-        Token headingToken = tokenizeHeading(line);
-        if (headingToken.type != TokenType::UNKNOWN) {
+        if (line.empty()) {
+            continue;
+        }
+
+        // Try to tokenize headings, lists, and links in order of precedence
+        if (Token headingToken = tokenizeHeading(line); headingToken.type != TokenType::UNKNOWN) {
+            headingToken.children = tokenizeInline(headingToken.value);
             tokens.push_back(headingToken);
-            continue;
-        }
-
-        // Tokenize lists
-        Token listToken = tokenizeList(line);
-        if (listToken.type != TokenType::UNKNOWN) {
+        } else if (Token listToken = tokenizeList(line); listToken.type != TokenType::UNKNOWN) {
+            listToken.children = tokenizeInline(listToken.value);
             tokens.push_back(listToken);
-            continue;
-        }
-
-        // Tokenize links
-        Token linkToken = tokenizeLink(line);
-        if (linkToken.type != TokenType::UNKNOWN) {
+        } else if (Token linkToken = tokenizeLink(line); linkToken.type != TokenType::UNKNOWN) {
             tokens.push_back(linkToken);
-            continue;
-        }
-
-        // Handle unrecognized lines as paragraphs
-        if (!line.empty()) {
+        } else {
             tokens.emplace_back(TokenType::PARAGRAPH, line);
         }
     }
 
     return tokens;
 }
+
 
 
 Token Tokenizer::tokenizeHeading(const std::string& line) {
