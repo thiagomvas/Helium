@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <fstream>
+#include <filesystem>
 
 
 void safeErase(std::shared_ptr<std::string> text, int start, int end) {
@@ -35,17 +37,7 @@ NoteArea::NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<Helium
 
 void NoteArea::Initialize(int heightOffset) {
     Texture2D temp;
-    if(Serializer::LoadNote("C:/Users/Thiago/picasso.note", *_rawText, temp))
-    {
-        _tokens = _tokenizer.tokenize(*_rawText);
-        _texture = LoadRenderTexture(temp.width, temp.height);
-        BeginTextureMode(_texture);
-        DrawTextureV(temp, {0, 0}, WHITE);
-        EndTextureMode();
-        UnloadTexture(temp);
-    }
-    else
-        _texture = LoadRenderTexture(_config->MaxNoteWidth, GetScreenHeight());
+    _texture = LoadRenderTexture(_config->MaxNoteWidth, GetScreenHeight());
 
     rlSetBlendFactorsSeparate(0x0302, 0x0303, 1, 0x0303, 0x8006, 0x8006); // Required configuration to be able to erase on the texture!
     _rect.width = _config->MaxNoteWidth;
@@ -486,5 +478,61 @@ std::string NoteArea::GetText() {
 
 Cursor* NoteArea::GetCursor() {
     return &_cursor;
+}
+void NoteArea::TryLoadNote(const std::string &path) {
+    if (!Utils::IsSupportedNoteFileType(path)) {
+        std::cerr << "Unsupported file type: " << path << std::endl;
+        return; 
+    }
+
+    std::string extension = std::filesystem::path(path).extension().string();
+
+    if(extension == ".note") {
+        Texture2D temp;
+        if(Serializer::LoadNote(path, *_rawText, temp))
+        {
+            _tokens = _tokenizer.tokenize(*_rawText);
+            _texture = LoadRenderTexture(temp.width, temp.height);
+            BeginTextureMode(_texture);
+            // Clear texture
+            BeginBlendMode(BLEND_CUSTOM);
+            DrawRectangleRec({_rect.x, _rect.x, static_cast<float>(_texture.texture.width), static_cast<float>(_texture.texture.height)}, BLANK);
+            EndBlendMode();
+
+            DrawTextureV(temp, {0, 0}, WHITE);
+            EndTextureMode();
+            UnloadTexture(temp);
+            isDirty = true;
+            std::cout << "Note file loaded successfully from: " << path << std::endl;
+        } else {
+            std::cerr << "Failed to open .note file: " << path << std::endl;
+        }
+    } else {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open text file: " << path << std::endl;
+            return; 
+        }
+
+        std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        
+        _rawText = std::make_shared<std::string>(content); 
+        float height = std::max(_rect.height, static_cast<float>(GetScreenHeight()));
+        UnloadRenderTexture(_texture);
+        _texture = LoadRenderTexture(_rect.width, GetScreenHeight());
+        // Clear texture
+        BeginDrawing();
+        BeginTextureMode(_texture);
+        BeginBlendMode(BLEND_CUSTOM);
+        DrawRectangleRec({_rect.x, _rect.x, static_cast<float>(_texture.texture.width), height}, BLANK);
+        EndBlendMode();
+        EndTextureMode();
+        BeginDrawing();
+
+        file.close();
+        isDirty = true;
+        std::cout << "Raw text loaded successfully as a note from: " << path << std::endl;
+    }
+    SetMode(Helium::NoteMode::READ);
 }
 }

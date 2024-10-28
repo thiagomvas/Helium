@@ -29,6 +29,7 @@ public:
     void SetRect(Rectangle rect);
     void SetMode(NoteMode mode);
 	Cursor* GetCursor();
+    void TryLoadNote(const std::string& path);
 private:
     RenderTexture2D _texture;
     std::shared_ptr<std::string> _rawText;

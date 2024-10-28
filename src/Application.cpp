@@ -157,7 +157,7 @@ void Application::Start() {
         if(wasModalClosed) {
             if(!fileOpenModal.IsVisible() && !fileOpenModal.GetSelectedFile().empty()) {
                 if(Utils::IsFile(fileOpenModal.GetSelectedFile())) {
-                    std::cout << "File: " << fileOpenModal.GetSelectedFile() << std::endl;
+                    _noteArea->TryLoadNote(fileOpenModal.GetSelectedFile());
                 } 
             }           
         }

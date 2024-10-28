@@ -16,6 +16,7 @@ int DrawInlineToken(const Helium::Token& it, int& x, int y, std::shared_ptr<Heli
 int GetLineHeight(Font font, int fontSize);
 
 bool IsFile(const std::string& path);
+bool IsSupportedNoteFileType(const std::string& path);
 }
 
 #endif
