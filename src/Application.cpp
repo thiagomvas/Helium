@@ -14,6 +14,8 @@
 #include <string>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include "OpenFileModal.hpp"
+#include <SaveFileModal.hpp>
 
 namespace Helium {
 
@@ -77,6 +79,9 @@ void Application::Start() {
     GuiLoadStyle("styles/raygui-dark");
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20); // Adjust text size
 
+    bool isModalOpen = false;
+    bool wasModalClosed = false;
+
     float menuHeight = _config->TopMenuBarHeight;
     Vector2 scroll = {0,0};
     int fileDropdownActive = 0;
@@ -84,10 +89,17 @@ void Application::Start() {
     _config->Formatting.loadFonts();
     bool innerClicked;
     GuiSetFont(_config->Formatting.DefaultFont);
-
+    Rectangle modalRect = { 100, 100, 400, 300 };
+    OpenFileModal fileOpenModal(modalRect, _config);
+    SaveFileModal saveFileModal(modalRect, _config);
+    std::vector<std::string> exampleFiles = { "file1.txt", "file2.txt", "file3.txt" };
     _noteArea->Initialize(_config->TopMenuBarHeight); // Offset the NoteArea 50px down
     while(isRunning)
     {
+        wasModalClosed = isModalOpen;   // Assume this as a temporary value
+        isModalOpen = fileOpenModal.IsVisible() || saveFileModal.IsVisible();
+        wasModalClosed = !isModalOpen && wasModalClosed; // Check if the modal is closed but was open
+
         innerClicked = false;  // Reset innerClicked flag each frame
         if(WindowShouldClose())
         {
@@ -96,42 +108,68 @@ void Application::Start() {
 
 
         // Update
+        // --------------------------------------------------------------------------------------------------
         _inputHandler->Update();
-        _noteArea->Update();
-        if(!IsKeyDown(KEY_LEFT_SHIFT))
-            scroll.y -= GetMouseWheelMove() * _config->Formatting.Paragraph * _config->ScrollLineCount;
-        if(scroll.y < 0) scroll.y = 0;
-        camera.target = {
-            GetScreenWidth() * 0.5f + scroll.x,
-            GetScreenHeight() * 0.5f + scroll.y,
-        };
-        camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
+
+        // Modals
+        fileOpenModal.Update();
+        saveFileModal.Update();
+
+        // Handle updates only if no modal is open
+        if(!isModalOpen) {
+            _noteArea->Update();
+
+            if(!IsKeyDown(KEY_LEFT_SHIFT))
+                scroll.y -= GetMouseWheelMove() * _config->Formatting.Paragraph * _config->ScrollLineCount;
+            if(scroll.y < 0) scroll.y = 0;
+            camera.target = {
+                GetScreenWidth() * 0.5f + scroll.x,
+                GetScreenHeight() * 0.5f + scroll.y,
+            };
+            camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
+        }
         // Draw
+        // --------------------------------------------------------------------------------------------------
         BeginDrawing();
         ClearBackground(_config->ColorTheme.Background);
 
-       DrawRectangleRec({(GetScreenWidth() - _config->MaxNoteWidth) * 0.5f, 0, static_cast<float>(_config->MaxNoteWidth), static_cast<float>(GetScreenHeight())}, _config->ColorTheme.Foreground);
+        DrawRectangleRec({(GetScreenWidth() - _config->MaxNoteWidth) * 0.5f, 0, static_cast<float>(_config->MaxNoteWidth), static_cast<float>(GetScreenHeight())}, _config->ColorTheme.Foreground);
         // NOTE AREA
-        // -------------------------------------s
-        // ----
+        // -------------------------------------
         BeginMode2D(camera);
         _noteArea->Draw();
         EndMode2D();
         DrawFPS(0,0); 
        
-       // UI
-        // ------------------------------------------ 
+        // UI
+        // --------------------------------------------------------------------------------------------------
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(_config->TopMenuBarHeight)}, _config->ColorTheme.Foreground);
+        fileOpenModal.Draw();
+        saveFileModal.Draw();
     
         switch(fileDropdownValue) {
             case 1: // Open
+                fileOpenModal.Show("C:/Users/Thiago");
             break;
             case 2: // Save
-                _noteArea->Save();
+                if(_noteArea->GetPath().empty()) {
+                    saveFileModal.Show();
+                }
             default: break;
         }
         fileDropdownValue = UiUtils::Dropdown({0, 0, 150, 20}, _config->ColorTheme.Foreground, "File;Open;Save#CTRL+S", _config, &fileDropdownActive);
         EndDrawing(); 
+
+        if(wasModalClosed) {
+            if(!fileOpenModal.IsVisible() && !fileOpenModal.GetSelectedFile().empty()) {
+                if(Utils::IsFile(fileOpenModal.GetSelectedFile())) {
+                    _noteArea->TryLoadNote(fileOpenModal.GetSelectedFile());
+                } 
+            }     
+            if(saveFileModal.HasClosed() && !saveFileModal.GetFilePath().empty()) {
+                std::cout << saveFileModal.GetFilePath() << std::endl;
+            }   
+        }
     }
     CloseWindow();
     return;

@@ -26,10 +26,14 @@ public:
     void Save();
     void Draw();
     std::string GetText();
+    std::string GetPath();
+    void SetPath(const std::string& path);
     void SetRect(Rectangle rect);
     void SetMode(NoteMode mode);
 	Cursor* GetCursor();
+    void TryLoadNote(const std::string& path);
 private:
+    std::string path;
     RenderTexture2D _texture;
     std::shared_ptr<std::string> _rawText;
     std::vector<Token> _tokens;

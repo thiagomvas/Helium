@@ -14,6 +14,9 @@ void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>>
 int DrawInlineToken(const Helium::Token& it, int& x, int y, std::shared_ptr<Helium::Configuration> _config, float fontSize);
 int DrawInlineToken(const Helium::Token& it, int& x, int y, std::shared_ptr<Helium::Configuration> _config);
 int GetLineHeight(Font font, int fontSize);
+
+bool IsFile(const std::string& path);
+bool IsSupportedNoteFileType(const std::string& path);
 }
 
 #endif

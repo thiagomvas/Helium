@@ -5,6 +5,9 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace Utils {
 
@@ -250,5 +253,19 @@ int DrawInlineToken(const Helium::Token& it, int& x, int y, std::shared_ptr<Heli
 int GetLineHeight(Font font, int fontSize) {
 	return MeasureTextEx(font, "A", fontSize, 1).y;
 }
+bool IsFile(const std::string& path) {
+    fs::path filePath(path); // Convert the string to a filesystem path
+    return fs::exists(filePath) && fs::is_regular_file(filePath); // Check if it exists and is a regular file
+}
 
+bool IsSupportedNoteFileType(const std::string& path) {
+    fs::path filePath(path); 
+
+    if (!fs::exists(filePath) || !fs::is_regular_file(filePath)) {
+        return false; 
+    }
+
+    std::string extension = filePath.extension().string();
+    return (extension == ".txt" || extension == ".note" || extension == ".md");
+}
 }
