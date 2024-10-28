@@ -124,8 +124,8 @@ void NoteArea::Update() {
             if (IsKeyDown(KEY_BACKSPACE) && !_rawText->empty()) {
                 _beginActionTime += GetFrameTime();
                 if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
-                    _cursor.MoveLeft();
                     safeErase(_rawText, _cursor.GetPosition() - 1, _cursor.GetPosition() - 1);
+                    _cursor.MoveLeft();
                     isDirty = true;
                 }
             }
@@ -150,7 +150,7 @@ void NoteArea::Update() {
                 std::string clipboard(GetClipboardText());
                 _rawText->insert(_cursor.GetPosition(), clipboard);
                 isDirty = true;
-                _cursor.MoveRight(); // Move cursor to the end of pasted text
+                _cursor.Goto(_cursor.GetPosition() + clipboard.length());
             }
 
             // Handle cursor movement
