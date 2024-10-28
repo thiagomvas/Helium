@@ -53,17 +53,16 @@ void SaveFileModal::HandleInput() {
             filePath.pop_back(); // Remove last character
         }
     } else {
-        for (int key = KEY_A; key <= KEY_Z; ++key) {
-            if (IsKeyPressed(key)) {
-                filePath += (char)(key - KEY_A + 'A'); // Add uppercase letters
+        int key;
+            while ((key = GetCharPressed()) > 0) {
+                if (key >= 32) { // Valid character range
+                    filePath += (char)key;
+                }
             }
-        }
+    }
 
-        // Handle other special characters
-        if (IsKeyPressed(KEY_SPACE)) {
-            filePath += ' ';
-        }
-        // You can add more keys for special characters as needed
+    if(IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
+        filePath += GetClipboardText();
     }
 }
 

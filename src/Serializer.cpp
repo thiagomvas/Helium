@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <filesystem>
 
 namespace Serializer {
 std::string Serialize(Color color) {
@@ -26,6 +27,7 @@ Color DeserializeRaylibColor(std::string& colorString) {
 }
 void SaveNote(std::string fileName, std::string text, Texture2D texture) {
     // Open file in binary mode
+    fileName = std::filesystem::path(fileName).replace_extension(".note").string();
     std::ofstream file(fileName, std::ios::binary);
     
     // Save string length followed by the string data
