@@ -26,6 +26,8 @@ public:
     void Save();
     void Draw();
     std::string GetText();
+    std::string GetPath();
+    void SetPath(const std::string& path);
     void SetRect(Rectangle rect);
     void SetMode(NoteMode mode);
 	Cursor* GetCursor();

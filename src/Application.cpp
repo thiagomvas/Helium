@@ -15,6 +15,7 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include "OpenFileModal.hpp"
+#include <SaveFileModal.hpp>
 
 namespace Helium {
 
@@ -90,12 +91,13 @@ void Application::Start() {
     GuiSetFont(_config->Formatting.DefaultFont);
     Rectangle modalRect = { 100, 100, 400, 300 };
     OpenFileModal fileOpenModal(modalRect, _config);
+    SaveFileModal saveFileModal(modalRect, _config);
     std::vector<std::string> exampleFiles = { "file1.txt", "file2.txt", "file3.txt" };
     _noteArea->Initialize(_config->TopMenuBarHeight); // Offset the NoteArea 50px down
     while(isRunning)
     {
         wasModalClosed = isModalOpen;   // Assume this as a temporary value
-        isModalOpen = fileOpenModal.IsVisible();
+        isModalOpen = fileOpenModal.IsVisible() || saveFileModal.IsVisible();
         wasModalClosed = !isModalOpen && wasModalClosed; // Check if the modal is closed but was open
 
         innerClicked = false;  // Reset innerClicked flag each frame
@@ -111,6 +113,7 @@ void Application::Start() {
 
         // Modals
         fileOpenModal.Update();
+        saveFileModal.Update();
 
         // Handle updates only if no modal is open
         if(!isModalOpen) {
@@ -142,13 +145,16 @@ void Application::Start() {
         // --------------------------------------------------------------------------------------------------
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(_config->TopMenuBarHeight)}, _config->ColorTheme.Foreground);
         fileOpenModal.Draw();
+        saveFileModal.Draw();
     
         switch(fileDropdownValue) {
             case 1: // Open
                 fileOpenModal.Show("C:/Users/Thiago");
             break;
             case 2: // Save
-                _noteArea->Save();
+                if(_noteArea->GetPath().empty()) {
+                    saveFileModal.Show();
+                }
             default: break;
         }
         fileDropdownValue = UiUtils::Dropdown({0, 0, 150, 20}, _config->ColorTheme.Foreground, "File;Open;Save#CTRL+S", _config, &fileDropdownActive);
@@ -159,7 +165,10 @@ void Application::Start() {
                 if(Utils::IsFile(fileOpenModal.GetSelectedFile())) {
                     _noteArea->TryLoadNote(fileOpenModal.GetSelectedFile());
                 } 
-            }           
+            }     
+            if(saveFileModal.HasClosed() && !saveFileModal.GetFilePath().empty()) {
+                std::cout << saveFileModal.GetFilePath() << std::endl;
+            }   
         }
     }
     CloseWindow();

@@ -468,7 +468,14 @@ void NoteArea::Draw() {
 void NoteArea::SetRect(Rectangle rect) {
     _rect = rect;
 }
-void NoteArea::Save() {
+std::string NoteArea::GetPath() {
+    return path;
+}
+void NoteArea::SetPath(const std::string &path) {
+    this->path = path;
+}
+void NoteArea::Save()
+{
     if(path.empty())
         std::cerr << "No valid path to save note" << std::endl;
     else
