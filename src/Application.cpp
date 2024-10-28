@@ -78,6 +78,8 @@ void Application::Start() {
     GuiLoadStyle("styles/raygui-dark");
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20); // Adjust text size
 
+    bool isModalOpen = false;
+
     float menuHeight = _config->TopMenuBarHeight;
     Vector2 scroll = {0,0};
     int fileDropdownActive = 0;
@@ -91,6 +93,7 @@ void Application::Start() {
     _noteArea->Initialize(_config->TopMenuBarHeight); // Offset the NoteArea 50px down
     while(isRunning)
     {
+        isModalOpen = fileOpenModal.IsVisible();
         innerClicked = false;  // Reset innerClicked flag each frame
         if(WindowShouldClose())
         {
@@ -101,18 +104,23 @@ void Application::Start() {
         // Update
         // --------------------------------------------------------------------------------------------------
         _inputHandler->Update();
-        _noteArea->Update();
+
+        // Modals
         fileOpenModal.Update();
 
+        // Handle updates only if no modal is open
+        if(!isModalOpen) {
+            _noteArea->Update();
 
-        if(!IsKeyDown(KEY_LEFT_SHIFT))
-            scroll.y -= GetMouseWheelMove() * _config->Formatting.Paragraph * _config->ScrollLineCount;
-        if(scroll.y < 0) scroll.y = 0;
-        camera.target = {
-            GetScreenWidth() * 0.5f + scroll.x,
-            GetScreenHeight() * 0.5f + scroll.y,
-        };
-        camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
+            if(!IsKeyDown(KEY_LEFT_SHIFT))
+                scroll.y -= GetMouseWheelMove() * _config->Formatting.Paragraph * _config->ScrollLineCount;
+            if(scroll.y < 0) scroll.y = 0;
+            camera.target = {
+                GetScreenWidth() * 0.5f + scroll.x,
+                GetScreenHeight() * 0.5f + scroll.y,
+            };
+            camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
+        }
         // Draw
         // --------------------------------------------------------------------------------------------------
         BeginDrawing();

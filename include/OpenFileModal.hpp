@@ -28,6 +28,8 @@ private:
     std::filesystem::path currentPath;
     std::string selectedFile;
     bool isVisible;
+    int scrollOffset;
+    int visibleItemCount;
     std::shared_ptr<Helium::Configuration> config;
     void LoadFilesInDirectory();
 };

@@ -7,7 +7,7 @@
 namespace fs = std::filesystem;
 
 OpenFileModal::OpenFileModal(const Rectangle& rect, std::shared_ptr<Helium::Configuration> config)
-    : modalRect(rect), config(config), isVisible(false) {}
+    : modalRect(rect), config(config), isVisible(false), scrollOffset(0) {}
 
 void OpenFileModal::Show(const std::string& rootPath) {
     currentPath = fs::path(rootPath); // Store the root path as a fs::path
@@ -51,9 +51,22 @@ void OpenFileModal::LoadFilesInDirectory() {
 void OpenFileModal::Update() {
     if (!isVisible) return;
 
+    // Handle scrolling input
+    if (IsKeyPressed(KEY_DOWN) && scrollOffset < static_cast<int>(fileList.size()) - visibleItemCount) {
+        scrollOffset++;
+    }
+    if (IsKeyPressed(KEY_UP && scrollOffset > 0)) {
+        scrollOffset--;
+    }
+
+    if(CheckCollisionPointRec(GetMousePosition(), modalRect))
+        scrollOffset -= std::clamp(static_cast<int>(GetMouseWheelMove()), -1, 1);
+    
+    scrollOffset = std::clamp(scrollOffset, 0, static_cast<int>(fileList.size()));
+
     // Update modal logic, such as detecting button clicks
-    for (size_t i = 0; i < fileList.size(); ++i) {
-        Rectangle itemRect = { modalRect.x + 10, modalRect.y + 50 + (i * 35), modalRect.width - 20, 30 };
+    for (size_t i = scrollOffset; i < scrollOffset + visibleItemCount && i < fileList.size(); ++i) {
+        Rectangle itemRect = { modalRect.x + 10, modalRect.y + 50 + ((i - scrollOffset) * 35), modalRect.width - 20, 30 };
         
         if (UiUtils::LabelButton(itemRect, fileList[i].c_str(), config->ColorTheme.Foreground, config)) {
             // Handle directory navigation
@@ -61,12 +74,14 @@ void OpenFileModal::Update() {
                 // Go to the parent directory
                 currentPath = currentPath.parent_path(); // Update to parent path
                 LoadFilesInDirectory(); // Reload files in the new directory
+                scrollOffset = 0; // Reset scroll offset
             } else {
                 // Check if the selected item is a directory
                 fs::path selectedPath = currentPath / fileList[i];
                 if (fs::is_directory(selectedPath)) {
                     currentPath = selectedPath; // Update to the selected directory
                     LoadFilesInDirectory(); // Load files in the selected directory
+                    scrollOffset = 0; // Reset scroll offset
                 } else {
                     selectedFile = selectedPath.string(); // Store the selected file
                     Hide(); // Close the modal after selection
@@ -91,9 +106,12 @@ void OpenFileModal::Draw() {
     // Draw title
     UiUtils::LabelDefault("Open File", { modalRect.x + 10, modalRect.y }, config->ColorTheme.TextColor, config);
 
-    // Draw each file in the modal as a button
-    for (size_t i = 0; i < fileList.size(); ++i) {
-        Rectangle itemRect = { modalRect.x + 10, modalRect.y + 50 + (i * 35), modalRect.width - 20, 30 };
+    // Calculate the number of visible items based on the modal height
+    visibleItemCount = (modalRect.height - 50) / 35; // Adjust based on item height (35 in this case)
+
+    // Draw each file in the modal as a button, taking scrolling into account
+    for (size_t i = scrollOffset; i < scrollOffset + visibleItemCount && i < fileList.size(); ++i) {
+        Rectangle itemRect = { modalRect.x + 10, modalRect.y + 50 + ((i - scrollOffset) * 35), modalRect.width - 20, 30 };
         UiUtils::LabelButton(itemRect, fileList[i].c_str(), config->ColorTheme.Foreground, config);
     }
 }
