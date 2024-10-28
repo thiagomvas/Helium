@@ -5,11 +5,8 @@
 #include <memory>
 
 int main() {
-
-    std::shared_ptr<Helium::Configuration> config = std::make_shared<Helium::Configuration>();
-
-    config->deserialize(config->serialize());
-    Helium::Application app(config);
+    Helium::Configuration::getInstance().deserialize(Helium::Configuration::getInstance().serialize());
+    Helium::Application app;
     app.Start();
     app.Stop();
 }

@@ -30,17 +30,17 @@ void safeErase(std::shared_ptr<std::string> text, int start, int end) {
 
 namespace Helium {
 
-NoteArea::NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<Helium::InputHandler> input) : _config(config), _inputHandler(input), _rawText(std::make_shared<std::string>()), wrappedLines(std::make_shared<std::vector<std::string>>()), readModeLines(std::make_shared<std::vector<std::string>>()) {
+NoteArea::NoteArea( std::shared_ptr<Helium::InputHandler> input) : _inputHandler(input), _rawText(std::make_shared<std::string>()), wrappedLines(std::make_shared<std::vector<std::string>>()), readModeLines(std::make_shared<std::vector<std::string>>()) {
     
 }
 
 
 void NoteArea::Initialize(int heightOffset) {
     Texture2D temp;
-    _texture = LoadRenderTexture(_config->MaxNoteWidth, GetScreenHeight());
+    _texture = LoadRenderTexture(Helium::Configuration::getInstance().MaxNoteWidth, GetScreenHeight());
 
     rlSetBlendFactorsSeparate(0x0302, 0x0303, 1, 0x0303, 0x8006, 0x8006); // Required configuration to be able to erase on the texture!
-    _rect.width = _config->MaxNoteWidth;
+    _rect.width = Helium::Configuration::getInstance().MaxNoteWidth;
     _rect.height = GetScreenHeight();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
     _rect.y = heightOffset;
@@ -115,7 +115,7 @@ void NoteArea::Update() {
             // Handle repeating backspace action
             if (IsKeyDown(KEY_BACKSPACE) && !_rawText->empty()) {
                 _beginActionTime += GetFrameTime();
-                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= Helium::Configuration::getInstance().ActionRepeatDelaySeconds) {
                     safeErase(_rawText, _cursor.GetPosition() - 1, _cursor.GetPosition() - 1);
                     _cursor.MoveLeft();
                     isDirty = true;
@@ -152,7 +152,7 @@ void NoteArea::Update() {
             }
             if (IsKeyDown(KEY_LEFT)) {
                 _beginActionTime += GetFrameTime();
-                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= Helium::Configuration::getInstance().ActionRepeatDelaySeconds) {
                     _cursor.MoveLeft();
                 }
             }
@@ -162,7 +162,7 @@ void NoteArea::Update() {
             }
             if (IsKeyDown(KEY_RIGHT)) {
                 _beginActionTime += GetFrameTime();
-                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= Helium::Configuration::getInstance().ActionRepeatDelaySeconds) {
                     _cursor.MoveRight();
                 }
             }
@@ -172,7 +172,7 @@ void NoteArea::Update() {
             }
             if (IsKeyDown(KEY_UP)) {
                 _beginActionTime += GetFrameTime();
-                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= Helium::Configuration::getInstance().ActionRepeatDelaySeconds) {
                     _cursor.MoveUp();
                 }
             }
@@ -182,7 +182,7 @@ void NoteArea::Update() {
             }
             if (IsKeyDown(KEY_DOWN)) {
                 _beginActionTime += GetFrameTime();
-                if (_beginActionTime >= _config->ActionRepeatDelaySeconds) {
+                if (_beginActionTime >= Helium::Configuration::getInstance().ActionRepeatDelaySeconds) {
                     _cursor.MoveDown();
                 }
             }
@@ -221,7 +221,7 @@ void NoteArea::Update() {
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), _rect)) {
                 Vector2 mousePosition = GetMousePosition();
                 
-                int lineIndex = (mousePosition.y - _rect.y) / _config->Formatting.GetLineHeight(_config->Formatting.Paragraph);
+                int lineIndex = (mousePosition.y - _rect.y) / Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
                 
                 if (lineIndex < wrappedLines->size()) {
                     float currentY = _rect.y; 
@@ -234,7 +234,7 @@ void NoteArea::Update() {
                     bool moved = false;
                     for (size_t i = 0; i < line.size(); i++) {
                         char c = line[i];
-                        int charWidth = MeasureTextEx(_config->Formatting.DefaultFont, &c, _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                        int charWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, &c, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
                         if (width <= charWidth) {
                             _cursor.Goto(totalChars + i); 
@@ -242,7 +242,7 @@ void NoteArea::Update() {
                             break;
                         }
                         
-                        width -= charWidth + _config->Formatting.CharSpacing;
+                        width -= charWidth + Helium::Configuration::getInstance().Formatting.CharSpacing;
                     }
                     if(!moved) {
                         _cursor.Goto(totalChars + line.size());
@@ -260,7 +260,7 @@ void NoteArea::Update() {
 
             if(isDirty) {
                 isDirty = false;
-                Utils::WrapText(*_rawText, wrappedLines, _config);
+                Utils::WrapText(*_rawText, wrappedLines);
             }
     
             break;
@@ -272,7 +272,7 @@ void NoteArea::Update() {
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
                 int reqHeight = std::max(_texture.texture.height, GetMouseY());
                 if( _texture.texture.height < reqHeight) {
-                    RenderTexture2D newTexture = LoadRenderTexture(_config->MaxNoteWidth, reqHeight);
+                    RenderTexture2D newTexture = LoadRenderTexture(Helium::Configuration::getInstance().MaxNoteWidth, reqHeight);
                     BeginTextureMode(newTexture);
                     BeginBlendMode(BLEND_CUSTOM);
                     ClearBackground(BLANK);
@@ -312,7 +312,7 @@ void NoteArea::Update() {
 
 
 void NoteArea::Draw() {
-    DrawRectangleRec(_rect, _config->ColorTheme.Foreground);
+    DrawRectangleRec(_rect, Helium::Configuration::getInstance().ColorTheme.Foreground);
 
     int y = _rect.y;
 
@@ -343,28 +343,28 @@ void NoteArea::Draw() {
                 int x = _rect.x;
                 switch (t.type) {
                     case Helium::TokenType::HEADER: {
-                        int headerFontSize = _config->Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at("level")));
-                        Utils::WrapText(t.value, readModeLines, headerFontSize, _config);
+                        int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at("level")));
+                        Utils::WrapText(t.value, readModeLines, headerFontSize);
                         for(std::string line : *readModeLines) {
                             std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
                             for(const Token& it : inlines) {
-                                x += Utils::DrawInlineToken(it, x, y, _config, headerFontSize);
+                                x += Utils::DrawInlineToken(it, x, y, headerFontSize);
                             }
                             x = _rect.x;
-                            y += _config->Formatting.GetLineHeight(headerFontSize);
+                            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(headerFontSize);
                         }
                         break;
                     }
                     default:
-                        Utils::WrapText(t.value, readModeLines, _config->Formatting.Paragraph, _config);
+                        Utils::WrapText(t.value, readModeLines, Helium::Configuration::getInstance().Formatting.Paragraph);
                         for(const std::string& line : *readModeLines) {
                             std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
                             for(const Token& it : inlines) {
-                                x += Utils::DrawInlineToken(it, x, y, _config);
+                                x += Utils::DrawInlineToken(it, x, y);
                             }
                             x = _rect.x;
                             
-                            y += _config->Formatting.GetLineHeight(_config->Formatting.Paragraph);
+                            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
                         }
                         
                         break;
@@ -375,7 +375,7 @@ void NoteArea::Draw() {
             int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
             float currentY = _rect.y;
 
-            float lineHeight = _config->Formatting.GetLineHeight(_config->Formatting.Paragraph);
+            float lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
 
             int cursorPos = _cursor.GetPosition();
             float currentX = _rect.x;
@@ -386,7 +386,7 @@ void NoteArea::Draw() {
             for (const std::string& wrappedLine : *wrappedLines) {
                 int lineLength = wrappedLine.length();
                 int lineEnd = totalChars + lineLength;
-                int lineWidth = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                int lineWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, wrappedLine.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
                 
                 if(_cursor.IsHighlighting()) {
                     int hlStart = _cursor.GetHighlightStart(), hlEnd = _cursor.GetHighlightEnd();
@@ -395,45 +395,45 @@ void NoteArea::Draw() {
 
                     // Case 1: Highlighting begins before line and ends after line
                     if (hlsl < lineIndex && hlel > lineIndex) {
-                        DrawRectangle(_rect.x, currentY, lineWidth, lineHeight, _config->ColorTheme.TextHighlight);
+                        DrawRectangle(_rect.x, currentY, lineWidth, lineHeight, Helium::Configuration::getInstance().ColorTheme.TextHighlight);
                     }
                     // Case 2: Highlighting starts in this line but ends after line
                     else if (hlsl == lineIndex && hlel > lineIndex && hlsc >= 0 && hlsc < lineLength) {
-                        int offset = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
-                                                    _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                        int offset = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
+                                                    Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
-                        DrawRectangle(_rect.x + offset, currentY, lineWidth - offset, lineHeight, _config->ColorTheme.TextHighlight);
+                        DrawRectangle(_rect.x + offset, currentY, lineWidth - offset, lineHeight, Helium::Configuration::getInstance().ColorTheme.TextHighlight);
                     }
                     // Case 3: Highlighting starts before this line but ends in this line
                     else if (hlsl < lineIndex && hlel == lineIndex && hlec <= lineLength) {
-                        int offset = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlec).c_str(), 
-                                                    _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                        int offset = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, wrappedLine.substr(0, hlec).c_str(), 
+                                                    Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
-                        DrawRectangle(_rect.x, currentY, offset, lineHeight, _config->ColorTheme.TextHighlight);
+                        DrawRectangle(_rect.x, currentY, offset, lineHeight, Helium::Configuration::getInstance().ColorTheme.TextHighlight);
                     }
                     // Case 4: Highlighting starts and ends in the same line
                     else if (hlsl == hlel && hlsl == lineIndex && hlsc >= 0 && hlsc < lineLength && hlec > hlsc && hlec <= lineLength) {
                         std::string highlightedText = wrappedLine.substr(hlsc, hlec - hlsc);
                         
                         if (!highlightedText.empty()) {
-                            float highlightStartX = MeasureTextEx(_config->Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
-                                                                   _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                            float highlightStartX = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, wrappedLine.substr(0, hlsc).c_str(), 
+                                                                   Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
-                            float highlightWidth = MeasureTextEx(_config->Formatting.DefaultFont, highlightedText.c_str(), 
-                                                                  _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+                            float highlightWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, highlightedText.c_str(), 
+                                                                  Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
-                            DrawRectangle(_rect.x + highlightStartX, currentY, highlightWidth, lineHeight, _config->ColorTheme.TextHighlight);
+                            DrawRectangle(_rect.x + highlightStartX, currentY, highlightWidth, lineHeight, Helium::Configuration::getInstance().ColorTheme.TextHighlight);
                         }
                     }
                 }
 
                 
                 // Render the wrapped line
-                DrawTextEx(_config->Formatting.DefaultFont, wrappedLine.c_str(), 
+                DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, wrappedLine.c_str(), 
                            {currentX, currentY}, 
-                           _config->Formatting.Paragraph, 
-                           _config->Formatting.CharSpacing, 
-                           _config->ColorTheme.TextColor);
+                           Helium::Configuration::getInstance().Formatting.Paragraph, 
+                           Helium::Configuration::getInstance().Formatting.CharSpacing, 
+                           Helium::Configuration::getInstance().ColorTheme.TextColor);
 
                 currentY += lineHeight;  // Move down to the next line
                 totalChars += wrappedLine.length();
@@ -442,15 +442,15 @@ void NoteArea::Draw() {
             if(_cursor.GetCurrentLineColumn() == 0) 
                 caretX = _rect.x;
             else
-                caretX = MeasureTextEx(_config->Formatting.DefaultFont,
+                caretX = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont,
                                        wrappedLines->at(_cursor.GetCurrentLineIndex()).substr(0, _cursor.GetCurrentLineColumn()).c_str(),
-                                       _config->Formatting.Paragraph,
-                                       _config->Formatting.CharSpacing).x + _rect.x ;
+                                       Helium::Configuration::getInstance().Formatting.Paragraph,
+                                       Helium::Configuration::getInstance().Formatting.CharSpacing).x + _rect.x ;
 
             caretY = _rect.y + lineHeight * _cursor.GetCurrentLineIndex();
             // Draw the caret if it’s visible
             if (showCaret) {
-                DrawRectangle(caretX, caretY, 2, lineHeight, _config->ColorTheme.TextColor);
+                DrawRectangle(caretX, caretY, 2, lineHeight, Helium::Configuration::getInstance().ColorTheme.TextColor);
             }
 
             break;
@@ -460,7 +460,7 @@ void NoteArea::Draw() {
     DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { _rect.x, _rect.y }, WHITE);
     // Handle draw mode (if applicable)
     if (_mode == Helium::NoteMode::DRAW) {
-        DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, _config->ColorTheme.BrushBorder);
+        DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, Helium::Configuration::getInstance().ColorTheme.BrushBorder);
     }
 }
 

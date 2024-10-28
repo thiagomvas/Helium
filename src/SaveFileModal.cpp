@@ -2,8 +2,8 @@
 #include "UiUtils.hpp" // Assuming UiUtils functions are in this file
 #include <iostream>
 
-SaveFileModal::SaveFileModal(const Rectangle& rect, std::shared_ptr<Helium::Configuration> config)
-    : modalRect(rect), config(config), isVisible(false), hasClosed(false) {}
+SaveFileModal::SaveFileModal(const Rectangle& rect )
+    : modalRect(rect), isVisible(false), hasClosed(false) {}
 
 void SaveFileModal::Show() {
     filePath.clear(); // Clear any previous path
@@ -70,19 +70,19 @@ void SaveFileModal::Draw() {
     if (!isVisible) return;
 
     // Draw modal background
-    DrawRectangleRec(modalRect, config->ColorTheme.Foreground);
-    DrawRectangle(modalRect.x, modalRect.y, modalRect.width, config->TopMenuBarHeight, config->ColorTheme.AccentBackground);
+    DrawRectangleRec(modalRect, Helium::Configuration::getInstance().ColorTheme.Foreground);
+    DrawRectangle(modalRect.x, modalRect.y, modalRect.width, Helium::Configuration::getInstance().TopMenuBarHeight, Helium::Configuration::getInstance().ColorTheme.AccentBackground);
     
     // Draw title
-    UiUtils::LabelDefault("Save File", { modalRect.x + 10, modalRect.y }, config->ColorTheme.TextColor, config);
+    UiUtils::LabelDefault("Save File", { modalRect.x + 10, modalRect.y }, Helium::Configuration::getInstance().ColorTheme.TextColor );
 
     // Draw the input box for the file path
-    UiUtils::LabelDefault("File Path:", { modalRect.x + 10, modalRect.y + 40 }, config->ColorTheme.TextColor, config);
-    UiUtils::LabelDefault(filePath.c_str(), { modalRect.x + 10, modalRect.y + 70 }, config->ColorTheme.TextColor, config);
+    UiUtils::LabelDefault("File Path:", { modalRect.x + 10, modalRect.y + 40 }, Helium::Configuration::getInstance().ColorTheme.TextColor );
+    UiUtils::LabelDefault(filePath.c_str(), { modalRect.x + 10, modalRect.y + 70 }, Helium::Configuration::getInstance().ColorTheme.TextColor );
 
     // Draw a "Save" button
     Rectangle saveButton = { modalRect.x + 10, modalRect.y + 110, modalRect.width - 20, 30 };
-    if (UiUtils::LabelButton(saveButton, "Save", config->ColorTheme.Foreground, config)) {
+    if (UiUtils::LabelButton(saveButton, "Save", Helium::Configuration::getInstance().ColorTheme.Foreground )) {
         // Save the file path when the button is pressed
         std::cout << "Save button pressed" << std::endl;
         Hide(); // Close the modal

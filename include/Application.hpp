@@ -9,7 +9,7 @@
 namespace Helium {
 class Application {
 public:
-	Application(std::shared_ptr<Configuration> config);
+	Application();
 	~Application();
 
 	void Start();
@@ -17,7 +17,6 @@ public:
 	void Stop();
 private:
 	bool isRunning;
-	std::shared_ptr<Configuration> _config;
 	std::shared_ptr<InputHandler> _inputHandler;
 	std::unique_ptr<NoteArea> _noteArea;
 };

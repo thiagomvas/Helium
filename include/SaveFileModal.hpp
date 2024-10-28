@@ -8,7 +8,7 @@
 
 class SaveFileModal {
 public:
-    SaveFileModal(const Rectangle& rect, std::shared_ptr<Helium::Configuration> config);
+    SaveFileModal(const Rectangle& rect );
 
     void Show();             // Show the modal
     void Hide();             // Hide the modal
@@ -23,7 +23,7 @@ private:
     std::string filePath;    // Variable to hold the user-entered file path
     bool isVisible;    
     bool hasClosed;      
-    std::shared_ptr<Helium::Configuration> config;
+     
 
     void HandleInput();      // Handle user input for the file path
 };

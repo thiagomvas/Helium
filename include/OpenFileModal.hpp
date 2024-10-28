@@ -9,7 +9,7 @@
 #include "Configuration.hpp"
 class OpenFileModal {
 public:
-    OpenFileModal(const Rectangle& rect, std::shared_ptr<Helium::Configuration> config);
+    OpenFileModal(const Rectangle& rect );
 
     // Methods to show, hide, and render the modal
     void Show(const std::string& rootPath);
@@ -30,7 +30,6 @@ private:
     bool isVisible;
     int scrollOffset;
     int visibleItemCount;
-    std::shared_ptr<Helium::Configuration> config;
     void LoadFilesInDirectory();
 };
 

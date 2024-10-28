@@ -9,20 +9,20 @@ namespace UiUtils {
 		return CheckCollisionPointRec(GetMousePosition(), rect);
 	return 0;
 }
-void LabelDefault(const char* text, Vector2 pos, Color color, std::shared_ptr<Helium::Configuration> config) {
+void LabelDefault(const char* text, Vector2 pos, Color color ) {
 	
-	DrawTextEx(config->Formatting.DefaultFont, text, pos, config->Formatting.Paragraph, config->Formatting.CharSpacing, color);
+	DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, text, pos, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, color);
 }
 
-int LabelButton(Rectangle rect, const char* text, Color rectColor, std::shared_ptr<Helium::Configuration> config) {
+int LabelButton(Rectangle rect, const char* text, Color rectColor ) {
 	int button = Button(rect, rectColor);
 
-	LabelDefault(text, {rect.x, rect.y}, config->ColorTheme.TextColor, config);
+	LabelDefault(text, {rect.x, rect.y}, Helium::Configuration::getInstance().ColorTheme.TextColor);
 	return button;
 }
 
 
-int Dropdown(Rectangle rect, Color tint, const std::string& items, std::shared_ptr<Helium::Configuration> config, int* active) {
+int Dropdown(Rectangle rect, Color tint, const std::string& items , int* active) {
     std::vector<std::string> itemList;
 
     // String stream to help split the items by ';'
@@ -38,7 +38,7 @@ int Dropdown(Rectangle rect, Color tint, const std::string& items, std::shared_p
     }
 
     // Render the first item (dropdown header) using LabelButton
-    if (LabelButton(rect, itemList.front().c_str(), tint, config)) {
+    if (LabelButton(rect, itemList.front().c_str(), tint )) {
         *active = 1;  
     }
 
@@ -61,7 +61,7 @@ int Dropdown(Rectangle rect, Color tint, const std::string& items, std::shared_p
             }
 
             
-            Vector2 rightTextSize = MeasureTextEx(config->Formatting.DefaultFont, rightText.c_str(), config->Formatting.Paragraph, config->Formatting.CharSpacing);
+            Vector2 rightTextSize = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, rightText.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing);
             float rightTextX = itemRect.x + itemRect.width - rightTextSize.x - 5; // Position with a small padding
             Vector2 rightTextPosition = { rightTextX, itemRect.y }; // Adding padding
             
@@ -69,8 +69,8 @@ int Dropdown(Rectangle rect, Color tint, const std::string& items, std::shared_p
                 *active = 0; 
                 return i;
             }
-            LabelDefault(mainText.c_str(), { itemRect.x, itemRect.y }, config->ColorTheme.TextColor, config); // Adding padding
-			DrawTextEx(config->Formatting.DefaultFont, rightText.c_str(), rightTextPosition, config->Formatting.Paragraph, config->Formatting.CharSpacing, config->ColorTheme.SecondaryTextColor);
+            LabelDefault(mainText.c_str(), { itemRect.x, itemRect.y }, Helium::Configuration::getInstance().ColorTheme.TextColor ); // Adding padding
+			DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, rightText.c_str(), rightTextPosition, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.SecondaryTextColor);
 
         }
     }

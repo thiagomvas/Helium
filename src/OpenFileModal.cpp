@@ -6,8 +6,8 @@
 
 namespace fs = std::filesystem;
 
-OpenFileModal::OpenFileModal(const Rectangle& rect, std::shared_ptr<Helium::Configuration> config)
-    : modalRect(rect), config(config), isVisible(false), scrollOffset(0) {}
+OpenFileModal::OpenFileModal(const Rectangle& rect )
+    : modalRect(rect), isVisible(false), scrollOffset(0) {}
 
 void OpenFileModal::Show(const std::string& rootPath) {
     currentPath = fs::path(rootPath); // Store the root path as a fs::path
@@ -68,7 +68,7 @@ void OpenFileModal::Update() {
     for (size_t i = scrollOffset; i < scrollOffset + visibleItemCount && i < fileList.size(); ++i) {
         Rectangle itemRect = { modalRect.x + 10, modalRect.y + 50 + ((i - scrollOffset) * 35), modalRect.width - 20, 30 };
         
-        if (UiUtils::LabelButton(itemRect, fileList[i].c_str(), config->ColorTheme.Foreground, config)) {
+        if (UiUtils::LabelButton(itemRect, fileList[i].c_str(), Helium::Configuration::getInstance().ColorTheme.Foreground )) {
             // Handle directory navigation
             if (fileList[i] == "..") {
                 // Go to the parent directory
@@ -100,11 +100,11 @@ void OpenFileModal::Draw() {
     if (!isVisible) return;
 
     // Draw modal background
-    DrawRectangleRec(modalRect, config->ColorTheme.Foreground);
-    DrawRectangle(modalRect.x, modalRect.y, modalRect.width, config->TopMenuBarHeight, config->ColorTheme.AccentBackground);
+    DrawRectangleRec(modalRect, Helium::Configuration::getInstance().ColorTheme.Foreground);
+    DrawRectangle(modalRect.x, modalRect.y, modalRect.width, Helium::Configuration::getInstance().TopMenuBarHeight, Helium::Configuration::getInstance().ColorTheme.AccentBackground);
     
     // Draw title
-    UiUtils::LabelDefault("Open File", { modalRect.x + 10, modalRect.y }, config->ColorTheme.TextColor, config);
+    UiUtils::LabelDefault("Open File", { modalRect.x + 10, modalRect.y }, Helium::Configuration::getInstance().ColorTheme.TextColor );
 
     // Calculate the number of visible items based on the modal height
     visibleItemCount = (modalRect.height - 50) / 35; // Adjust based on item height (35 in this case)
@@ -112,6 +112,6 @@ void OpenFileModal::Draw() {
     // Draw each file in the modal as a button, taking scrolling into account
     for (size_t i = scrollOffset; i < scrollOffset + visibleItemCount && i < fileList.size(); ++i) {
         Rectangle itemRect = { modalRect.x + 10, modalRect.y + 50 + ((i - scrollOffset) * 35), modalRect.width - 20, 30 };
-        UiUtils::LabelButton(itemRect, fileList[i].c_str(), config->ColorTheme.Foreground, config);
+        UiUtils::LabelButton(itemRect, fileList[i].c_str(), Helium::Configuration::getInstance().ColorTheme.Foreground );
     }
 }
