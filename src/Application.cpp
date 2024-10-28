@@ -14,6 +14,7 @@
 #include <string>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include "OpenFileModal.hpp"
 
 namespace Helium {
 
@@ -84,7 +85,9 @@ void Application::Start() {
     _config->Formatting.loadFonts();
     bool innerClicked;
     GuiSetFont(_config->Formatting.DefaultFont);
-
+    Rectangle modalRect = { 100, 100, 400, 300 };
+    OpenFileModal fileOpenModal(modalRect, _config);
+    std::vector<std::string> exampleFiles = { "file1.txt", "file2.txt", "file3.txt" };
     _noteArea->Initialize(_config->TopMenuBarHeight); // Offset the NoteArea 50px down
     while(isRunning)
     {
@@ -96,8 +99,12 @@ void Application::Start() {
 
 
         // Update
+        // --------------------------------------------------------------------------------------------------
         _inputHandler->Update();
         _noteArea->Update();
+        fileOpenModal.Update();
+
+
         if(!IsKeyDown(KEY_LEFT_SHIFT))
             scroll.y -= GetMouseWheelMove() * _config->Formatting.Paragraph * _config->ScrollLineCount;
         if(scroll.y < 0) scroll.y = 0;
@@ -107,24 +114,26 @@ void Application::Start() {
         };
         camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
         // Draw
+        // --------------------------------------------------------------------------------------------------
         BeginDrawing();
         ClearBackground(_config->ColorTheme.Background);
 
-       DrawRectangleRec({(GetScreenWidth() - _config->MaxNoteWidth) * 0.5f, 0, static_cast<float>(_config->MaxNoteWidth), static_cast<float>(GetScreenHeight())}, _config->ColorTheme.Foreground);
+        DrawRectangleRec({(GetScreenWidth() - _config->MaxNoteWidth) * 0.5f, 0, static_cast<float>(_config->MaxNoteWidth), static_cast<float>(GetScreenHeight())}, _config->ColorTheme.Foreground);
         // NOTE AREA
-        // -------------------------------------s
-        // ----
+        // -------------------------------------
         BeginMode2D(camera);
         _noteArea->Draw();
         EndMode2D();
         DrawFPS(0,0); 
        
-       // UI
-        // ------------------------------------------ 
+        // UI
+        // --------------------------------------------------------------------------------------------------
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(_config->TopMenuBarHeight)}, _config->ColorTheme.Foreground);
+        fileOpenModal.Draw();
     
         switch(fileDropdownValue) {
             case 1: // Open
+                fileOpenModal.Show("C:/Users/Thiago");
             break;
             case 2: // Save
                 _noteArea->Save();

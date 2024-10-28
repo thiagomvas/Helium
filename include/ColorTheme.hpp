@@ -11,7 +11,9 @@ namespace Helium {
 class ColorTheme {
 public: 
 	Color Background = { 12, 12, 12, 255 };
+	Color AccentBackground = { 50, 50, 50, 255 };
 	Color Foreground = { 20, 20, 20, 255 };
+	Color AccentForeground = { 200, 100, 100, 255 };
 	Color TextColor = { 200, 200, 200, 255 };
 	Color SecondaryTextColor = { 150, 150, 150, 255};
 	Color BrushBorder = { 200, 200, 200, 255 };
@@ -20,7 +22,9 @@ public:
 	std::string serialize() {
 	std::ostringstream oss;
 		oss << "Background:" << Serializer::Serialize(Background) << '\n';
+        oss << "AccentBackground:" << Serializer::Serialize(AccentBackground) << '\n';
 		oss << "Foreground:" << Serializer::Serialize(Foreground) << '\n';
+        oss << "AccentForeground:" << Serializer::Serialize(AccentForeground) << '\n';
 		oss << "TextColor:" << Serializer::Serialize(TextColor) << '\n';
 		oss << "BrushBorder:" << Serializer::Serialize(BrushBorder) << '\n';
 		oss << "SecondaryTextColor:" << Serializer::Serialize(SecondaryTextColor) << '\n';
@@ -35,7 +39,9 @@ public:
 	    std::string line;
 	    std::unordered_map<std::string, std::function<void(std::string&)>> handlers{
 		{"Background", [this](std::string& value) { Background = Serializer::DeserializeRaylibColor(value); }},
+		{"AccentBackground", [this](std::string& value) { AccentBackground = Serializer::DeserializeRaylibColor(value); }},
 		{"Foreground", [this](std::string& value) { Foreground = Serializer::DeserializeRaylibColor(value); }},
+		{"AccentForeground", [this](std::string& value) { AccentForeground = Serializer::DeserializeRaylibColor(value); }},
 		{"TextColor", [this](std::string& value) { TextColor = Serializer::DeserializeRaylibColor(value); }},
 		{"BrushBorder", [this](std::string& value) { BrushBorder = Serializer::DeserializeRaylibColor(value); }}, 
 		{"SecondaryTextColor", [this](std::string& value) {SecondaryTextColor = Serializer::DeserializeRaylibColor(value); }},
