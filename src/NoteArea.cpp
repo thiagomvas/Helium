@@ -60,7 +60,7 @@ void NoteArea::SetMode(NoteMode mode) {
                     Utils::WrapText(t.value, readModeLines, headerFontSize);
                     for(std::string line : *readModeLines) {
                         Helium::Token token(t.type, t.value, _tokenizer.tokenizeInline(line));
-                        token.attributes["level"] = t.attributes.at("level");
+                        token.attributes[ATTRIBUTE_HEADER_LEVEL] = t.attributes.at(ATTRIBUTE_HEADER_LEVEL);
                         temp.push_back(token);
                     }
                     break;
@@ -373,7 +373,7 @@ void NoteArea::Draw() {
                 int x = _rect.x;
                 switch (t.type) {
                     case Helium::TokenType::HEADER: {
-                        int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at("level")));
+                        int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at(ATTRIBUTE_HEADER_LEVEL)));
                         for(const Token& it : t.children) {
                             x += Utils::DrawInlineToken(it, x, y, headerFontSize);
                         }
@@ -413,7 +413,7 @@ void NoteArea::Draw() {
                         int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph;
                         int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
                         float totalHeight = t.children.size() * lineHeight;
-                        DrawRectangle(x, y, 5, totalHeight, Configuration::getInstance().ColorTheme.getQuoteColor(t.attributes.at("type")));
+                        DrawRectangle(x, y, 5, totalHeight, Configuration::getInstance().ColorTheme.getQuoteColor(t.attributes.at(ATTRIBUTE_QUOTE_TYPE)));
                         x += 25;
                         
                         for(const Token& child : t.children) {

@@ -9,6 +9,18 @@
 
 namespace Helium {
 
+const std::string ATTRIBUTE_QUOTE_TYPE = "type";
+const std::string ATTRIBUTE_QUOTE_TYPE_DEFAULT = "default";
+const std::string ATTRIBUTE_QUOTE_TYPE_NOTE = "note";
+const std::string ATTRIBUTE_QUOTE_TYPE_TIP = "tip";
+const std::string ATTRIBUTE_QUOTE_TYPE_IMPORTANT = "important";
+const std::string ATTRIBUTE_QUOTE_TYPE_WARNING = "warning";
+const std::string ATTRIBUTE_QUOTE_TYPE_CAUTION = "caution";
+
+const std::string ATTRIBUTE_HEADER_LEVEL = "level";
+
+const std::string ATTRIBUTE_HYPERLINK_URL = "url";
+
 // Token types enumeration
 enum class TokenType {
     HEADER,

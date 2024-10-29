@@ -87,22 +87,22 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
 
                 // Check if the content starts with a specific type indicator
                 if (content.starts_with("[!NOTE]")) {
-                    token.attributes["type"] = "note";
+                    token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_NOTE;
                     content = content.substr(7); // Remove "[!NOTE]"
                 } else if (content.starts_with("[!TIP]")) {
-                    token.attributes["type"] = "tip";
+                    token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_TIP;
                     content = content.substr(6); // Remove "[!TIP]"
                 } else if (content.starts_with("[!IMPORTANT]")) {
-                    token.attributes["type"] = "important";
+                    token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_IMPORTANT;
                     content = content.substr(13); // Remove "[!IMPORTANT]"
                 } else if (content.starts_with("[!WARNING]")) {
-                    token.attributes["type"] = "warning";
+                    token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_WARNING;
                     content = content.substr(10); // Remove "[!WARNING]"
                 } else if (content.starts_with("[!CAUTION]")) {
-                    token.attributes["type"] = "caution";
+                    token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_CAUTION;
                     content = content.substr(10); // Remove "[!CRITICAL]"
                 } else {
-                    token.attributes["type"] = "default"; // Optional: Set a default type if none match
+                    token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_DEFAULT; // Optional: Set a default type if none match
                 }
 
                 // Trim leading whitespace from the content
@@ -189,7 +189,7 @@ Token Tokenizer::tokenizeHeading(const std::string& line) {
         int level = matches[1].str().length();
         std::string content = matches[2].str();
         Token token(TokenType::HEADER, content);
-        token.attributes["level"] = std::to_string(level);
+        token.attributes[ATTRIBUTE_HEADER_LEVEL] = std::to_string(level);
         return token;
     }
 
@@ -216,7 +216,7 @@ Token Tokenizer::tokenizeLink(const std::string& text) {
         std::string linkText = matches[1].str();
         std::string linkUrl = matches[2].str();
         Token token(TokenType::LINK, linkText);
-        token.attributes["url"] = linkUrl;
+        token.attributes[ATTRIBUTE_HYPERLINK_URL] = linkUrl;
         return token;
     }
 
