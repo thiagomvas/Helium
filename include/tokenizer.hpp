@@ -23,6 +23,7 @@ const std::string ATTRIBUTE_HYPERLINK_URL = "url";
 
 const std::string ATTRIBUTE_LIST_ORDERED = "ordered";
 
+const std::string ATTRIBUTE_COLORCHIP_COLOR = "hex";
 // Token types enumeration
 enum class TokenType {
     HEADER,
@@ -39,6 +40,7 @@ enum class TokenType {
     INLINECODE,
     HORIZONTALLINE,
     TODO,
+    COLORCHIP,
     UNKNOWN,
 };
 

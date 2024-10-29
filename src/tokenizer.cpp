@@ -19,7 +19,7 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
     std::smatch match;
 
     // Combined regex for bold, italic, strikethrough, and code
-    std::regex inlineRegex(R"((\*\*(.*?)\*\*)|(\*(.*?)\*)|(~(.*?)~)|(`(.*?)`))");
+    std::regex inlineRegex(R"((\*\*(.*?)\*\*)|(\*(.*?)\*)|(~(.*?)~)|(`(#[A-Fa-f0-9]{6})`)|(`(.*?)`))");
 
     while (searchStart != line.cend()) {
         if (std::regex_search(searchStart, line.cend(), match, inlineRegex)) {
@@ -35,8 +35,14 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
                 tokens.push_back(Token(TokenType::ITALIC, match[4].str()));
             } else if (match[5].matched) { // Strikethrough
                 tokens.push_back(Token(TokenType::STRIKETHROUGH, match[6].str()));
-            } else if (match[7].matched) { // Inline Code
-                tokens.push_back(Token(TokenType::INLINECODE, match[8].str()));
+            } else if (match[7].matched) { 
+                std::string hexColor = match[8].str(); 
+
+                Token token(TokenType::COLORCHIP, hexColor);
+                token.attributes[ATTRIBUTE_COLORCHIP_COLOR] = hexColor;
+                tokens.push_back(token);
+            } else if (match[9].matched) { // Inline Code
+                tokens.push_back(Token(TokenType::INLINECODE, match[10].str()));
             }
 
             // Move search start position to the end of the match
