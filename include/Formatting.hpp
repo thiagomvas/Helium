@@ -22,6 +22,7 @@ public:
 	std::string ItalicFontPath = "resources/Roboto-BoldItalic.ttf";
 	std::string CodeFontPath = "resources/Roboto-Regular.ttf";
 	float CharSpacing = 1;
+	int HorizontalLineThickness = 2;
 
 	// Loaded during runtime
 	// !! DO NOT SERIALIZE !!
@@ -75,6 +76,7 @@ public:
 		oss << "BoldFontPath:" << BoldFontPath << '\n';
 		oss << "ItalicFontPath:" << ItalicFontPath << '\n';
 		oss << "CodeFontPath:" << CodeFontPath << '\n';
+		oss << "HorizontalLineThickness:" << HorizontalLineThickness << '\n';
 
 		return oss.str();
 	}
@@ -95,7 +97,8 @@ public:
 			{"DefaultFontPath", [this](const std::string& value) { DefaultFontPath = value; }},
 			{"BoldFontPath", [this](const std::string& value) {BoldFontPath = value;}},
 			{"ItalicFontPath", [this](const std::string& value) {ItalicFontPath = value;}},
-			{"CodeFontPath", [this](const std::string& value) {CodeFontPath = value;}}
+			{"CodeFontPath", [this](const std::string& value) {CodeFontPath = value;}},
+			{"HorizontalLineThickness", [this](const std::string& value) {HorizontalLineThickness = std::stoi(value);}}
 		};
 
 		while (std::getline(iss, line)) {

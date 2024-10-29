@@ -26,6 +26,7 @@ public:
     Color QuoteImportant = { 137, 86, 228, 255 }; 
     Color QuoteWarning = { 158, 106, 3, 255 }; 
     Color QuoteCaution = { 219, 54, 50, 255 }; 
+	Color HorizontalLineColor = {40, 40, 40, 255};
 
 	std::string serialize() {
 	std::ostringstream oss;
@@ -45,6 +46,7 @@ public:
         oss << "QuoteImportant:" << Serializer::Serialize(QuoteImportant) << '\n';
         oss << "QuoteWarning:" << Serializer::Serialize(QuoteWarning) << '\n';
         oss << "QuoteCaution:" << Serializer::Serialize(QuoteCaution) << '\n';
+        oss << "HorizontalLineColor:" << Serializer::Serialize(HorizontalLineColor) << '\n';
 
 		return oss.str();
 	}
@@ -86,6 +88,7 @@ public:
         {"QuoteImportant", [this](std::string& value) { QuoteImportant = Serializer::DeserializeRaylibColor(value); }},
         {"QuoteWarning", [this](std::string& value) { QuoteWarning = Serializer::DeserializeRaylibColor(value); }},
         {"QuoteCaution", [this](std::string& value) { QuoteCaution = Serializer::DeserializeRaylibColor(value); }},
+        {"HorizontalLineColor", [this](std::string& value) { HorizontalLineColor = Serializer::DeserializeRaylibColor(value); }},
 	    };
 
 	    while (std::getline(iss, line)) {

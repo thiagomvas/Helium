@@ -75,8 +75,10 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
 
     while (std::getline(stream, line)) {
         if (line.empty()) {
-            continue;
+            tokens.push_back(Token(TokenType::PARAGRAPH));
         }
+
+        
 
         if(line.starts_with("> ")) {
             std::string content = line.substr(2);
@@ -130,6 +132,11 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                 tokens.push_back(token);
                 multiline = false;
                 multilineType = TokenType::UNKNOWN;
+        }
+
+        if (line == "---" || line == "***" || line == "___") {
+            tokens.push_back(Token(TokenType::HORIZONTALLINE));
+            continue;
         }
         // MULTILINE CODE BLOCKS
         if(line.starts_with("```") || (multiline && multilineType == TokenType::CODE)) {

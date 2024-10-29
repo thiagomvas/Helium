@@ -35,6 +35,7 @@ enum class TokenType {
     QUOTECHILD,
     CODE,
     INLINECODE,
+    HORIZONTALLINE,
     UNKNOWN,
 };
 
@@ -55,6 +56,7 @@ struct Token {
     Token() : type(TokenType::UNKNOWN), value("") {}
 
     // Parameterized constructor
+    Token(TokenType t) : type(std::move(t)), value("") {}
     Token(TokenType t, std::string v) : type(std::move(t)), value(std::move(v)) {}
 
     // Constructor with attributes

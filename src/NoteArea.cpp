@@ -65,7 +65,8 @@ void NoteArea::SetMode(NoteMode mode) {
                     }
                     break;
                 }
-                // MULTILINE TOKENS
+                // MULTILINE TOKENS && SPECIAL TOKENS
+                case Helium::TokenType::HORIZONTALLINE:
                 case Helium::TokenType::QUOTE:
                 case Helium::TokenType::CODE: {
                     temp.push_back(t);
@@ -385,6 +386,16 @@ void NoteArea::Draw() {
                         y += Helium::Configuration::getInstance().Formatting.GetLineHeight(headerFontSize);
                         break;
                     }
+                    case Helium::TokenType::HORIZONTALLINE: {
+                        int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph;
+                        int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
+                        DrawLineEx({_rect.x + 25, static_cast<float>(y + lineHeight * 0.5f)}, {_rect.x + _rect.width - 25, static_cast<float>(y + lineHeight * 0.5f)}, 
+                                    Configuration::getInstance().Formatting.HorizontalLineThickness, 
+                                    Configuration::getInstance().ColorTheme.HorizontalLineColor);
+                        y += lineHeight + Configuration::getInstance().Formatting.HorizontalLineThickness;
+                        break;
+                    }
+
                     case Helium::TokenType::CODE: {
                         int codeFontSize = Helium::Configuration::getInstance().Formatting.Paragraph; // Assume a config entry for code font size
                         int maxWidth = 0; // Track maximum width for the rectangle
@@ -427,6 +438,7 @@ void NoteArea::Draw() {
                             x = _rect.x + 25;
                             y += lineHeight;
                         }
+                        x = _rect.x;
                         break;
                     }
 
