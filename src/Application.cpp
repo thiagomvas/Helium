@@ -8,14 +8,17 @@
 #include "UiUtils.hpp"
 #include "utils.hpp"
 #include <iostream>
+#include <filesystem>
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
 #include <string>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include "OpenFileModal.hpp"
 #include <SaveFileModal.hpp>
+#include "DataPath.hpp"
 
 namespace Helium {
 
@@ -33,7 +36,28 @@ Application::Application() : isRunning(false), _inputHandler(std::make_unique<In
         _noteArea->Save();
     });
 
-    _inputHandler->AddGlobalAction(InputCombo(KEY_F1), [this]() { std::cout << Helium::Configuration::getInstance().serialize(); });
+    _inputHandler->AddGlobalAction(InputCombo(KEY_F1), [this]() { 
+        std::string appDataPath = GetAppDataPath();
+        std::filesystem::path configFilePath = appDataPath + "/Helium/config.txt";
+
+        if (std::filesystem::exists(configFilePath)) {
+            std::ifstream configFile(configFilePath);
+            std::string configData((std::istreambuf_iterator<char>(configFile)),
+                                std::istreambuf_iterator<char>());
+            configFile.close();
+
+            // Reload the configuration from file
+            Helium::Configuration::getInstance().deserialize(configData);
+
+            // Print the updated configuration as a serialized string
+            std::cout << "New Configuration: " 
+                    << Helium::Configuration::getInstance().serialize() 
+                    << std::endl;
+        } else {
+            std::cout << "Configuration file not found at " << configFilePath 
+                    << std::endl;
+        }
+    });
 
     // READ MODE
      
