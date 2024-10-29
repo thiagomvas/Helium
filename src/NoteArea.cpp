@@ -654,4 +654,7 @@ void NoteArea::TryLoadNote(const std::string &path) {
     SetMode(Helium::NoteMode::READ);
     this->path = path;
 }
+void NoteArea::SetDirty() {
+    isDirty = true;
+}
 }
