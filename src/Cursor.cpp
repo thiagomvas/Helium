@@ -5,6 +5,7 @@
 #include <iterator>
 #include <numeric>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Helium {
@@ -15,6 +16,54 @@ void Cursor::Goto(int position) {
     _position = position;
     if(_highlightMode) _highlightEnd = _position;
 }
+
+std::string Cursor::GetWordAtCursor() const {
+    if (!text || text->empty()) return ""; // Return empty if text is null or empty
+    int start = _position;
+    int end = _position;
+    int textSize = text->size();
+
+    while (start > 0 && !std::isspace((*text)[start - 1]) && !std::ispunct((*text)[start - 1])) {
+        --start;
+    }
+
+    while (end < textSize && !std::isspace((*text)[end]) && !std::ispunct((*text)[end])) {
+        ++end;
+    }
+
+    if (start < 0 || end > textSize) return ""; // Check for invalid ranges
+
+    return text->substr(start, end - start);
+}
+
+
+void Cursor::ReplaceWordWithMacro(const std::unordered_map<std::string, std::string>& macros) {
+    std::string word = GetWordAtCursor();
+
+    if (!word.empty() && macros.find(word) != macros.end()) {
+        std::string replacement = macros.at(word);
+
+        int start = _position - static_cast<int>(word.length());
+        if (_position > start + static_cast<int>(word.length())) {
+            start = _position - word.length(); 
+        }
+
+        if (start < 0) {
+            start = 0; 
+        }
+
+        Goto(start);
+
+        BeginHighlight();
+
+        (*text).replace(start, word.length(), replacement);
+
+        _position = start + replacement.length();
+
+        EndHighlight();
+    }
+}
+
 
 void Cursor::MoveToStart() {
     _position = 0;
@@ -213,6 +262,8 @@ std::string Cursor::GetHighlightedText() {
 }
 
 int Cursor::GetPosition() {
+    if(_position > text->length())
+        _position = text->length();
     return _position;
 }
 

@@ -38,6 +38,10 @@ Application::Application() : isRunning(false), _inputHandler(std::make_unique<In
     // READ MODE
      
     // WRITE MODE
+    _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_TAB), [this]() { 
+        this->_noteArea->GetCursor()->ReplaceWordWithMacro(Helium::Configuration::getInstance().Macros);
+        this->_noteArea->SetDirty();
+    });
     _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_C, KEY_LEFT_CONTROL), [this]() {
         if(this->_noteArea->GetCursor()->IsHighlighting()) {
             SetClipboardText(_noteArea->GetCursor()->GetHighlightedText().c_str());
