@@ -254,8 +254,12 @@ void NoteArea::Update() {
             }
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 _cursor.BeginHighlight();
-            if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-                _cursor.EndHighlight();
+            if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+                if(_cursor.GetHighlightStart() == _cursor.GetHighlightEnd())
+                    _cursor.Deselect();
+                else
+                    _cursor.EndHighlight();
+            }
 
 
             if(isDirty) {
@@ -339,37 +343,7 @@ void NoteArea::Draw() {
     switch (_mode) {
         default:
         case Helium::NoteMode::READ:
-            for (const Token& t : _tokens) {
-                int x = _rect.x;
-                switch (t.type) {
-                    case Helium::TokenType::HEADER: {
-                        int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at("level")));
-                        Utils::WrapText(t.value, readModeLines, headerFontSize);
-                        for(std::string line : *readModeLines) {
-                            std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
-                            for(const Token& it : inlines) {
-                                x += Utils::DrawInlineToken(it, x, y, headerFontSize);
-                            }
-                            x = _rect.x;
-                            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(headerFontSize);
-                        }
-                        break;
-                    }
-                    default:
-                        Utils::WrapText(t.value, readModeLines, Helium::Configuration::getInstance().Formatting.Paragraph);
-                        for(const std::string& line : *readModeLines) {
-                            std::vector<Token> inlines = _tokenizer.tokenizeInline(line);
-                            for(const Token& it : inlines) {
-                                x += Utils::DrawInlineToken(it, x, y);
-                            }
-                            x = _rect.x;
-                            
-                            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
-                        }
-                        
-                        break;
-                }
-            }
+            RenderMarkdown(y);
             break;
         case Helium::NoteMode::WRITE: {
             int highlightStart = _cursor.GetHighlightStart(), highlightEnd = _cursor.GetHighlightEnd();
@@ -464,6 +438,139 @@ void NoteArea::Draw() {
     }
 }
 
+void NoteArea::RenderMarkdown(int y)
+{
+    int orderedListCount = 0;
+    for (const Token &t : _tokens)
+    {
+        if(t.type != Helium::TokenType::LIST)
+            orderedListCount = 0;
+        int x = _rect.x;
+        switch (t.type)
+        {
+        case Helium::TokenType::HEADER:
+        {
+            int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at(ATTRIBUTE_HEADER_LEVEL)));
+            for (const Token &it : t.children)
+            {
+                x += Utils::DrawInlineToken(it, x, y, headerFontSize);
+            }
+            x = _rect.x;
+            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(headerFontSize);
+            break;
+        }
+        case Helium::TokenType::HORIZONTALLINE:
+        {
+            int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph;
+            int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
+            DrawLineEx({_rect.x + 25, static_cast<float>(y + lineHeight * 0.5f)}, {_rect.x + _rect.width - 25, static_cast<float>(y + lineHeight * 0.5f)},
+                       Configuration::getInstance().Formatting.HorizontalLineThickness,
+                       Configuration::getInstance().ColorTheme.HorizontalLineColor);
+            y += lineHeight + Configuration::getInstance().Formatting.HorizontalLineThickness;
+            break;
+        }
+        case Helium::TokenType::TODO: {
+            int offset = MeasureTextEx(Configuration::getInstance().Formatting.DefaultFont, " TODO ", Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing).x;
+            int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph; 
+            int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
+            DrawRectangle(_rect.x, y, offset, lineHeight, Configuration::getInstance().ColorTheme.TodoBackgroundColor);
+            DrawTextEx(Configuration::getInstance().Formatting.DefaultFont, " TODO ", {static_cast<float>(x), static_cast<float>(y)}, Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing, Configuration::getInstance().ColorTheme.TodoForegroundColor);
+            x += offset + 10;
+            for (const Token &it : t.children)
+                {
+                    x += Utils::DrawInlineToken(it, x, y);
+                }
+            x = _rect.x;
+            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+            break;
+        }
+        case Helium::TokenType::CODE:
+        {
+            int codeFontSize = Helium::Configuration::getInstance().Formatting.Paragraph; // Assume a config entry for code font size
+            int maxWidth = 0;                                                             // Track maximum width for the rectangle
+            int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(codeFontSize);
+
+            // Calculate the width for all child tokens to set the rectangle dimensions
+            for (const Token &it : t.children)
+            {
+                float width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), codeFontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+                maxWidth = std::max(maxWidth, static_cast<int>(width));
+            }
+
+            // Draw the background rectangle for the code block
+            DrawRectangle(x - 2, y - 2, maxWidth + 4, (lineHeight * t.children.size()) + 4, Helium::Configuration::getInstance().ColorTheme.CodeBackgroundColor);
+
+            // Draw each line of code
+            for (const Token &it : t.children)
+            {
+                DrawTextEx(Configuration::getInstance().Formatting.CodeFont,
+                           it.value.c_str(),
+                           {static_cast<float>(x), static_cast<float>(y)},
+                           Configuration::getInstance().Formatting.Paragraph,
+                           Configuration::getInstance().Formatting.CharSpacing,
+                           Configuration::getInstance().ColorTheme.CodeTextColor);
+                y += lineHeight; // Move down after rendering each line of code
+            }
+
+            x = _rect.x;
+            break;
+        }
+        case Helium::TokenType::QUOTE:
+        {
+            int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph;
+            int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
+            float totalHeight = t.children.size() * lineHeight;
+            DrawRectangle(x, y, 5, totalHeight, Configuration::getInstance().ColorTheme.getQuoteColor(t.attributes.at(ATTRIBUTE_QUOTE_TYPE)));
+            x += 25;
+
+            for (const Token &child : t.children)
+            {
+                for (const Token &it : child.children)
+                {
+                    x += Utils::DrawInlineToken(it, x, y);
+                }
+                x = _rect.x + 25;
+                y += lineHeight;
+            }
+            x = _rect.x;
+            break;
+        }
+        case Helium::TokenType::LIST: {
+            if(t.attributes.at(ATTRIBUTE_LIST_ORDERED) == "true") {
+                std::string listItemText = std::to_string(orderedListCount) + ".";
+                DrawTextEx(Configuration::getInstance().Formatting.DefaultFont, listItemText.c_str(), {static_cast<float>(x), static_cast<float>(y)}, Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing, Configuration::getInstance().ColorTheme.ListItemBulletColor);
+                x += 25;
+                for (const Token &it : t.children)
+                {
+                    x += Utils::DrawInlineToken(it, x, y);
+                }
+                orderedListCount++;
+            } else {
+                DrawTextEx(Configuration::getInstance().Formatting.DefaultFont, "-", {static_cast<float>(x), static_cast<float>(y)}, Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing, Configuration::getInstance().ColorTheme.ListItemBulletColor);
+                x += 25;
+                for (const Token &it : t.children)
+                {
+                    x += Utils::DrawInlineToken(it, x, y);
+                }
+
+            }
+            x = _rect.x;
+            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+
+            break;
+        }
+        default:
+            for (const Token &it : t.children)
+            {
+                x += Utils::DrawInlineToken(it, x, y);
+            }
+            x = _rect.x;
+            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+
+            break;
+        }
+    }
+}
 
 void NoteArea::SetRect(Rectangle rect) {
     _rect = rect;
