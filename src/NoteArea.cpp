@@ -501,7 +501,21 @@ void NoteArea::RenderMarkdown(int y)
             y += lineHeight + Configuration::getInstance().Formatting.HorizontalLineThickness;
             break;
         }
-
+        case Helium::TokenType::TODO: {
+            int offset = MeasureTextEx(Configuration::getInstance().Formatting.DefaultFont, " TODO ", Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing).x;
+            int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph; 
+            int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
+            DrawRectangle(_rect.x, y, offset, lineHeight, Configuration::getInstance().ColorTheme.TodoBackgroundColor);
+            DrawTextEx(Configuration::getInstance().Formatting.DefaultFont, " TODO ", {static_cast<float>(x), static_cast<float>(y)}, Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing, Configuration::getInstance().ColorTheme.TodoForegroundColor);
+            x += offset + 10;
+            for (const Token &it : t.children)
+                {
+                    x += Utils::DrawInlineToken(it, x, y);
+                }
+            x = _rect.x;
+            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+            break;
+        }
         case Helium::TokenType::CODE:
         {
             int codeFontSize = Helium::Configuration::getInstance().Formatting.Paragraph; // Assume a config entry for code font size

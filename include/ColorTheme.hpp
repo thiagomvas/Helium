@@ -28,6 +28,8 @@ public:
     Color QuoteCaution = { 219, 54, 50, 255 }; 
 	Color HorizontalLineColor = {40, 40, 40, 255};
 	Color ListItemBulletColor = { 200, 100, 100, 255 };
+	Color TodoBackgroundColor = { 8, 108, 52, 255 };
+	Color TodoForegroundColor = { 200, 200, 200, 255 };
 
 	std::string serialize() {
 	std::ostringstream oss;
@@ -49,6 +51,8 @@ public:
         oss << "QuoteCaution:" << Serializer::Serialize(QuoteCaution) << '\n';
         oss << "HorizontalLineColor:" << Serializer::Serialize(HorizontalLineColor) << '\n';
         oss << "ListItemBulletColor:" << Serializer::Serialize(ListItemBulletColor) << '\n';
+        oss << "TodoBackgroundColor:" << Serializer::Serialize(TodoBackgroundColor) << '\n';
+        oss << "TodoForegroundColor:" << Serializer::Serialize(TodoForegroundColor) << '\n';
 
 		return oss.str();
 	}
@@ -92,6 +96,8 @@ public:
         {"QuoteCaution", [this](std::string& value) { QuoteCaution = Serializer::DeserializeRaylibColor(value); }},
         {"HorizontalLineColor", [this](std::string& value) { HorizontalLineColor = Serializer::DeserializeRaylibColor(value); }},
         {"ListItemBulletColor", [this](std::string& value) { ListItemBulletColor = Serializer::DeserializeRaylibColor(value); }},
+        {"TodoBackgroundColor", [this](std::string& value) { TodoBackgroundColor = Serializer::DeserializeRaylibColor(value); }},
+        {"TodoForegroundColor", [this](std::string& value) { TodoForegroundColor = Serializer::DeserializeRaylibColor(value); }},
 	    };
 
 	    while (std::getline(iss, line)) {

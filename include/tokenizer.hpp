@@ -38,6 +38,7 @@ enum class TokenType {
     CODE,
     INLINECODE,
     HORIZONTALLINE,
+    TODO,
     UNKNOWN,
 };
 

@@ -169,15 +169,18 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
         else if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
             token.children = tokenizeInline(token.value);
             tokens.push_back(token);
-        } else if (token = tokenizeList(line); token.type != TokenType::UNKNOWN) {
-            token.children = tokenizeInline(token.value);
+        } else if (line.starts_with("TODO: ")) {
+            token.type = TokenType::TODO;
+            token.value = line.substr(6);
             tokens.push_back(token);
         } else if (token = tokenizeLink(line); token.type != TokenType::UNKNOWN) {
             tokens.push_back(token);
         } else if(token = tokenizeCode(line); token.type != TokenType::UNKNOWN) { 
             tokens.push_back(token);
         } else {
-            tokens.emplace_back(TokenType::PARAGRAPH, line);
+            token.type = TokenType::PARAGRAPH;
+            token.value = line;
+            tokens.push_back(token);
         }
     }
 
