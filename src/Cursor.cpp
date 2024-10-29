@@ -19,36 +19,51 @@ void Cursor::Goto(int position) {
 
 std::string Cursor::GetWordAtCursor() const {
     if (!text || text->empty()) return ""; // Return empty if text is null or empty
-
     int start = _position;
     int end = _position;
     int textSize = text->size();
 
-    // Move start backwards until it reaches the beginning of the word
     while (start > 0 && !std::isspace((*text)[start - 1]) && !std::ispunct((*text)[start - 1])) {
         --start;
     }
 
-    // Move end forwards until it reaches the end of the word
     while (end < textSize && !std::isspace((*text)[end]) && !std::ispunct((*text)[end])) {
         ++end;
     }
 
-    // Extract and return the word
+    if (start < 0 || end > textSize) return ""; // Check for invalid ranges
+
     return text->substr(start, end - start);
 }
 
+
 void Cursor::ReplaceWordWithMacro(const std::unordered_map<std::string, std::string>& macros) {
     std::string word = GetWordAtCursor();
-    if (macros.find(word) != macros.end()) {
-        std::string replacement = macros.at(word);
-        int start = _position - word.length(); 
-        int end = _position; 
 
-        (*text).replace(start, end - start, replacement);
+    if (!word.empty() && macros.find(word) != macros.end()) {
+        std::string replacement = macros.at(word);
+
+        int start = _position - static_cast<int>(word.length());
+        if (_position > start + static_cast<int>(word.length())) {
+            start = _position - word.length(); 
+        }
+
+        if (start < 0) {
+            start = 0; 
+        }
+
+        Goto(start);
+
+        BeginHighlight();
+
+        (*text).replace(start, word.length(), replacement);
+
         _position = start + replacement.length();
+
+        EndHighlight();
     }
 }
+
 
 void Cursor::MoveToStart() {
     _position = 0;
@@ -247,6 +262,8 @@ std::string Cursor::GetHighlightedText() {
 }
 
 int Cursor::GetPosition() {
+    if(_position > text->length())
+        _position = text->length();
     return _position;
 }
 
