@@ -21,6 +21,8 @@ const std::string ATTRIBUTE_HEADER_LEVEL = "level";
 
 const std::string ATTRIBUTE_HYPERLINK_URL = "url";
 
+const std::string ATTRIBUTE_LIST_ORDERED = "ordered";
+
 // Token types enumeration
 enum class TokenType {
     HEADER,

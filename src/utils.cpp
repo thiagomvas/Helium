@@ -261,7 +261,17 @@ int DrawInlineToken(const Helium::Token& it, int& x, int y) {
 int GetLineHeight(Font font, int fontSize) {
 	return MeasureTextEx(font, "A", fontSize, 1).y;
 }
-bool IsFile(const std::string& path) {
+void DrawText(const std::string &text, Vector2 pos) {
+    DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, text.c_str(), pos, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+}
+void DrawText(const std::string &text, Vector2 pos, int fontSize) {
+    DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, text.c_str(), pos, fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+}
+void DrawText(Font font, const std::string &text, Vector2 pos, int fontSize) {
+    DrawTextEx(font, text.c_str(), pos, fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+}
+bool IsFile(const std::string &path)
+{
     fs::path filePath(path); // Convert the string to a filesystem path
     return fs::exists(filePath) && fs::is_regular_file(filePath); // Check if it exists and is a regular file
 }

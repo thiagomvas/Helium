@@ -68,6 +68,10 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
 std::vector<Token> Tokenizer::tokenize(const std::string& text) {
     std::vector<Token> tokens;
     std::istringstream stream(text);
+    std::regex listRegex(R"(^(\s*)([\-\*\+])\s+(.*)$)");
+    std::regex unorderedListRegex(R"(^[\-\*\+]\s+(.*)$)");
+    std::regex orderedListRegex(R"(^\d+\.\s+(.*)$)");
+    std::smatch matches;
     std::string line;
     bool multiline = false;
     TokenType multilineType;
@@ -161,8 +165,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                 multilineType = TokenType::UNKNOWN;
                 tokens.push_back(token);
             }
-        } 
-        
+        }
         else if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
             token.children = tokenizeInline(token.value);
             tokens.push_back(token);
@@ -234,13 +237,20 @@ Token Tokenizer::tokenizeList(const std::string& line) {
     std::regex unorderedListRegex(R"(^[\-\*\+]\s+(.*)$)");
     std::regex orderedListRegex(R"(^\d+\.\s+(.*)$)");
     std::smatch matches;
+    Token token(TokenType::UNKNOWN, "");
 
     if (std::regex_match(line, matches, unorderedListRegex)) {
-        return Token(TokenType::LIST, matches[1].str());
+        token.type = TokenType::LIST;
+        token.value = matches[1].str();
+        token.attributes[ATTRIBUTE_LIST_ORDERED] = "false";
+        return token;
     }
 
     if (std::regex_match(line, matches, orderedListRegex)) {
-        return Token(TokenType::LIST, matches[1].str());
+        token.type = TokenType::LIST;
+        token.value = matches[1].str();
+        token.attributes[ATTRIBUTE_LIST_ORDERED] = "true";
+        return token;
     }
 
     return Token(TokenType::UNKNOWN, "");

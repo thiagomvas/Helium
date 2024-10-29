@@ -25,6 +25,7 @@ public:
     void Update();
     void Save();
     void Draw();
+    void RenderMarkdown(int y);
     std::string GetText();
     std::string GetPath();
     void SetPath(const std::string& path);

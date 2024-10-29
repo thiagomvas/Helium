@@ -27,6 +27,7 @@ public:
     Color QuoteWarning = { 158, 106, 3, 255 }; 
     Color QuoteCaution = { 219, 54, 50, 255 }; 
 	Color HorizontalLineColor = {40, 40, 40, 255};
+	Color ListItemBulletColor = { 200, 100, 100, 255 };
 
 	std::string serialize() {
 	std::ostringstream oss;
@@ -47,6 +48,7 @@ public:
         oss << "QuoteWarning:" << Serializer::Serialize(QuoteWarning) << '\n';
         oss << "QuoteCaution:" << Serializer::Serialize(QuoteCaution) << '\n';
         oss << "HorizontalLineColor:" << Serializer::Serialize(HorizontalLineColor) << '\n';
+        oss << "ListItemBulletColor:" << Serializer::Serialize(ListItemBulletColor) << '\n';
 
 		return oss.str();
 	}
@@ -89,6 +91,7 @@ public:
         {"QuoteWarning", [this](std::string& value) { QuoteWarning = Serializer::DeserializeRaylibColor(value); }},
         {"QuoteCaution", [this](std::string& value) { QuoteCaution = Serializer::DeserializeRaylibColor(value); }},
         {"HorizontalLineColor", [this](std::string& value) { HorizontalLineColor = Serializer::DeserializeRaylibColor(value); }},
+        {"ListItemBulletColor", [this](std::string& value) { ListItemBulletColor = Serializer::DeserializeRaylibColor(value); }},
 	    };
 
 	    while (std::getline(iss, line)) {
