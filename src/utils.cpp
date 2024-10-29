@@ -260,6 +260,12 @@ int DrawInlineToken(const Helium::Token& it, int& x, int y) {
             DrawTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.CodeTextColor);
             break;
         }
+
+        case Helium::TokenType::COLOREDTEXT: {
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Utils::ParseHexColor(it.attributes.at(Helium::ATTRIBUTE_COLOREDTEXT_COLOR)));
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+            break;
+        }
         default: {
             DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
             width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
@@ -309,5 +315,13 @@ Color ParseHexColor(const std::string& hexColor) {
 
     // Return the Raylib Color with alpha set to 255 (fully opaque)
     return { static_cast<unsigned char>(r), static_cast<unsigned char>(g), static_cast<unsigned char>(b), 255 };
+}
+std::string ColorToHex(const Color &color) {
+    std::ostringstream oss;
+    oss << "#"
+        << std::hex << std::setw(2) << std::setfill('0') << (color.r & 0xFF)
+        << std::setw(2) << std::setfill('0') << (color.g & 0xFF)
+        << std::setw(2) << std::setfill('0') << (color.b & 0xFF);
+    return oss.str();
 }
 }

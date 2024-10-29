@@ -21,6 +21,7 @@ void DrawText(Font font, const std::string& text, Vector2 pos, int fontSize);
 bool IsFile(const std::string& path);
 bool IsSupportedNoteFileType(const std::string& path);
 Color ParseHexColor(const std::string& hexColor);
+std::string ColorToHex(const Color& color);
 
 }
 

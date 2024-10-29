@@ -90,18 +90,43 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                 if (content.starts_with("[!NOTE]")) {
                     token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_NOTE;
                     content = content.substr(7); // Remove "[!NOTE]"
-                } else if (content.starts_with("[!TIP]")) {
+                    Token headerParent = Token(TokenType::QUOTECHILD, "");
+                    Token header = Token(TokenType::COLOREDTEXT, "Note");
+                    header.attributes[ATTRIBUTE_COLOREDTEXT_COLOR] = Utils::ColorToHex(Helium::Configuration::getInstance().ColorTheme.QuoteNote);
+                    headerParent.children.push_back(header);
+                    token.children.push_back(headerParent);
+                } else if (content.starts_with("[!TIP")) {
                     token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_TIP;
                     content = content.substr(6); // Remove "[!TIP]"
+                    Token headerParent = Token(TokenType::QUOTECHILD, "");
+                    Token header = Token(TokenType::COLOREDTEXT, "Tip");
+                    header.attributes[ATTRIBUTE_COLOREDTEXT_COLOR] = Utils::ColorToHex(Helium::Configuration::getInstance().ColorTheme.QuoteTip);
+                    headerParent.children.push_back(header);
+                    token.children.push_back(headerParent);
                 } else if (content.starts_with("[!IMPORTANT]")) {
                     token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_IMPORTANT;
                     content = content.substr(13); // Remove "[!IMPORTANT]"
+                    Token headerParent = Token(TokenType::QUOTECHILD, "");
+                    Token header = Token(TokenType::COLOREDTEXT, "Important");
+                    header.attributes[ATTRIBUTE_COLOREDTEXT_COLOR] = Utils::ColorToHex(Helium::Configuration::getInstance().ColorTheme.QuoteImportant);
+                    headerParent.children.push_back(header);
+                    token.children.push_back(headerParent);
                 } else if (content.starts_with("[!WARNING]")) {
                     token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_WARNING;
                     content = content.substr(10); // Remove "[!WARNING]"
+                    Token headerParent = Token(TokenType::QUOTECHILD, "");
+                    Token header = Token(TokenType::COLOREDTEXT, "Warning");
+                    header.attributes[ATTRIBUTE_COLOREDTEXT_COLOR] = Utils::ColorToHex(Helium::Configuration::getInstance().ColorTheme.QuoteWarning);
+                    headerParent.children.push_back(header);
+                    token.children.push_back(headerParent);
                 } else if (content.starts_with("[!CAUTION]")) {
                     token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_CAUTION;
                     content = content.substr(10); // Remove "[!CRITICAL]"
+                    Token headerParent = Token(TokenType::QUOTECHILD, "");
+                    Token header = Token(TokenType::COLOREDTEXT, "Caution");
+                    header.attributes[ATTRIBUTE_COLOREDTEXT_COLOR] = Utils::ColorToHex(Helium::Configuration::getInstance().ColorTheme.QuoteCaution);
+                    headerParent.children.push_back(header);
+                    token.children.push_back(headerParent);
                 } else {
                     token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_DEFAULT; // Optional: Set a default type if none match
                 }
