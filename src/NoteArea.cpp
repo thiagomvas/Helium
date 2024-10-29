@@ -284,8 +284,12 @@ void NoteArea::Update() {
             }
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 _cursor.BeginHighlight();
-            if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-                _cursor.EndHighlight();
+            if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+                if(_cursor.GetHighlightStart() == _cursor.GetHighlightEnd())
+                    _cursor.Deselect();
+                else
+                    _cursor.EndHighlight();
+            }
 
 
             if(isDirty) {
