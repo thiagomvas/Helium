@@ -413,14 +413,14 @@ void NoteArea::Draw() {
                         int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph;
                         int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
                         float totalHeight = t.children.size() * lineHeight;
-                        DrawRectangle(x, y, 10, totalHeight, RED);
+                        DrawRectangle(x, y, 5, totalHeight, Configuration::getInstance().ColorTheme.getQuoteColor(t.attributes.at("type")));
                         x += 25;
                         
                         for(const Token& child : t.children) {
-                            DrawText(child.value.c_str(), x, y, 16, RED);
-                            // for(const Token& it : child.children) {
-                            //     Utils::DrawInlineToken(it, x, y);
-                            // }
+                            for(const Token& it : child.children) {
+                                x += Utils::DrawInlineToken(it, x, y);
+                            }
+                            x = _rect.x + 25;
                             y += lineHeight;
                         }
                         break;

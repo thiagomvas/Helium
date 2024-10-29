@@ -79,13 +79,37 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
         }
 
         if(line.starts_with("> ")) {
-            if(!multiline) {
+            std::string content = line.substr(2);
+            if (!multiline) {
                 multiline = true;
                 multilineType = TokenType::QUOTE;
                 token = Token(TokenType::QUOTE, "");
-            }
 
-            std::string content = line.substr(2);
+                // Check if the content starts with a specific type indicator
+                if (content.starts_with("[!NOTE]")) {
+                    token.attributes["type"] = "note";
+                    content = content.substr(7); // Remove "[!NOTE]"
+                } else if (content.starts_with("[!TIP]")) {
+                    token.attributes["type"] = "tip";
+                    content = content.substr(6); // Remove "[!TIP]"
+                } else if (content.starts_with("[!IMPORTANT]")) {
+                    token.attributes["type"] = "important";
+                    content = content.substr(13); // Remove "[!IMPORTANT]"
+                } else if (content.starts_with("[!WARNING]")) {
+                    token.attributes["type"] = "warning";
+                    content = content.substr(10); // Remove "[!WARNING]"
+                } else if (content.starts_with("[!CAUTION]")) {
+                    token.attributes["type"] = "caution";
+                    content = content.substr(10); // Remove "[!CRITICAL]"
+                } else {
+                    token.attributes["type"] = "default"; // Optional: Set a default type if none match
+                }
+
+                // Trim leading whitespace from the content
+                content.erase(content.begin(), std::find_if(content.begin(), content.end(), [](unsigned char ch) {
+                    return !std::isspace(ch);
+                }));
+            }
             std::vector<std::string> wrapped = Utils::WrapText(content, 
                                                                 Configuration::getInstance().Formatting.CodeFont, 
                                                                 Configuration::getInstance().Formatting.Paragraph,

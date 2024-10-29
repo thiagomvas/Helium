@@ -20,6 +20,12 @@ public:
 	Color TextHighlight = { 37, 150, 190, 128 };
 	Color CodeTextColor = { 150, 150, 150, 255 };
 	Color CodeBackgroundColor = { 40, 40, 40, 255 };
+    Color QuoteDefault = { 246, 248, 250, 255 }; 
+    Color QuoteNote = { 31, 110, 234, 255 };   
+    Color QuoteTip = { 31, 110, 234, 255 };    
+    Color QuoteImportant = { 137, 86, 228, 255 }; 
+    Color QuoteWarning = { 158, 106, 3, 255 }; 
+    Color QuoteCaution = { 219, 54, 50, 255 }; 
 
 	std::string serialize() {
 	std::ostringstream oss;
@@ -33,8 +39,30 @@ public:
 		oss << "TextHighlight:" << Serializer::Serialize(TextHighlight) << '\n';
 		oss << "CodeTextColor" << Serializer::Serialize(CodeTextColor) << '\n';
 		oss << "CodeBackgroundColor" << Serializer::Serialize(CodeBackgroundColor) << '\n';
+        oss << "QuoteDefault:" << Serializer::Serialize(QuoteDefault) << '\n';
+        oss << "QuoteNote:" << Serializer::Serialize(QuoteNote) << '\n';
+        oss << "QuoteTip:" << Serializer::Serialize(QuoteTip) << '\n';
+        oss << "QuoteImportant:" << Serializer::Serialize(QuoteImportant) << '\n';
+        oss << "QuoteWarning:" << Serializer::Serialize(QuoteWarning) << '\n';
+        oss << "QuoteCaution:" << Serializer::Serialize(QuoteCaution) << '\n';
 
 		return oss.str();
+	}
+
+	Color getQuoteColor(const std::string& type) {
+		if (type == "note") {
+			return QuoteNote;
+		} else if (type == "tip") {
+			return QuoteTip;
+		} else if (type == "important") {
+			return QuoteImportant;
+		} else if (type == "warning") {
+			return QuoteWarning;
+		} else if (type == "caution") {
+			return QuoteCaution;
+		} else {
+			return QuoteDefault;
+		}
 	}
 
 
@@ -52,6 +80,12 @@ public:
 		{"TextHighlight", [this](std::string& value) {TextHighlight = Serializer::DeserializeRaylibColor(value); }},
 		{"CodeTextColor", [this](std::string& value) {CodeTextColor = Serializer::DeserializeRaylibColor(value); }},
 		{"CodeBackgroundColor", [this](std::string& value) {CodeBackgroundColor = Serializer::DeserializeRaylibColor(value); }},
+		{"QuoteDefault", [this](std::string& value) { QuoteDefault = Serializer::DeserializeRaylibColor(value); }},
+        {"QuoteNote", [this](std::string& value) { QuoteNote = Serializer::DeserializeRaylibColor(value); }},
+        {"QuoteTip", [this](std::string& value) { QuoteTip = Serializer::DeserializeRaylibColor(value); }},
+        {"QuoteImportant", [this](std::string& value) { QuoteImportant = Serializer::DeserializeRaylibColor(value); }},
+        {"QuoteWarning", [this](std::string& value) { QuoteWarning = Serializer::DeserializeRaylibColor(value); }},
+        {"QuoteCaution", [this](std::string& value) { QuoteCaution = Serializer::DeserializeRaylibColor(value); }},
 	    };
 
 	    while (std::getline(iss, line)) {
