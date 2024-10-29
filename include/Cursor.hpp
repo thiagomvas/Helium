@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <unordered_map>
 namespace Helium {
 
 class Cursor {
@@ -25,6 +26,8 @@ public:
 	void Deselect();
 	void SetTextPter(std::shared_ptr<std::string> text, std::shared_ptr<std::vector<std::string>> wrappedLines);
 	void Goto(int position);
+	std::string GetWordAtCursor() const;
+	void ReplaceWordWithMacro(const std::unordered_map<std::string, std::string>& macros);
 	int GetCurrentLineIndex() const;
 	int GetCurrentLineColumn() const;
 	int GetColumn(int position) const;
