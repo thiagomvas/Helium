@@ -65,6 +65,10 @@ void NoteArea::SetMode(NoteMode mode) {
                     }
                     break;
                 }
+                case Helium::TokenType::CODE: {
+                    temp.push_back(t);
+                    break;
+                }
                 default:
                     Utils::WrapText(t.value, readModeLines, Helium::Configuration::getInstance().Formatting.Paragraph);
                     for(const std::string& line : *readModeLines) {
@@ -374,6 +378,35 @@ void NoteArea::Draw() {
                         y += Helium::Configuration::getInstance().Formatting.GetLineHeight(headerFontSize);
                         break;
                     }
+                    case Helium::TokenType::CODE: {
+                        int codeFontSize = Helium::Configuration::getInstance().Formatting.Paragraph; // Assume a config entry for code font size
+                        int maxWidth = 0; // Track maximum width for the rectangle
+                        int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(codeFontSize);
+                        
+                        // Calculate the width for all child tokens to set the rectangle dimensions
+                        for (const Token& it : t.children) {
+                            float width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), codeFontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+                            maxWidth = std::max(maxWidth, static_cast<int>(width));
+                        }
+
+                        // Draw the background rectangle for the code block
+                        DrawRectangle(x - 2, y - 2, maxWidth + 4, (lineHeight * t.children.size()) + 4, Helium::Configuration::getInstance().ColorTheme.CodeBackgroundColor);
+
+                        // Draw each line of code
+                        for (const Token& it : t.children) {
+                            DrawTextEx(Configuration::getInstance().Formatting.CodeFont, 
+                                        it.value.c_str(), 
+                                        {static_cast<float>(x), static_cast<float>(y)}, 
+                                        Configuration::getInstance().Formatting.Paragraph, 
+                                        Configuration::getInstance().Formatting.CharSpacing, 
+                                        Configuration::getInstance().ColorTheme.CodeTextColor);
+                            y += lineHeight; // Move down after rendering each line of code
+                        }
+                        
+                        x = _rect.x; 
+                        break;
+                    }
+
                     default:
                         for(const Token& it : t.children) {
                             x += Utils::DrawInlineToken(it, x, y);

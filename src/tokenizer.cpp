@@ -3,8 +3,15 @@
 #include <string>
 #include <regex>
 #include <sstream>
+#include <unordered_map>
+#include "utils.hpp"
 
 namespace Helium {
+bool isEmptyOrWhitespace(const std::string& str) {
+    return std::all_of(str.begin(), str.end(), [](unsigned char c) {
+        return std::isspace(c);
+    });
+}
 
 std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
     std::vector<Token> tokens;
@@ -62,14 +69,36 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
     std::vector<Token> tokens;
     std::istringstream stream(text);
     std::string line;
+    bool multiline = false;
+    TokenType multilineType;
+    Token token;
 
     while (std::getline(stream, line)) {
         if (line.empty()) {
             continue;
         }
 
-        Token token;
-        if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
+        if(line.starts_with("```") || (multiline && multilineType == TokenType::CODE)) {
+            if(!multiline) {
+                multiline = true;
+                multilineType = TokenType::CODE;
+                token = Token(TokenType::CODE, "");
+            }
+            std::vector<std::string> wrapped = Utils::WrapText(line, 
+                                                                Configuration::getInstance().Formatting.CodeFont, 
+                                                                Configuration::getInstance().Formatting.Paragraph,
+                                                                Configuration::getInstance().Formatting.CharSpacing,
+                                                                Configuration::getInstance().MaxNoteWidth);
+            for(std::string wline : wrapped) {
+                wline.erase(std::remove(wline.begin(), wline.end(), '`'), wline.end());
+                token.children.push_back(Token(TokenType::INLINECODE, wline));
+            }
+            if(line.ends_with("```")) {
+                multiline = false;
+                multilineType = TokenType::UNKNOWN;
+                tokens.push_back(token);
+            }
+        } else if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
             token.children = tokenizeInline(token.value);
             tokens.push_back(token);
         } else if (token = tokenizeList(line); token.type != TokenType::UNKNOWN) {

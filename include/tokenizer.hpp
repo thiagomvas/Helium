@@ -25,6 +25,11 @@ enum class TokenType {
     UNKNOWN,
 };
 
+struct TokenPattern {
+    TokenType type;
+    std::regex regex;
+    bool isMultiline;
+};
 // Token struct
 
 struct Token {
