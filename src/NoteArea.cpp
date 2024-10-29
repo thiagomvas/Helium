@@ -209,7 +209,8 @@ void NoteArea::Update() {
             while ((key = GetCharPressed()) > 0) {
                 if (key >= 32) { // Valid character range
                     if (_cursor.IsHighlighting()) {
-                        safeErase(_rawText, _cursor.GetHighlightStart(), _cursor.GetHighlightEnd());
+                        if( _cursor.GetHighlightStart() != _cursor.GetHighlightEnd())
+                            safeErase(_rawText, _cursor.GetHighlightStart(), _cursor.GetHighlightEnd());
                         _cursor.Deselect();
                     }
                     _rawText->insert(_cursor.GetPosition(), 1, (char)key);
