@@ -15,48 +15,34 @@ bool isEmptyOrWhitespace(const std::string& str) {
 
 std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
     std::vector<Token> tokens;
-    std::string::const_iterator searchStart(line.cbegin());
+    std::string::const_iterator searchStart = line.cbegin();
     std::smatch match;
-    std::regex boldRegex(R"(\*\*(.*?)\*\*)");
-    std::regex italicRegex(R"(\*(.*?)\*)");
-    std::regex strikethroughRegex(R"(~(.*?)~)");
-    std::regex codeRegex(R"(`(.*?)`)");  
 
-    while(searchStart != line.cend()) {
-        // BOLD
-        if(std::regex_search(searchStart, line.cend(), match, boldRegex)) {
-            if(match.prefix().length() > 0) {
-                tokens.push_back(Token(TokenType::TEXT,match.prefix().str()));
-            }
-            tokens.push_back(Token(TokenType::BOLD, match[1].str()));
-            searchStart = match.suffix().first;
-        } 
-        // ITALIC
-        else if (std::regex_search(searchStart, line.cend(), match, italicRegex)) {
-            if(match.prefix().length() > 0 ) {
-                tokens.push_back(Token(TokenType::TEXT, match.prefix().str()));
-            }
-            tokens.push_back(Token(TokenType::ITALIC, match[1].str()));
-            searchStart = match.suffix().first;
-        } 
-        // STRIKETHROUGH
-        else if (std::regex_search(searchStart, line.cend(), match, strikethroughRegex)) {
-            if(match.prefix().length() > 0 ) {
-                tokens.push_back(Token(TokenType::TEXT, match.prefix().str()));
-            }
-            tokens.push_back(Token(TokenType::STRIKETHROUGH, match[1].str()));
-            searchStart = match.suffix().first;
-        }
-        // INLINE CODE 
-        else if (std::regex_search(searchStart, line.cend(), match, codeRegex)) {
+    // Combined regex for bold, italic, strikethrough, and code
+    std::regex inlineRegex(R"((\*\*(.*?)\*\*)|(\*(.*?)\*)|(~(.*?)~)|(`(.*?)`))");
+
+    while (searchStart != line.cend()) {
+        if (std::regex_search(searchStart, line.cend(), match, inlineRegex)) {
+            // Add any preceding text as a TEXT token
             if (match.prefix().length() > 0) {
                 tokens.push_back(Token(TokenType::TEXT, match.prefix().str()));
             }
-            tokens.push_back(Token(TokenType::INLINECODE, match[1].str()));
+
+            // Determine the type of token by examining which group matched
+            if (match[1].matched) { // Bold
+                tokens.push_back(Token(TokenType::BOLD, match[2].str()));
+            } else if (match[3].matched) { // Italic
+                tokens.push_back(Token(TokenType::ITALIC, match[4].str()));
+            } else if (match[5].matched) { // Strikethrough
+                tokens.push_back(Token(TokenType::STRIKETHROUGH, match[6].str()));
+            } else if (match[7].matched) { // Inline Code
+                tokens.push_back(Token(TokenType::INLINECODE, match[8].str()));
+            }
+
+            // Move search start position to the end of the match
             searchStart = match.suffix().first;
-        }
-        
-        else {
+        } else {
+            // No more inline formatting found, add remaining text as a TEXT token
             tokens.push_back(Token(TokenType::TEXT, std::string(searchStart, line.cend())));
             break;
         }
@@ -64,6 +50,7 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
 
     return tokens;
 }
+
 
 std::vector<Token> Tokenizer::tokenize(const std::string& text) {
     std::vector<Token> tokens;
