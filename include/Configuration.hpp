@@ -25,7 +25,7 @@ public:
     // Public members
     const std::string AppName = "Helium";
     const int TopMenuBarHeight = 25;
-
+    std::unordered_map<std::string, std::string> Macros;
     int MaxNoteWidth = 600;
     float ActionRepeatDelaySeconds = 0.5f;
     int ScrollLineCount = 4;
@@ -45,12 +45,17 @@ public:
         oss << "COLORTHEME" << '\n';
         oss << ColorTheme.serialize() << '\n';
 
+        oss << "MACROS" << '\n';
+        for(const auto& [key, value] : Macros) {
+            oss << key << ":" << value << '\n';
+        }
         return oss.str();
     }
 
     void deserialize(const std::string& data) {
         std::istringstream iss(data);
         std::string line;
+        bool inMacrosSection = false;
         // Map of handlers for each key
         std::unordered_map<std::string, std::function<void(const std::string&)>> handlers{
             {"MaxNoteWidth", [this](const std::string& value) { MaxNoteWidth = std::stoi(value); }},
@@ -63,8 +68,25 @@ public:
         std::string colorThemeData;
 
         while (std::getline(iss, line)) {
+            if (line == "MACROS") {
+                inMacrosSection = true;
+                continue;
+            }
+
+            if (inMacrosSection) {
+                if (line.empty()) {
+                    inMacrosSection = false; // Exit MACROS section on blank line
+                } else {
+                    auto delimiterPos = line.find(':');
+                    if (delimiterPos != std::string::npos) {
+                        std::string key = line.substr(0, delimiterPos);
+                        std::string value = line.substr(delimiterPos + 1);
+                        Macros[key] = value;
+                    }
+                }
+            }
             // Handle formatting section
-            if (line == "FORMATTING") {
+            else if (line == "FORMATTING") {
                 formattingData.clear();
                 while (std::getline(iss, line) && !line.empty() && line != "COLORTHEME") {
                     formattingData += line + "\n";
