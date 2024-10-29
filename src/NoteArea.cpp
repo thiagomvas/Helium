@@ -65,10 +65,13 @@ void NoteArea::SetMode(NoteMode mode) {
                     }
                     break;
                 }
+                // MULTILINE TOKENS
+                case Helium::TokenType::QUOTE:
                 case Helium::TokenType::CODE: {
                     temp.push_back(t);
                     break;
                 }
+                
                 default:
                     Utils::WrapText(t.value, readModeLines, Helium::Configuration::getInstance().Formatting.Paragraph);
                     for(const std::string& line : *readModeLines) {
@@ -404,6 +407,22 @@ void NoteArea::Draw() {
                         }
                         
                         x = _rect.x; 
+                        break;
+                    }
+                    case Helium::TokenType::QUOTE: {
+                        int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph;
+                        int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
+                        float totalHeight = t.children.size() * lineHeight;
+                        DrawRectangle(x, y, 10, totalHeight, RED);
+                        x += 25;
+                        
+                        for(const Token& child : t.children) {
+                            DrawText(child.value.c_str(), x, y, 16, RED);
+                            // for(const Token& it : child.children) {
+                            //     Utils::DrawInlineToken(it, x, y);
+                            // }
+                            y += lineHeight;
+                        }
                         break;
                     }
 

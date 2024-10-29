@@ -20,6 +20,7 @@ enum class TokenType {
     ITALIC,
     STRIKETHROUGH,
     QUOTE,
+    QUOTECHILD,
     CODE,
     INLINECODE,
     UNKNOWN,

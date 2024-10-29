@@ -78,12 +78,44 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
             continue;
         }
 
+        if(line.starts_with("> ")) {
+            if(!multiline) {
+                multiline = true;
+                multilineType = TokenType::QUOTE;
+                token = Token(TokenType::QUOTE, "");
+            }
+
+            std::string content = line.substr(2);
+            std::vector<std::string> wrapped = Utils::WrapText(content, 
+                                                                Configuration::getInstance().Formatting.CodeFont, 
+                                                                Configuration::getInstance().Formatting.Paragraph,
+                                                                Configuration::getInstance().Formatting.CharSpacing,
+                                                                Configuration::getInstance().MaxNoteWidth);
+            for(const std::string& wline : wrapped) {
+                token.children.push_back(Token(TokenType::QUOTECHILD, wline, tokenizeInline(wline)));
+            }
+
+            if(line.starts_with("> ")) {
+                continue;
+            } else {
+                tokens.push_back(token);
+                multiline = false;
+                multilineType = TokenType::UNKNOWN;
+            }
+        } else if(multilineType == TokenType::QUOTE) {
+                tokens.push_back(token);
+                multiline = false;
+                multilineType = TokenType::UNKNOWN;
+        }
+        // MULTILINE CODE BLOCKS
         if(line.starts_with("```") || (multiline && multilineType == TokenType::CODE)) {
             if(!multiline) {
                 multiline = true;
                 multilineType = TokenType::CODE;
                 token = Token(TokenType::CODE, "");
             }
+
+
             std::vector<std::string> wrapped = Utils::WrapText(line, 
                                                                 Configuration::getInstance().Formatting.CodeFont, 
                                                                 Configuration::getInstance().Formatting.Paragraph,
@@ -98,16 +130,15 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                 multilineType = TokenType::UNKNOWN;
                 tokens.push_back(token);
             }
-        } else if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
+        } 
+        
+        else if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
             token.children = tokenizeInline(token.value);
             tokens.push_back(token);
         } else if (token = tokenizeList(line); token.type != TokenType::UNKNOWN) {
             token.children = tokenizeInline(token.value);
             tokens.push_back(token);
         } else if (token = tokenizeLink(line); token.type != TokenType::UNKNOWN) {
-            tokens.push_back(token);
-        } else if (token = tokenizeQuote(line); token.type != TokenType::UNKNOWN) { 
-            token.children = tokenizeInline(token.value);
             tokens.push_back(token);
         } else if(token = tokenizeCode(line); token.type != TokenType::UNKNOWN) { 
             tokens.push_back(token);
@@ -116,6 +147,11 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
         }
     }
 
+    if(multiline) {
+        multiline = false;
+        multilineType = TokenType::UNKNOWN;
+        tokens.push_back(token);
+    }
     return tokens;
 }
 
