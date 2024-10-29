@@ -33,6 +33,7 @@ public:
     void SetMode(NoteMode mode);
 	Cursor* GetCursor();
     void TryLoadNote(const std::string& path);
+    void SetDirty();
 private:
     std::string path;
     RenderTexture2D _texture;
