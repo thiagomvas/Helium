@@ -73,6 +73,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
     std::regex orderedListRegex(R"(^\d+\.\s+(.*)$)");
     std::smatch matches;
     std::string line;
+    std::vector<std::string> wrappedLines;
     bool multiline = false;
     TokenType multilineType;
     Token token;
@@ -86,6 +87,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
 
         if(line.starts_with("> ")) {
             std::string content = line.substr(2);
+            token.type = TokenType::QUOTE;
             if (!multiline) {
                 multiline = true;
                 multilineType = TokenType::QUOTE;
@@ -167,20 +169,42 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
             }
         }
         else if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
-            token.children = tokenizeInline(token.value);
-            tokens.push_back(token);
+            
+            int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(token.attributes.at(ATTRIBUTE_HEADER_LEVEL)));
+            std::vector<std::string> wrapped = Utils::WrapText(token.value, 
+                                                                Configuration::getInstance().Formatting.DefaultFont, 
+                                                                headerFontSize,
+                                                                Configuration::getInstance().Formatting.CharSpacing,
+                                                                Configuration::getInstance().MaxNoteWidth);
+            for(std::string line : wrapped) {
+                Helium::Token t(token.type, line, tokenizeInline(line));
+                t.attributes[ATTRIBUTE_HEADER_LEVEL] = token.attributes.at(ATTRIBUTE_HEADER_LEVEL);
+                tokens.push_back(t);
+            }
         } else if (line.starts_with("TODO: ")) {
             token.type = TokenType::TODO;
             token.value = line.substr(6);
+            token.children = tokenizeInline(token.value);
             tokens.push_back(token);
         } else if (token = tokenizeLink(line); token.type != TokenType::UNKNOWN) {
             tokens.push_back(token);
         } else if(token = tokenizeCode(line); token.type != TokenType::UNKNOWN) { 
             tokens.push_back(token);
+        } else if (token = tokenizeList(line); token.type != TokenType::UNKNOWN) {
+            token.children = tokenizeInline(token.value);
+            tokens.push_back(token);
         } else {
             token.type = TokenType::PARAGRAPH;
             token.value = line;
-            tokens.push_back(token);
+            std::vector<std::string> wrapped = Utils::WrapText(token.value, 
+                                                                Configuration::getInstance().Formatting.DefaultFont, 
+                                                                Configuration::getInstance().Formatting.Paragraph,
+                                                                Configuration::getInstance().Formatting.CharSpacing,
+                                                                Configuration::getInstance().MaxNoteWidth);
+            for(std::string line : wrapped) {
+                Helium::Token t(token.type, line, tokenizeInline(line));
+                tokens.push_back(t);
+            }
         }
     }
 

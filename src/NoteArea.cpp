@@ -52,38 +52,6 @@ void NoteArea::SetMode(NoteMode mode) {
     _mode = mode;
     if(mode == NoteMode::READ) {
         _tokens = _tokenizer.tokenize(*_rawText);
-        std::vector<Helium::Token> temp;
-        for (const Token& t : _tokens) {
-            switch (t.type) {
-                case Helium::TokenType::HEADER: {
-                    int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(t.attributes.at("level")));
-                    Utils::WrapText(t.value, readModeLines, headerFontSize);
-                    for(std::string line : *readModeLines) {
-                        Helium::Token token(t.type, t.value, _tokenizer.tokenizeInline(line));
-                        token.attributes[ATTRIBUTE_HEADER_LEVEL] = t.attributes.at(ATTRIBUTE_HEADER_LEVEL);
-                        temp.push_back(token);
-                    }
-                    break;
-                }
-                // MULTILINE TOKENS && SPECIAL TOKENS
-                case Helium::TokenType::LIST:
-                case Helium::TokenType::HORIZONTALLINE:
-                case Helium::TokenType::QUOTE:
-                case Helium::TokenType::CODE: {
-                    temp.push_back(t);
-                    break;
-                }
-                
-                default:
-                    Utils::WrapText(t.value, readModeLines, Helium::Configuration::getInstance().Formatting.Paragraph);
-                    for(const std::string& line : *readModeLines) {
-                        Helium::Token token(t.type, t.value, _tokenizer.tokenizeInline(line));
-                        temp.push_back(token);
-                    }
-                    break;
-            }
-        }
-        _tokens = std::move(temp);
     }
 }
 
