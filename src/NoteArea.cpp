@@ -57,12 +57,9 @@ void NoteArea::SetMode(NoteMode mode) {
 
 void NoteArea::Update() {
     
-    // Change height to fit screen
-    if(IsWindowResized()) {
-        _rect.height = GetScreenHeight();
-        _rect.x = (GetScreenWidth() - _rect.width) / 2;
-    }
-
+    _rect.height = GetScreenHeight();
+    _rect.width = Helium::Configuration::getInstance().MaxNoteWidth;
+    _rect.x = (GetScreenWidth() - _rect.width) / 2;
 
     int wheel;
     if (CheckCollisionPointRec(GetMousePosition(), _rect) &&
