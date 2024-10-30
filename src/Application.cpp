@@ -195,7 +195,8 @@ void Application::Start() {
                 } 
             }     
             if(saveFileModal.HasClosed() && !saveFileModal.GetFilePath().empty()) {
-                std::cout << saveFileModal.GetFilePath() << std::endl;
+                _noteArea->SetPath(saveFileModal.GetFilePath());
+                _noteArea->Save();
             }   
         }
     }

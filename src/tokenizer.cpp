@@ -73,7 +73,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
 
     while (std::getline(stream, line)) {
         if (line.empty()) {
-            tokens.push_back(Token(TokenType::PARAGRAPH));
+            tokens.push_back(Token(TokenType::PARAGRAPH, "\n"));
         }
 
         
