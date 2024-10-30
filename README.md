@@ -5,6 +5,7 @@ Helium is a light-weight markdown-based note-taking app built with C++ using Ray
 - **Markdown Support**: Write notes in markdown for easy formatting.
 - **Drawing on note**: You can draw on top of your notes and save them as is
 - **High customizability**: Helium has a focus on high customizability, where the user can customize the app as much as possible.
+- **Text macros**: Text macros are "keywords" that whenever you press `[TAB]`, that keyword will be replaced with whatever text you configured it to.
 
 ## Installation
 Currently, the only way to install it is by building it locally. 
