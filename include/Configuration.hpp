@@ -25,7 +25,8 @@ class Configuration {
     const int TopMenuBarHeight = 25;
     std::unordered_map<std::string, std::string> Macros;
     int MaxNoteWidth = 600;
-    float ActionRepeatDelaySeconds = 0.5f;
+    float ActionRepeatInitialDelaySeconds = 0.5f;
+    float ActionRepeatDelaySeconds = 0.05f;
     int ScrollLineCount = 4;
     Formatting Formatting;
     ColorTheme ColorTheme;
@@ -33,6 +34,7 @@ class Configuration {
     std::string serialize() {
         std::ostringstream oss;
         oss << "MaxNoteWidth:" << MaxNoteWidth << '\n';
+        oss << "ActionRepeatInitialDelaySeconds:" << ActionRepeatInitialDelaySeconds << '\n';
         oss << "ActionRepeatDelaySeconds:" << ActionRepeatDelaySeconds << '\n';
         oss << "ScrollLineCount:" << ScrollLineCount << '\n';
 

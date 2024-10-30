@@ -13,6 +13,7 @@
 #include "tokenizer.hpp"
 #include "constants.h"
 #include "Configuration.hpp"
+#include "InputHandler.hpp"
 
 void SaveNote(std::string fileName, std::string text, Texture2D texture);
 
@@ -20,7 +21,7 @@ bool LoadNote(std::string fileName, std::string& text, Texture2D& texture);
 namespace Helium {
 class NoteArea {
 public:
-    NoteArea(std::shared_ptr<InputHandler> input);
+    NoteArea();
     void Initialize(int heightOffset);
     void Update();
     void Save();
