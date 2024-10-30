@@ -16,6 +16,8 @@ public:
 	void MoveRight();
 	void MoveUp();
 	void MoveDown();
+	void MoveToEndOfLine();
+	void MoveToStartOfLine();
 	int GetPosition();
 	int GetHighlightStart();
 	int GetHighlightEnd();

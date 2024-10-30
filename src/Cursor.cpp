@@ -216,7 +216,6 @@ void Cursor::MoveUp() {
         Goto(newPosition); 
     }
 
-    // Update highlighting as before
     if (_highlightMode) {
         _highlightEnd = _position;
     } else {
@@ -256,6 +255,41 @@ void Cursor::MoveDown() {
         _highlightActive = false;
     }
 }
+
+void Cursor::MoveToEndOfLine() {
+    int totalChars = 0;
+    int line = 0;
+
+    for (int i = 0; i < wrappedLines->size(); i++) {
+        line = i;
+        int lineLength = wrappedLines->at(i).length();
+
+        if (totalChars + lineLength >= GetPosition()) {
+            Goto(totalChars + lineLength);
+            return;
+        }
+
+        totalChars += lineLength + 1; 
+    }
+}
+
+void Cursor::MoveToStartOfLine() {
+    int totalChars = 0;
+    int line = 0;
+
+    for (int i = 0; i < wrappedLines->size(); i++) {
+        line = i;
+        int lineLength = wrappedLines->at(i).length();
+
+        if (totalChars + lineLength >= GetPosition()) {
+            Goto(totalChars);
+            return;
+        }
+
+        totalChars += lineLength + 1; 
+    }
+}
+
 
 void Cursor::BeginHighlight() {
     _highlightStart = _position;

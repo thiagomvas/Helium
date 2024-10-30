@@ -62,9 +62,17 @@ Application::Application() : isRunning(false), _inputHandler(std::make_unique<In
     // READ MODE
      
     // WRITE MODE
+    _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_END), [this]() { this->_noteArea->GetCursor()->MoveToEndOfLine(); });
+    _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_HOME), [this]() { this->_noteArea->GetCursor()->MoveToStartOfLine(); });
     _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_TAB), [this]() { 
         this->_noteArea->GetCursor()->ReplaceWordWithMacro(Helium::Configuration::getInstance().Macros);
         this->_noteArea->SetDirty();
+    });
+    _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_A, KEY_LEFT_CONTROL), [this]() {
+        this->_noteArea->GetCursor()->MoveToStart();
+        this->_noteArea->GetCursor()->BeginHighlight();
+        this->_noteArea->GetCursor()->MoveToEnd();
+        this->_noteArea->GetCursor()->EndHighlight();
     });
     _inputHandler->AddAction(NoteMode::WRITE, InputCombo(KEY_C, KEY_LEFT_CONTROL), [this]() {
         if(this->_noteArea->GetCursor()->IsHighlighting()) {

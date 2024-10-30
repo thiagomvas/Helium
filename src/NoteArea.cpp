@@ -183,13 +183,6 @@ void NoteArea::Update() {
                     _cursor.MoveDown();
                 }
             }
-
-            // Handle Home and End keys
-            if (IsKeyPressed(KEY_HOME))
-                _cursor.MoveToStart();
-            if (IsKeyPressed(KEY_END))
-                _cursor.MoveToEnd();
-
             // Handle Enter key
             if (IsKeyPressed(KEY_ENTER)) {
                 if (_cursor.IsHighlighting()) {
