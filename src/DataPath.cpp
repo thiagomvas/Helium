@@ -3,6 +3,20 @@
 #include <string>
 #include <cstdlib>
 
+std::string GetUserRootPath() {
+#ifdef _WIN32
+    // Windows: Use the USERPROFILE environment variable (C:\Users\Username)
+    char* userProfilePath = std::getenv("USERPROFILE");
+    return userProfilePath ? std::string(userProfilePath) : "";
+#elif __APPLE__ || __linux__
+    // macOS and Linux: Use the HOME environment variable
+    char* homePath = std::getenv("HOME");
+    return homePath ? std::string(homePath) : "";
+#else
+    return ""; // Unsupported system
+#endif
+}
+
 std::string GetAppDataPath() {
 #ifdef _WIN32
     // Windows: Use the APPDATA environment variable (C:\Users\Username\AppData\Roaming)

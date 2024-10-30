@@ -2,7 +2,7 @@
 #define DATAPATH_HPP
 
 #include <string>
-
+std::string GetUserRootPath();
 std::string GetAppDataPath();
 
 

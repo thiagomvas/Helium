@@ -178,7 +178,7 @@ void Application::Start() {
     
         switch(fileDropdownValue) {
             case 1: // Open
-                fileOpenModal.Show("C:/Users/Thiago");
+                fileOpenModal.Show(GetUserRootPath());
             break;
             case 2: // Save
                 if(_noteArea->GetPath().empty()) {
