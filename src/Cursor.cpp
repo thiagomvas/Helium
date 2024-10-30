@@ -189,57 +189,74 @@ int Cursor::GetColumn(int position) const {
 
 
 void Cursor::MoveUp() {
-    int lineIndex = GetCurrentLineIndex(); // Get the current line index
-    if (lineIndex > 0) {
-        // Get the length of the current line
-        size_t currLineLength = wrappedLines->at(lineIndex).size();
-        size_t currColumn = _position - (lineIndex > 0 ? std::accumulate(wrappedLines->begin(), wrappedLines->begin() + lineIndex, 0, 
-            [](size_t sum, const std::string& line) { return sum + line.size(); }) : 0);
+    int totalChars = 0;
+    int line = 0, column = 0;
+    int prevLineLength = 0; 
 
-        // Move to the previous line
-        --lineIndex;
+    for (int i = 0; i < wrappedLines->size(); i++) {
+        line = i;
+        int lineLength = wrappedLines->at(i).length();
 
-        // Get the length of the previous line
-        size_t prevLineLength = wrappedLines->at(lineIndex).size();
-        
-        // Update cursor position
-        _position = std::min(currColumn, prevLineLength);
-        _position += std::accumulate(wrappedLines->begin(), wrappedLines->begin() + lineIndex, 0, 
-            [](size_t sum, const std::string& line) { return sum + line.size(); });
+        if (totalChars + lineLength >= GetPosition()) {
+            column = GetPosition() - totalChars;
+            break;
+        }
+
+        prevLineLength = lineLength;  
+        totalChars += lineLength + 1; 
     }
 
-    // Update highlighting
+    
+    if (line > 0) {
+        int prevLineLength = wrappedLines->at(line - 1).length();
+        int targetColumn = std::min(column, prevLineLength);
+        
+        int newPosition = totalChars - wrappedLines->at(line).length() - 1 + targetColumn;
+        
+        Goto(newPosition); 
+    }
+
+    // Update highlighting as before
     if (_highlightMode) {
         _highlightEnd = _position;
     } else {
         _highlightActive = false;
     }
 }
+
 
 void Cursor::MoveDown() {
-    int lineIndex = GetCurrentLineIndex(); // Get the current line index
-    if (lineIndex < wrappedLines->size() - 1) {
-        // Get the length of the current line
-        size_t currLineLength = wrappedLines->at(lineIndex).size();
-        size_t currColumn = _position - (lineIndex > 0 ? std::accumulate(wrappedLines->begin(), wrappedLines->begin() + lineIndex, 0, 
-            [](size_t sum, const std::string& line) { return sum + line.size(); }) : 0);
+    int totalChars = 0;
+    int line = 0, column = 0;
 
-        // Move to the next line
-        ++lineIndex;
+    for (int i = 0; i < wrappedLines->size(); i++) {
+        line = i;
+        int lineLength = wrappedLines->at(i).length();
 
-        // Update cursor position
-        _position = std::min(currColumn, wrappedLines->at(lineIndex).size());
-        _position += std::accumulate(wrappedLines->begin(), wrappedLines->begin() + lineIndex, 0, 
-            [](size_t sum, const std::string& line) { return sum + line.size(); });
+        if (totalChars + lineLength >= GetPosition()) {
+            column = GetPosition() - totalChars;
+            break;
+        }
+
+        totalChars += lineLength + 1; 
     }
 
-    // Update highlighting
+    if (line < wrappedLines->size() - 1) {
+        int nextLineLength = wrappedLines->at(line + 1).length();
+        int targetColumn = std::min(column, nextLineLength);
+        
+        int newPosition = totalChars + wrappedLines->at(line).length() + 1 + targetColumn;
+        
+        Goto(newPosition);
+    }
+
     if (_highlightMode) {
         _highlightEnd = _position;
     } else {
         _highlightActive = false;
     }
 }
+
 void Cursor::BeginHighlight() {
     _highlightStart = _position;
     _highlightEnd = _position;

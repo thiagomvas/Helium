@@ -1,12 +1,13 @@
 #include "SaveFileModal.hpp"
-#include "UiUtils.hpp" // Assuming UiUtils functions are in this file
+#include "UiUtils.hpp"
+#include "DataPath.hpp"
 #include <iostream>
 
 SaveFileModal::SaveFileModal(const Rectangle& rect )
     : modalRect(rect), isVisible(false), hasClosed(false) {}
 
 void SaveFileModal::Show() {
-    filePath.clear(); // Clear any previous path
+    filePath = GetUserRootPath();
     isVisible = true;
     hasClosed = false; // Reset closed state when showing
 }
