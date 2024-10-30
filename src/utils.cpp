@@ -5,10 +5,13 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace Utils {
 
-void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output, std::shared_ptr<Helium::Configuration> _config) {
+void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output) {
     std::string line;
     std::istringstream textStream(text);
     output->clear();
@@ -16,7 +19,7 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
     // Process the raw text line by line
     while (std::getline(textStream, line)) {
         // Check if the entire line fits without wrapping
-        if (MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x < _config->MaxNoteWidth) {
+        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().MaxNoteWidth) {
             output->push_back(line);  // Line fits without wrapping
             continue;
         }
@@ -37,15 +40,15 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
             // Extract the word including spaces
             std::string segment = line.substr(start, end - start);
             // Measure width including the segment's width and a space if currLine is not empty
-            int width = MeasureTextEx(_config->Formatting.DefaultFont, segment.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+            int width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, segment.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
             // If currLine is not empty, we need to consider the space before adding the segment
             if (!currLine.empty()) {
-                width += MeasureTextEx(_config->Formatting.DefaultFont, " ", _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x; // Width of a space
+                width += MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, " ", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x; // Width of a space
             }
 
             // If the segment doesn't fit, wrap to the next line
-            if (currWidth + width > _config->MaxNoteWidth) {
+            if (currWidth + width > Helium::Configuration::getInstance().MaxNoteWidth) {
                 if (!currLine.empty()) {
                     output->push_back(currLine);  // Only push if there's content in currLine
                 }
@@ -70,7 +73,7 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
         }
     }
 }
-void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>> output, float fontSize, std::shared_ptr<Helium::Configuration> _config) {
+void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>> output, float fontSize) {
     std::string line;
     std::istringstream textStream(text);
     output->clear();
@@ -78,7 +81,7 @@ void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>>
     // Process the raw text line by line
     while (std::getline(textStream, line)) {
         // Check if the entire line fits without wrapping
-        if (MeasureTextEx(_config->Formatting.DefaultFont, line.c_str(), fontSize, _config->Formatting.CharSpacing).x < _config->MaxNoteWidth) {
+        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().MaxNoteWidth) {
             output->push_back(line);  // Line fits without wrapping
             continue;
         }
@@ -99,15 +102,15 @@ void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>>
             // Extract the word including spaces
             std::string segment = line.substr(start, end - start);
             // Measure width including the segment's width and a space if currLine is not empty
-            int width = MeasureTextEx(_config->Formatting.DefaultFont, segment.c_str(), fontSize, _config->Formatting.CharSpacing).x;
+            int width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, segment.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
             // If currLine is not empty, we need to consider the space before adding the segment
             if (!currLine.empty()) {
-                width += MeasureTextEx(_config->Formatting.DefaultFont, " ", fontSize, _config->Formatting.CharSpacing).x; // Width of a space
+                width += MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, " ", fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x; // Width of a space
             }
 
             // If the segment doesn't fit, wrap to the next line
-            if (currWidth + width > _config->MaxNoteWidth) {
+            if (currWidth + width > Helium::Configuration::getInstance().MaxNoteWidth) {
                 if (!currLine.empty()) {
                     output->push_back(currLine);  // Only push if there's content in currLine
                 }
@@ -184,64 +187,88 @@ std::vector<std::string> WrapText(const std::string& text, Font font, float font
 
     return output;
 }
-int DrawInlineToken(const Helium::Token& it, int& x, int y, std::shared_ptr<Helium::Configuration> _config, float fontSize) {
+int DrawInlineToken(const Helium::Token& it, int& x, int y, float fontSize) {
     int width;
     switch (it.type) {
         case Helium::TokenType::BOLD: {
-            DrawTextEx(_config->Formatting.BoldFont, it.value.c_str(), { (float)x, (float)y }, fontSize, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            width = MeasureTextEx(_config->Formatting.BoldFont, it.value.c_str(), fontSize, _config->Formatting.CharSpacing).x;
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.BoldFont, it.value.c_str(), { (float)x, (float)y }, fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.BoldFont, it.value.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
             break;
         }
 
         case Helium::TokenType::ITALIC: {
-            DrawTextEx(_config->Formatting.ItalicFont, it.value.c_str(), { (float)x, (float)y }, fontSize, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            width = MeasureTextEx(_config->Formatting.ItalicFont, it.value.c_str(), fontSize, _config->Formatting.CharSpacing).x;
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.ItalicFont, it.value.c_str(), { (float)x, (float)y }, fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.ItalicFont, it.value.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
             break;
         }
 
         case Helium::TokenType::STRIKETHROUGH: {
-            DrawTextEx(_config->Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, fontSize, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            int xOffset = MeasureTextEx(_config->Formatting.DefaultFont, it.value.c_str(), fontSize, _config->Formatting.CharSpacing).x;
-            DrawLineEx({ (float)x, (float)y + fontSize * 0.5f }, { (float)(x + xOffset), (float)y + fontSize * 0.5f }, _config->Formatting.StrikethroughWidth, _config->ColorTheme.TextColor);
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+            int xOffset = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+            DrawLineEx({ (float)x, (float)y + fontSize * 0.5f }, { (float)(x + xOffset), (float)y + fontSize * 0.5f }, Helium::Configuration::getInstance().Formatting.StrikethroughWidth, Helium::Configuration::getInstance().ColorTheme.TextColor);
             width = xOffset;
             break;
         }
 
         default: {
-            DrawTextEx(_config->Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, fontSize, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            width = MeasureTextEx(_config->Formatting.DefaultFont, it.value.c_str(), fontSize, _config->Formatting.CharSpacing).x;
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
             break;
         }
     }
     return width;
 }
 
-int DrawInlineToken(const Helium::Token& it, int& x, int y, std::shared_ptr<Helium::Configuration> _config) {
+int DrawInlineToken(const Helium::Token& it, int& x, int y) {
     int width;
     switch (it.type) {
+        case Helium::TokenType::COLORCHIP: {
+            int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+            DrawRectangle(x - 2, y - 2, width + 4 + lineHeight, Helium::Configuration::getInstance().Formatting.Paragraph + 4, Helium::Configuration::getInstance().ColorTheme.CodeBackgroundColor);
+            DrawCircle(x + width +  lineHeight * 0.5f, y + lineHeight * 0.5f, lineHeight * 0.25f, ParseHexColor(it.attributes.at(Helium::ATTRIBUTE_COLORCHIP_COLOR)));
+            // Draw code text
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.CodeTextColor);
+            width += 4 + lineHeight;
+            break;
+        }
         case Helium::TokenType::BOLD: {
-            DrawTextEx(_config->Formatting.BoldFont, it.value.c_str(), { (float)x, (float)y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            width = MeasureTextEx(_config->Formatting.BoldFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.BoldFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.BoldFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
             break;
         }
 
         case Helium::TokenType::ITALIC: {
-            DrawTextEx(_config->Formatting.ItalicFont, it.value.c_str(), { (float)x, (float)y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            width = MeasureTextEx(_config->Formatting.ItalicFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.ItalicFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.ItalicFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
             break;
         }
 
         case Helium::TokenType::STRIKETHROUGH: {
-            DrawTextEx(_config->Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            int xOffset = MeasureTextEx(_config->Formatting.DefaultFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
-            DrawLineEx({ (float)x, (float)y + _config->Formatting.Paragraph * 0.5f }, { (float)(x + xOffset), (float)y + _config->Formatting.Paragraph * 0.5f }, _config->Formatting.StrikethroughWidth, _config->ColorTheme.TextColor);
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+            int xOffset = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+            DrawLineEx({ (float)x, (float)y + Helium::Configuration::getInstance().Formatting.Paragraph * 0.5f }, { (float)(x + xOffset), (float)y + Helium::Configuration::getInstance().Formatting.Paragraph * 0.5f }, Helium::Configuration::getInstance().Formatting.StrikethroughWidth, Helium::Configuration::getInstance().ColorTheme.TextColor);
             width = xOffset;
             break;
         }
 
+        case Helium::TokenType::INLINECODE: { 
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+            DrawRectangle(x - 2, y - 2, width + 4, Helium::Configuration::getInstance().Formatting.Paragraph + 4, Helium::Configuration::getInstance().ColorTheme.CodeBackgroundColor);
+
+            // Draw code text
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.CodeFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.CodeTextColor);
+            break;
+        }
+
+        case Helium::TokenType::COLOREDTEXT: {
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Utils::ParseHexColor(it.attributes.at(Helium::ATTRIBUTE_COLOREDTEXT_COLOR)));
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+            break;
+        }
         default: {
-            DrawTextEx(_config->Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, _config->Formatting.Paragraph, _config->Formatting.CharSpacing, _config->ColorTheme.TextColor);
-            width = MeasureTextEx(_config->Formatting.DefaultFont, it.value.c_str(), _config->Formatting.Paragraph, _config->Formatting.CharSpacing).x;
+            DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), { (float)x, (float)y }, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+            width = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, it.value.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
             break;
         }
     }
@@ -250,5 +277,51 @@ int DrawInlineToken(const Helium::Token& it, int& x, int y, std::shared_ptr<Heli
 int GetLineHeight(Font font, int fontSize) {
 	return MeasureTextEx(font, "A", fontSize, 1).y;
 }
+void DrawText(const std::string &text, Vector2 pos) {
+    DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, text.c_str(), pos, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+}
+void DrawText(const std::string &text, Vector2 pos, int fontSize) {
+    DrawTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, text.c_str(), pos, fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+}
+void DrawText(Font font, const std::string &text, Vector2 pos, int fontSize) {
+    DrawTextEx(font, text.c_str(), pos, fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing, Helium::Configuration::getInstance().ColorTheme.TextColor);
+}
+bool IsFile(const std::string &path)
+{
+    fs::path filePath(path); // Convert the string to a filesystem path
+    return fs::exists(filePath) && fs::is_regular_file(filePath); // Check if it exists and is a regular file
+}
 
+bool IsSupportedNoteFileType(const std::string& path) {
+    fs::path filePath(path); 
+
+    if (!fs::exists(filePath) || !fs::is_regular_file(filePath)) {
+        return false; 
+    }
+
+    std::string extension = filePath.extension().string();
+    return (extension == ".txt" || extension == ".note" || extension == ".md");
+}
+Color ParseHexColor(const std::string& hexColor) {
+    // Ensure the color string starts with '#' and is followed by exactly 6 hex digits
+    if (hexColor.length() != 7 || hexColor[0] != '#') {
+        return BLANK;
+    }
+
+    // Convert hex color components to integers
+    int r = std::stoi(hexColor.substr(1, 2), nullptr, 16);
+    int g = std::stoi(hexColor.substr(3, 2), nullptr, 16);
+    int b = std::stoi(hexColor.substr(5, 2), nullptr, 16);
+
+    // Return the Raylib Color with alpha set to 255 (fully opaque)
+    return { static_cast<unsigned char>(r), static_cast<unsigned char>(g), static_cast<unsigned char>(b), 255 };
+}
+std::string ColorToHex(const Color &color) {
+    std::ostringstream oss;
+    oss << "#"
+        << std::hex << std::setw(2) << std::setfill('0') << (color.r & 0xFF)
+        << std::setw(2) << std::setfill('0') << (color.g & 0xFF)
+        << std::setw(2) << std::setfill('0') << (color.b & 0xFF);
+    return oss.str();
+}
 }

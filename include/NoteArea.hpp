@@ -20,16 +20,22 @@ bool LoadNote(std::string fileName, std::string& text, Texture2D& texture);
 namespace Helium {
 class NoteArea {
 public:
-    NoteArea(std::shared_ptr<Configuration> config, std::shared_ptr<InputHandler> input);
+    NoteArea(std::shared_ptr<InputHandler> input);
     void Initialize(int heightOffset);
     void Update();
     void Save();
     void Draw();
+    void RenderMarkdown(int y);
     std::string GetText();
+    std::string GetPath();
+    void SetPath(const std::string& path);
     void SetRect(Rectangle rect);
     void SetMode(NoteMode mode);
 	Cursor* GetCursor();
+    void TryLoadNote(const std::string& path);
+    void SetDirty();
 private:
+    std::string path;
     RenderTexture2D _texture;
     std::shared_ptr<std::string> _rawText;
     std::vector<Token> _tokens;
@@ -39,7 +45,6 @@ private:
     int _brushRadius = 5;
     NoteMode _mode = Helium::NoteMode::READ;
     Cursor _cursor;
-    std::shared_ptr<Configuration> _config;
     std::shared_ptr<InputHandler> _inputHandler;
     Vector2 _prevCursorPos;
     std::shared_ptr<std::vector<std::string>> wrappedLines;
