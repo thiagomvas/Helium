@@ -324,4 +324,17 @@ std::string ColorToHex(const Color &color) {
         << std::setw(2) << std::setfill('0') << (color.b & 0xFF);
     return oss.str();
 }
+std::string CleanseText(const std::string &text) {
+    std::string cleansedText = text; 
+
+    for (size_t i = 0; i < cleansedText.length(); ) {
+        if (cleansedText[i] == '\r') {
+            cleansedText.erase(i, 1);
+        } else {
+            ++i;
+        }
+    }
+
+    return cleansedText;
+}
 }

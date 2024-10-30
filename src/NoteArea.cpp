@@ -139,7 +139,7 @@ void NoteArea::Update() {
                     safeErase(_rawText, _cursor.GetHighlightStart(), _cursor.GetHighlightEnd());
                     _cursor.Deselect();
                 }
-                std::string clipboard(GetClipboardText());
+                std::string clipboard(Utils::CleanseText(GetClipboardText()));
                 _rawText->insert(_cursor.GetPosition(), clipboard);
                 isDirty = true;
                 _cursor.Goto(_cursor.GetPosition() + clipboard.length());
@@ -609,7 +609,7 @@ void NoteArea::TryLoadNote(const std::string &path) {
         Texture2D temp;
         if(Serializer::LoadNote(path, *_rawText, temp))
         {
-            _tokens = _tokenizer.tokenize(*_rawText);
+            _tokens = _tokenizer.tokenize(Utils::CleanseText(*_rawText));
             _texture = LoadRenderTexture(temp.width, temp.height);
             BeginTextureMode(_texture);
             // Clear texture
@@ -634,7 +634,7 @@ void NoteArea::TryLoadNote(const std::string &path) {
 
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         
-        _rawText = std::make_shared<std::string>(content); 
+        _rawText = std::make_shared<std::string>(Utils::CleanseText(content)); 
         float height = std::max(_rect.height, static_cast<float>(GetScreenHeight()));
         UnloadRenderTexture(_texture);
         _texture = LoadRenderTexture(_rect.width, GetScreenHeight());

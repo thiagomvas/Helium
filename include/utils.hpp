@@ -22,6 +22,7 @@ bool IsFile(const std::string& path);
 bool IsSupportedNoteFileType(const std::string& path);
 Color ParseHexColor(const std::string& hexColor);
 std::string ColorToHex(const Color& color);
+std::string CleanseText(const std::string& text);
 
 }
 
