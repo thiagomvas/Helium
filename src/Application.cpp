@@ -154,6 +154,7 @@ void Application::Start() {
                 GetScreenWidth() * 0.5f + scroll.x,
                 GetScreenHeight() * 0.5f + scroll.y,
             };
+            _noteArea->SetViewOffset(scroll.y);
             camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
         }
         // Draw

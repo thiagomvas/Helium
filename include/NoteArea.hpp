@@ -34,6 +34,7 @@ public:
 	Cursor* GetCursor();
     void TryLoadNote(const std::string& path);
     void SetDirty();
+    void SetViewOffset(int y);
 private:
     std::string path;
     RenderTexture2D _texture;
@@ -50,6 +51,7 @@ private:
     std::shared_ptr<std::vector<std::string>> wrappedLines;
     std::shared_ptr<std::vector<std::string>> readModeLines;
     bool isDirty;
+    int viewOffset = 0;
 }; 
 
 

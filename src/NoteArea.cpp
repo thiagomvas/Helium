@@ -222,7 +222,7 @@ void NoteArea::Update() {
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), _rect)) {
                 Vector2 mousePosition = GetMousePosition();
                 
-                int lineIndex = (mousePosition.y - _rect.y) / Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+                int lineIndex = (mousePosition.y - _rect.y + viewOffset) / Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
                 
                 if (lineIndex < wrappedLines->size()) {
                     float currentY = _rect.y; 
@@ -275,7 +275,7 @@ void NoteArea::Update() {
                 _prevCursorPos = GetMousePosition();
             }
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-                int reqHeight = std::max(_texture.texture.height, GetMouseY());
+                int reqHeight = std::max(_texture.texture.height, GetMouseY() + viewOffset);
                 if( _texture.texture.height < reqHeight) {
                     RenderTexture2D newTexture = LoadRenderTexture(Helium::Configuration::getInstance().MaxNoteWidth, reqHeight);
                     BeginTextureMode(newTexture);
@@ -291,8 +291,8 @@ void NoteArea::Update() {
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT))
             {
                 BeginTextureMode(_texture);
-                DrawCircleV({GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius, RED);
-                DrawLineEx({_prevCursorPos.x - _rect.x, _prevCursorPos.y - _rect.y}, {GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius * 2, RED);
+                DrawCircleV({GetMouseX() - _rect.x, GetMouseY() - _rect.y + viewOffset}, _brushRadius, RED);
+                DrawLineEx({_prevCursorPos.x - _rect.x, _prevCursorPos.y - _rect.y + viewOffset}, {GetMouseX() - _rect.x, GetMouseY() - _rect.y + viewOffset}, _brushRadius * 2, RED);
                 EndTextureMode();
                 _prevCursorPos = GetMousePosition();
             }
@@ -300,8 +300,8 @@ void NoteArea::Update() {
             {
                 BeginTextureMode(_texture);
                 BeginBlendMode(BLEND_CUSTOM);
-                DrawCircleV({GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius, BLANK);
-                DrawLineEx({_prevCursorPos.x - _rect.x, _prevCursorPos.y - _rect.y}, {GetMouseX() - _rect.x, GetMouseY() - _rect.y}, _brushRadius * 2, BLANK);
+                DrawCircleV({GetMouseX() - _rect.x, GetMouseY() - _rect.y + viewOffset}, _brushRadius, BLANK);
+                DrawLineEx({_prevCursorPos.x - _rect.x, _prevCursorPos.y - _rect.y + viewOffset}, {GetMouseX() - _rect.x, GetMouseY() - _rect.y + viewOffset}, _brushRadius * 2, BLANK);
                 EndBlendMode();
                 EndTextureMode();
                 _prevCursorPos = GetMousePosition();
@@ -435,7 +435,7 @@ void NoteArea::Draw() {
     DrawTextureRec(_texture.texture, { 0, 0, static_cast<float>(_texture.texture.width), -static_cast<float>(_texture.texture.height) }, { _rect.x, _rect.y }, WHITE);
     // Handle draw mode (if applicable)
     if (_mode == Helium::NoteMode::DRAW) {
-        DrawCircleLines(GetMouseX(), GetMouseY(), _brushRadius, Helium::Configuration::getInstance().ColorTheme.BrushBorder);
+        DrawCircleLines(GetMouseX(), GetMouseY() + viewOffset, _brushRadius, Helium::Configuration::getInstance().ColorTheme.BrushBorder);
     }
 }
 
@@ -656,5 +656,8 @@ void NoteArea::TryLoadNote(const std::string &path) {
 }
 void NoteArea::SetDirty() {
     isDirty = true;
+}
+void NoteArea::SetViewOffset(int y){
+    viewOffset = y;
 }
 }
