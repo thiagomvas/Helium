@@ -1,3 +1,5 @@
+# TO PUBLISH A BUILD WITHOUT CONSOLE, USE 'cmake -S . -B build -DCMAKE_BUILD_TYPE=Release', THEN BUILD NORMALLY
+
 cmake_minimum_required(VERSION 3.10)
 project(Helium)  # Replace MyProject with your project name
 
@@ -25,6 +27,11 @@ file(GLOB_RECURSE SOURCES
 
 # Add the executable
 add_executable(out ${SOURCES})
+
+# Specify that the executable is a Windows application only for Release build
+set_target_properties(out PROPERTIES
+    WIN32_EXECUTABLE $<STREQUAL:$<CONFIG>,Release>
+)
 
 # Link libraries
 target_link_libraries(out
