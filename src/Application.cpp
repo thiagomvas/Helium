@@ -156,6 +156,7 @@ void Application::Start() {
         fileDropdown.Draw();
         switch (fileDropdown.GetSelected()) {
         case 1: // Open
+            fileOpenModal.SetFilter(Helium::Configuration::getInstance().SUPPORTED_NOTE_FILE_TYPE);
             fileOpenModal.Show(GetUserRootPath());
             break;
         case 2: // Save

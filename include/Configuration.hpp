@@ -15,6 +15,8 @@ class Configuration {
     public:
     static Configuration &getInstance();
 
+    const std::string SUPPORTED_NOTE_FILE_TYPE = "txt, note, md";
+
     Configuration(const Configuration &) = delete;
     Configuration &operator=(const Configuration &) = delete;
 

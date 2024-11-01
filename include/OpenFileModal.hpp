@@ -12,6 +12,7 @@
 class OpenFileModal {
 public:
     OpenFileModal(const Rectangle& rect );
+    OpenFileModal(const Rectangle& rect, const std::string& fileFilter );
 
     const float PATH_BAR_MARGIN = 5;
     const float TOP_BAR_HEIGHT = 25;
@@ -29,6 +30,8 @@ public:
     // Check if the modal is currently visible
     bool IsVisible() const;
 
+    void SetFilter(const std::string& filter);
+
 private:
     Rectangle modalRect;
     Rectangle pathBarRect;
@@ -44,6 +47,7 @@ private:
     UI::Button selectFileBtn;
     UI::Button parentFolderBtn;
     UI::Button closeModalBtn;
+    std::string _fileFilter;
     bool isVisible;
     int scrollOffset;
     int visibleItemCount;
