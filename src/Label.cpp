@@ -41,7 +41,7 @@ int Label::GetFontSize() {
     return _fontSize;
 }
 
-std::string &Label::GetText() {
+std::string Label::GetText() const {
     return _text;
 }
 }

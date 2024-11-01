@@ -16,13 +16,14 @@ class Button : public UIElement {
     void Draw() override;
 
     // Methods to set button properties
+    std::string GetText() const;
     void SetText(std::string text);
     void SetBackgroundColor(Color color);
     void Show();
     void Hide();
     void SetHorizontalAlignment(HorizontalAlignment alignment);
     // Check if the button was clicked
-    bool IsClicked();
+    bool IsClicked() const;
 
     private:
     Label _label;           

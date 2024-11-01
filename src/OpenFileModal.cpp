@@ -1,4 +1,5 @@
 #include "OpenFileModal.hpp"
+#include "Button.hpp"
 #include "UiUtils.hpp" // Assuming UiUtils functions are in this file
 #include "utils.hpp"
 #include <algorithm>
@@ -8,7 +9,7 @@
 namespace fs = std::filesystem;
 
 OpenFileModal::OpenFileModal(const Rectangle &rect)
-    : modalRect(rect), isVisible(false), scrollOffset(0) {
+    : modalRect(rect), isVisible(false), scrollOffset(0), parentFolderBtn(".. <", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, Helium::Configuration::getInstance().ColorTheme.Foreground), selectFileBtn("Select", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, Helium::Configuration::getInstance().ColorTheme.Foreground), closeModalBtn("X", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, BLANK ) {
 }
 
 void OpenFileModal::Show(const std::string &rootPath) {
@@ -32,21 +33,40 @@ std::string OpenFileModal::GetSelectedFile() const {
 
 void OpenFileModal::LoadFilesInDirectory() {
     fileList.clear();
+    fileButtons.clear();
 
     if (fs::exists(currentPath) && fs::is_directory(currentPath)) {
-        if (currentPath != fs::path("/")) {
-            fileList.push_back("..");
-        }
+        std::vector<UI::Button> directories;
+        std::vector<UI::Button> files;
 
         for (const auto &entry : fs::directory_iterator(currentPath)) {
-            fileList.push_back(entry.path().filename().string());
+            std::string entryName = entry.path().filename().string();
+            UI::Button button(
+                entryName,
+                Helium::Configuration::getInstance().Formatting.Paragraph,
+                Helium::Configuration::getInstance().ColorTheme.TextColor,
+                Helium::Configuration::getInstance().ColorTheme.Foreground
+            );
+
+            if (fs::is_directory(entry)) {
+                button.SetText(entryName + "/"); // Add "/" to indicate a directory
+                directories.push_back(button);
+            } else {
+                files.push_back(button);
+            }
         }
+
+        // Add directories first, followed by files
+        fileButtons.insert(fileButtons.end(), directories.begin(), directories.end());
+        fileButtons.insert(fileButtons.end(), files.begin(), files.end());
     } else {
         std::cerr << "Directory does not exist: " << currentPath << std::endl;
     }
 }
 
+
 void OpenFileModal::Update() {
+    if(!isVisible) return;
     float offset = GetMouseY() - modalRect.y;
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), modalRect) && offset > 0 && offset < TOP_BAR_HEIGHT) {
         isDragging = true;
@@ -59,31 +79,85 @@ void OpenFileModal::Update() {
         modalRect.x += delta.x;
         modalRect.y += delta.y;
     }
+
+    // Handle scrolling input
+    if (IsKeyPressed(KEY_DOWN) && scrollOffset < static_cast<int>(fileList.size()) - visibleItemCount) {
+        scrollOffset++;
+    }
+    if (IsKeyPressed(KEY_UP && scrollOffset > 0)) {
+        scrollOffset--;
+    }
+
+    if (CheckCollisionPointRec(GetMousePosition(), modalRect))
+        scrollOffset -= std::clamp(static_cast<int>(GetMouseWheelMove()), -1, 1);
+
+    scrollOffset = std::clamp(scrollOffset, 0, static_cast<int>(fileButtons.size()));
+
+    float y = pathBarRect.y + pathBarRect.height;
+    for (size_t i = scrollOffset; i < scrollOffset + visibleItemCount && i < fileButtons.size(); ++i) {
+        UI::Button b = fileButtons[i];
+        b.SetPosition({modalRect.x, y});
+        if (b.IsClicked()) {
+            std::string text = b.GetText();
+            if(!text.empty() && text.back() == '/')
+                text.pop_back();
+            fs::path selected = currentPath / text;
+            if (fs::is_directory(selected)) {
+                currentPath = selected;
+                LoadFilesInDirectory();
+                scrollOffset = 0;
+            } else {
+                unconfirmedSelectedFile = selected.string();
+            }
+        }
+        y += b.GetBounds().height;
+    }
+
+    if (selectFileBtn.IsClicked()) {
+        selectedFile = unconfirmedSelectedFile;
+        unconfirmedSelectedFile.clear();
+        Hide();
+    }
+
+    if(closeModalBtn.IsClicked()) {
+        unconfirmedSelectedFile.clear();
+        selectedFile.clear();
+        Hide();
+    }
+
+    if (parentFolderBtn.IsClicked()) {
+        currentPath = currentPath.parent_path();
+        LoadFilesInDirectory();
+        scrollOffset = 0;
+    }
 }
 
 void OpenFileModal::Draw() {
+    if(!isVisible) return;
     // Modal
-    DrawRectangleRounded(modalRect, 0.1, 8, Helium::Configuration::getInstance().ColorTheme.Background);
-    DrawRectangleRounded({modalRect.x, modalRect.y, modalRect.width, TOP_BAR_HEIGHT}, 1, 8, Helium::Configuration::getInstance().ColorTheme.AccentBackground);
-    DrawRectangleRec({modalRect.x, modalRect.y + TOP_BAR_HEIGHT * 0.5f, modalRect.width, TOP_BAR_HEIGHT * 0.5f}, Helium::Configuration::getInstance().ColorTheme.AccentBackground);
-    DrawRectangleRoundedLinesEx(modalRect, 0.1, 8, 2, Helium::Configuration::getInstance().ColorTheme.AccentBackground);
-    Utils::DrawText("    Open File...", {modalRect.x, modalRect.y});
-    
+    DrawRectangleRounded(modalRect, 0.1, 8, Helium::Configuration::getInstance().ColorTheme.Background);                                                                            // Modal Background
+    DrawRectangleRounded({modalRect.x, modalRect.y, modalRect.width, TOP_BAR_HEIGHT}, 1, 8, Helium::Configuration::getInstance().ColorTheme.AccentBackground);                      // Modal top bar
+    DrawRectangleRec({modalRect.x, modalRect.y + TOP_BAR_HEIGHT * 0.5f, modalRect.width, TOP_BAR_HEIGHT * 0.5f}, Helium::Configuration::getInstance().ColorTheme.AccentBackground); // Modal Top bar (straight bottom)
+    DrawRectangleRoundedLinesEx(modalRect, 0.1, 8, 2, Helium::Configuration::getInstance().ColorTheme.AccentBackground);                                                            // Modal border
+    Utils::DrawText("    Open File...", {modalRect.x, modalRect.y});                                                                                                                // Modal title
+    closeModalBtn.SetBounds({modalRect.x + modalRect.width - WINDOW_PADDING - 25, modalRect.y, 25, 25});
+    closeModalBtn.Draw();
+
+
     // Path bar
     float height = Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph) + 10;
     float barWidth = (modalRect.width - 2 * WINDOW_PADDING) * 0.75f;
     float buttonWidth = (modalRect.width - 2 * WINDOW_PADDING) * 0.25f - PATH_BAR_MARGIN;
     pathBarRect = {modalRect.x + WINDOW_PADDING, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN, barWidth, height};
     parentFolderButtonRect = {modalRect.x + WINDOW_PADDING + barWidth + PATH_BAR_MARGIN, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN, buttonWidth, height};
-    DrawRectangleRounded(pathBarRect, 0.25, 8, Helium::Configuration::getInstance().ColorTheme.Foreground);
-    DrawRectangleRounded(parentFolderButtonRect, 0.25, 8, Helium::Configuration::getInstance().ColorTheme.Foreground);
-    Utils::DrawText(".. <", {parentFolderButtonRect.x, parentFolderButtonRect.y});
-    
+    parentFolderBtn.SetBounds(parentFolderButtonRect);
+    parentFolderBtn.Draw();
+
     // Path text rendering with ellipsis if it overflows
     std::string pathText = currentPath.string();
     int fontSize = Helium::Configuration::getInstance().Formatting.Paragraph;
     int pathWidth = MeasureText(pathText.c_str(), fontSize);
-    
+
     if (pathWidth > barWidth) {
         std::string ellipsis = "...";
         int ellipsisWidth = MeasureText(ellipsis.c_str(), fontSize);
@@ -99,6 +173,24 @@ void OpenFileModal::Draw() {
 
     Utils::DrawText(pathText.c_str(), {modalRect.x + WINDOW_PADDING, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN});
 
-    // Files
-}
+    // Bottom bar
+    selectedFileNameRect = {modalRect.x + WINDOW_PADDING + PATH_BAR_MARGIN, modalRect.y + modalRect.height - WINDOW_PADDING - height - PATH_BAR_MARGIN, barWidth, height};
+    DrawRectangleRounded(selectedFileNameRect, 0.25, 8, Helium::Configuration::getInstance().ColorTheme.Foreground);
+    Utils::DrawText(unconfirmedSelectedFile, {selectedFileNameRect.x + WINDOW_PADDING, selectedFileNameRect.y + WINDOW_PADDING});
+    confirmSelectionButtonRect = {modalRect.x + WINDOW_PADDING + barWidth + PATH_BAR_MARGIN + PATH_BAR_MARGIN, modalRect.y + modalRect.height - WINDOW_PADDING - height - PATH_BAR_MARGIN, buttonWidth - WINDOW_PADDING, height};
+    selectFileBtn.SetBounds(confirmSelectionButtonRect);
+    selectFileBtn.Draw();
 
+
+    fileListRect = {modalRect.x + WINDOW_PADDING, pathBarRect.y + pathBarRect.height + PATH_BAR_MARGIN, modalRect.width - 2 * WINDOW_PADDING, selectedFileNameRect.y - (pathBarRect.y + pathBarRect.height + 2 * PATH_BAR_MARGIN)  };
+
+    visibleItemCount = static_cast<int>(fileListRect.height) / FILE_ITEM_HEIGHT;
+
+    for (size_t i = scrollOffset; i < scrollOffset + visibleItemCount && i < fileButtons.size(); ++i) {
+        Rectangle itemRect = {fileListRect.x, fileListRect.y + (i - scrollOffset) * FILE_ITEM_HEIGHT, fileListRect.width, FILE_ITEM_HEIGHT};
+
+        fileButtons[i].SetBounds(itemRect);
+        fileButtons[i].Draw();
+    }
+
+}

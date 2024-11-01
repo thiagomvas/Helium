@@ -13,7 +13,7 @@ class Label : public UIElement {
     void Draw() override;
     void SetText(std::string text);
     int GetFontSize();
-    std::string &GetText();
+    std::string GetText() const;
     void Show();
     void Hide();
 

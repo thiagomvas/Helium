@@ -44,11 +44,13 @@ void Button::Draw() {
     _label.Draw();
 }
 
+std::string Button::GetText() const {
+    return _label.GetText();
+}
 
 void Button::SetText(std::string text) {
     _label.SetText(text);
 }
-
 
 void Button::SetBackgroundColor(Color color) {
     _backgroundColor = color;
@@ -62,7 +64,7 @@ void Button::Hide() {
     _visible = false;
 }
 
-bool Button::IsClicked() {
+bool Button::IsClicked() const {
     return _visible && CheckCollisionPointRec(GetMousePosition(), _bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 }
 void Button::SetHorizontalAlignment(HorizontalAlignment alignment) {
