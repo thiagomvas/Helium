@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "Label.hpp"
+#include "UI.hpp"
 #include <string>
 #ifndef BUTTON_HPP
 #define BUTTON_HPP
@@ -20,7 +21,7 @@ class Button {
     void SetBackgroundColor(Color color);
     void Show();
     void Hide();
-
+    void SetHorizontalAlignment(HorizontalAlignment alignment);
     // Check if the button was clicked
     bool IsClicked();
 
@@ -29,6 +30,7 @@ class Button {
     Rectangle _bounds;      
     Color _backgroundColor; 
     bool _visible;          
+    HorizontalAlignment _horizontalAlignment = HorizontalAlignment::Left;
 };
 }
 #endif

@@ -1,5 +1,6 @@
 #include "Button.hpp"
 #include <string>
+#include "UI.hpp"
 #include "Label.hpp"
 
 namespace UI {
@@ -17,14 +18,30 @@ void Button::Draw() {
     // Draw button background
     DrawRectangleRec(_bounds, _backgroundColor);
 
-    // Center the label within the button
+    // Adjust label's horizontal position based on alignment
+    float labelX = _bounds.x;
+    float textWidth = MeasureText(_label.GetText().c_str(), _label.GetFontSize());
+
+    switch (_horizontalAlignment) {
+        case HorizontalAlignment::Center:
+            labelX += (_bounds.width - textWidth) / 2;
+            break;
+        case HorizontalAlignment::Left:
+            labelX += 10; 
+            break;
+        case HorizontalAlignment::Right:
+            labelX += _bounds.width - textWidth - 10; 
+            break;
+    }
+
     Vector2 labelPosition = {
-        _bounds.x + (_bounds.width - MeasureText(_label.GetText().c_str(), _label.GetFontSize())) / 2,
+        labelX,
         _bounds.y + (_bounds.height - _label.GetFontSize()) / 2
     };
     _label.SetPosition(labelPosition);
     _label.Draw();
 }
+
 
 void Button::SetText(std::string text) {
     _label.SetText(text);
@@ -54,5 +71,8 @@ void Button::Hide() {
 
 bool Button::IsClicked() {
     return _visible && CheckCollisionPointRec(GetMousePosition(), _bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+}
+void Button::SetHorizontalAlignment(HorizontalAlignment alignment) {
+    _horizontalAlignment = alignment;
 }
 }
