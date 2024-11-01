@@ -1,23 +1,22 @@
 #include "raylib.h"
 #include "Label.hpp"
 #include "UI.hpp"
+#include "UIElement.hpp"
 #include <string>
 #ifndef BUTTON_HPP
 #define BUTTON_HPP
 namespace UI {
-class Button {
+class Button : public UIElement {
     public:
     // Constructors for Button class
     Button(std::string text, int fontSize, Color textColor, Color backgroundColor);
     Button(std::string text, int fontSize, Color textColor, Color backgroundColor, Rectangle bounds);
 
     // Draw method to render button and label
-    void Draw();
+    void Draw() override;
 
     // Methods to set button properties
     void SetText(std::string text);
-    void SetPosition(Vector2 pos);
-    void SetSize(Vector2 size);
     void SetBackgroundColor(Color color);
     void Show();
     void Hide();
@@ -27,7 +26,6 @@ class Button {
 
     private:
     Label _label;           
-    Rectangle _bounds;      
     Color _backgroundColor; 
     bool _visible;          
     HorizontalAlignment _horizontalAlignment = HorizontalAlignment::Left;

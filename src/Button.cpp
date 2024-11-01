@@ -10,7 +10,9 @@ namespace UI {
 }
 
 Button::Button(std::string text, int fontSize, Color textColor, Color backgroundColor, Rectangle bounds)
-    : _label(text, fontSize, textColor), _backgroundColor(backgroundColor), _bounds(bounds), _visible(true) {}
+    : _label(text, fontSize, textColor), _backgroundColor(backgroundColor),  _visible(true) {
+        SetBounds(bounds);
+    }
 
 void Button::Draw() {
     if (!_visible) return;
@@ -47,15 +49,6 @@ void Button::SetText(std::string text) {
     _label.SetText(text);
 }
 
-void Button::SetPosition(Vector2 pos) {
-    _bounds.x = pos.x;
-    _bounds.y = pos.y;
-}
-
-void Button::SetSize(Vector2 size) {
-    _bounds.width = size.x;
-    _bounds.height = size.y;
-}
 
 void Button::SetBackgroundColor(Color color) {
     _backgroundColor = color;

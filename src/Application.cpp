@@ -153,8 +153,8 @@ void Application::Start() {
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(Helium::Configuration::getInstance().TopMenuBarHeight)}, Helium::Configuration::getInstance().ColorTheme.Foreground);
         fileOpenModal.Draw();
         saveFileModal.Draw();
-        int fileValue = fileDropdown.Draw();
-        switch (fileValue) {
+        fileDropdown.Draw();
+        switch (fileDropdown.GetSelected()) {
         case 1: // Open
             fileOpenModal.Show(GetUserRootPath());
             break;

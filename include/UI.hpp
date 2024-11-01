@@ -9,6 +9,11 @@ enum class HorizontalAlignment {
     Right
 };
 
+enum class Orientation {
+    Vertical,
+    Horizontal
+};
+
 }
 
 #endif

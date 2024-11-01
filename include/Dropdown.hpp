@@ -1,25 +1,27 @@
 #include "raylib.h"
 #include "Button.hpp"
+#include "UIElement.hpp"
 #include <string>
 #include <vector>
 #ifndef DROPDOWN_HPP
 #define DROPDOWN_HPP
 
 namespace UI {
-class Dropdown {
+class Dropdown : public UIElement {
     public:
     Dropdown(Rectangle rect, Color backgroundColor, const std::string &items);
 
-    int Draw();
+    void Draw() override;
+    void SetPosition(Vector2 pos) override;
+    void SetSize(Vector2 size) override;
 
-    void SetPosition(Vector2 pos);
-    void SetSize(Vector2 size);
     void Show();
     void Hide();
     bool IsVisible() const;
+    int GetSelected() const;
 
     private:
-    Rectangle _bounds;            
+    int _selected;
     Color _backgroundColor;       
     std::vector<Button> _buttons; 
     bool _active;                 
