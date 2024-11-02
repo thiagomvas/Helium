@@ -25,6 +25,12 @@ int main() {
 
         Helium::Configuration::getInstance().deserialize(configData);
         std::cout << "Configuration loaded from config.txt." << std::endl;
+        
+        std::string updatedConfig = Helium::Configuration::getInstance().serialize();
+        std::ofstream configFileOut(filePath);
+        configFileOut << updatedConfig;
+        configFileOut.close();
+        std::cout << "Configuration updated and saved to config.txt." << std::endl;
     } else {
         std::string defaultConfig = Helium::Configuration::getInstance().serialize();
 

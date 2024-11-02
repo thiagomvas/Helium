@@ -31,6 +31,7 @@ public:
     Color ListItemBulletColor = { 200, 100, 100, 255 };
     Color TodoBackgroundColor = { 8, 108, 52, 255 };
     Color TodoForegroundColor = { 200, 200, 200, 255 };
+    Color ButtonHoverColor = { 200, 100, 100, 255 };
 
     std::string serialize();
     Color getQuoteColor(const std::string& type);

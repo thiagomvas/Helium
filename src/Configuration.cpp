@@ -20,6 +20,7 @@ namespace Helium {
         oss << "ActionRepeatInitialDelaySeconds:" << ActionRepeatInitialDelaySeconds << '\n';
         oss << "ActionRepeatDelaySeconds:" << ActionRepeatDelaySeconds << '\n';
         oss << "ScrollLineCount:" << ScrollLineCount << '\n';
+        oss << "HoverAnimationDurationSeconds:" << HoverAnimationDurationSeconds << '\n';
 
         oss << "FORMATTING\n"
             << Formatting.serialize() << '\n';
@@ -48,6 +49,7 @@ namespace Helium {
             {"ActionRepeatInitialDelaySeconds", [this](const std::string &value) { ActionRepeatInitialDelaySeconds = std::stof(value); }},
             {"ActionRepeatDelaySeconds", [this](const std::string &value) { ActionRepeatDelaySeconds = std::stof(value); }},
             {"ScrollLineCount", [this](const std::string &value) { ScrollLineCount = std::stoi(value); }},
+            {"HoverAnimationDurationSeconds", [this](const std::string &value) { HoverAnimationDurationSeconds = std::stof(value); }},
         };
 
         std::string formattingData;

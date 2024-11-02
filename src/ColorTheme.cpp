@@ -24,6 +24,7 @@ std::string ColorTheme::serialize() {
     oss << "ListItemBulletColor:" << Serializer::Serialize(ListItemBulletColor) << '\n';
     oss << "TodoBackgroundColor:" << Serializer::Serialize(TodoBackgroundColor) << '\n';
     oss << "TodoForegroundColor:" << Serializer::Serialize(TodoForegroundColor) << '\n';
+    oss << "ButtonHoverColor:" << Serializer::Serialize(ButtonHoverColor) << '\n';
 
     return oss.str();
 }
@@ -68,6 +69,7 @@ void ColorTheme::deserialize(const std::string& data) {
         {"ListItemBulletColor", [this](std::string& value) { ListItemBulletColor = Serializer::DeserializeRaylibColor(value); }},
         {"TodoBackgroundColor", [this](std::string& value) { TodoBackgroundColor = Serializer::DeserializeRaylibColor(value); }},
         {"TodoForegroundColor", [this](std::string& value) { TodoForegroundColor = Serializer::DeserializeRaylibColor(value); }},
+        {"ButtonHoverColor", [this](std::string& value) { ButtonHoverColor = Serializer::DeserializeRaylibColor(value); }},
     };
 
     while (std::getline(iss, line)) {

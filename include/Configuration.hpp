@@ -29,6 +29,7 @@ class Configuration {
     int ScrollLineCount = 4;
     Formatting Formatting;
     ColorTheme ColorTheme;
+    float HoverAnimationDurationSeconds = 0.125f;
 
     std::string serialize();
 

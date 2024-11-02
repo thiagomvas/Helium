@@ -27,6 +27,7 @@ class Button : public UIElement {
     Label _label;           
     Color _backgroundColor; 
     HorizontalAlignment _horizontalAlignment = HorizontalAlignment::Left;
+    float _hoverTime;
 };
 }
 #endif
