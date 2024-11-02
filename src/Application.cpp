@@ -24,7 +24,7 @@
 namespace Helium {
 
 Application::Application()
-    : isRunning(false), _inputHandler(std::make_unique<InputHandler>()), _noteArea(std::make_unique<NoteArea>()) {
+    : isRunning(false), _inputHandler(std::make_unique<InputHandler>()), _noteArea(std::make_unique<NoteArea>()), _saveModal({100, 100, 400, 300}, Helium::Configuration::getInstance().SUPPORTED_NOTE_FILE_TYPE) {
     _noteArea->SetMode(NoteMode::READ);
     _inputHandler->SetMode(NoteMode::READ);
 
@@ -35,7 +35,11 @@ Application::Application()
     });
 
     _inputHandler->AddGlobalAction(InputCombo(KEY_S, KEY_LEFT_CONTROL), [this]() {
-        _noteArea->Save();
+        if (_noteArea->GetPath().empty()) {
+            OpenSaveModal();
+        } else {
+            _noteArea->Save();
+        }
     });
 
     _inputHandler->AddGlobalAction(InputCombo(KEY_F1), [this]() {
@@ -100,13 +104,12 @@ void Application::Start() {
     Helium::Configuration::getInstance().Formatting.loadFonts();
     GuiSetFont(Helium::Configuration::getInstance().Formatting.DefaultFont);
     Rectangle modalRect = {100, 100, 400, 300};
-    OpenFileModal fileOpenModal(modalRect);
-    SaveFileModal saveFileModal(modalRect);
+    OpenFileModal fileOpenModal(modalRect, Helium::Configuration::getInstance().SUPPORTED_NOTE_FILE_TYPE);
     UI::Dropdown fileDropdown({0, 0, 150, 20}, Helium::Configuration::getInstance().ColorTheme.Foreground, "File;Open;Save#CTRL+S");
     _noteArea->Initialize(Helium::Configuration::getInstance().TopMenuBarHeight); // Offset the NoteArea 50px down
     while (isRunning) {
         wasModalClosed = isModalOpen; // Assume this as a temporary value
-        isModalOpen = fileOpenModal.IsVisible() || saveFileModal.IsVisible();
+        isModalOpen = fileOpenModal.IsVisible() || _saveModal.IsVisible();
         wasModalClosed = !isModalOpen && wasModalClosed; // Check if the modal is closed but was open
 
         if (WindowShouldClose()) {
@@ -119,7 +122,7 @@ void Application::Start() {
 
         // Modals
         fileOpenModal.Update();
-        saveFileModal.Update();
+        _saveModal.Update();
 
         // Handle updates only if no modal is open
         if (!isModalOpen) {
@@ -152,30 +155,28 @@ void Application::Start() {
         // --------------------------------------------------------------------------------------------------
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(Helium::Configuration::getInstance().TopMenuBarHeight)}, Helium::Configuration::getInstance().ColorTheme.Foreground);
         fileOpenModal.Draw();
-        saveFileModal.Draw();
+        _saveModal.Draw();
         fileDropdown.Draw();
         switch (fileDropdown.GetSelected()) {
         case 1: // Open
-            fileOpenModal.SetFilter(Helium::Configuration::getInstance().SUPPORTED_NOTE_FILE_TYPE);
             fileOpenModal.Show(GetUserRootPath());
             break;
         case 2: // Save
             if (_noteArea->GetPath().empty()) {
-                saveFileModal.Show();
+                _saveModal.Show();
             }
         default: break;
         }
         EndDrawing();
 
         if (wasModalClosed) {
-            std::cout << "Modal closed" << std::endl;
             if (!fileOpenModal.IsVisible() && !fileOpenModal.GetSelectedFile().empty()) {
                 if (Utils::IsFile(fileOpenModal.GetSelectedFile())) {
                     _noteArea->TryLoadNote(fileOpenModal.GetSelectedFile());
                 }
             }
-            if (saveFileModal.HasClosed() && !saveFileModal.GetFilePath().empty()) {
-                _noteArea->SetPath(saveFileModal.GetFilePath());
+            if (_saveModal.HasClosed() && !_saveModal.GetFilePath().empty()) {
+                _noteArea->SetPath(_saveModal.GetFilePath());
                 _noteArea->Save();
             }
         }
@@ -193,5 +194,8 @@ void Application::Stop() {
     } else {
         std::cout << "Application already stopped" << std::endl;
     }
+}
+void Application::OpenSaveModal() {
+    _saveModal.Show();
 }
 }

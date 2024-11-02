@@ -180,3 +180,7 @@ void SaveFileModal::Draw() {
         fileButtons[i].Draw();
     }
 }
+
+void SaveFileModal::SetBounds(const Rectangle &rect) {
+    modalRect = rect;
+}

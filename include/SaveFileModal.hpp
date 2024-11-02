@@ -21,6 +21,7 @@ public:
     bool HasClosed();
     void Update();           // Update modal logic
     void Draw();             // Draw the modal
+    void SetBounds(const Rectangle& rect);
 
 private:
     Rectangle modalRect;
