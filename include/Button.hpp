@@ -19,8 +19,6 @@ class Button : public UIElement {
     std::string GetText() const;
     void SetText(std::string text);
     void SetBackgroundColor(Color color);
-    void Show();
-    void Hide();
     void SetHorizontalAlignment(HorizontalAlignment alignment);
     // Check if the button was clicked
     bool IsClicked() const;
@@ -28,7 +26,6 @@ class Button : public UIElement {
     private:
     Label _label;           
     Color _backgroundColor; 
-    bool _visible;          
     HorizontalAlignment _horizontalAlignment = HorizontalAlignment::Left;
 };
 }

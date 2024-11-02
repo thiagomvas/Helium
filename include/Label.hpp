@@ -14,14 +14,11 @@ class Label : public UIElement {
     void SetText(std::string text);
     int GetFontSize();
     std::string GetText() const;
-    void Show();
-    void Hide();
 
     private:
     std::string _text;
     int _fontSize;
     Color _color;
-    bool _visible;
 };
 }
 

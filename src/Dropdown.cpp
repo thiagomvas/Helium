@@ -64,14 +64,6 @@ void Dropdown::SetSize(Vector2 size) {
     }
 }
 
-void Dropdown::Show() {
-    _visible = true;
-}
-
-void Dropdown::Hide() {
-    _visible = false;
-}
-
 bool Dropdown::IsVisible() const {
     return _visible;
 }

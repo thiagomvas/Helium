@@ -30,13 +30,6 @@ void Label::SetText(std::string text) {
     SetSize(size);
 }
 
-void Label::Show() {
-    _visible = true;
-}
-void Label::Hide() {
-    _visible = false;
-}
-
 int Label::GetFontSize() {
     return _fontSize;
 }

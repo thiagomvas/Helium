@@ -5,13 +5,15 @@
 
 namespace UI {
     Button::Button(std::string text, int fontSize, Color textColor, Color backgroundColor)
-    : _label(text, fontSize, textColor), _backgroundColor(backgroundColor), _visible(true) {
+    : _label(text, fontSize, textColor), _backgroundColor(backgroundColor) {
     _bounds = {0, 0, 100, 50}; // Default size, can be changed later
+        Show();
 }
 
 Button::Button(std::string text, int fontSize, Color textColor, Color backgroundColor, Rectangle bounds)
-    : _label(text, fontSize, textColor), _backgroundColor(backgroundColor),  _visible(true) {
+    : _label(text, fontSize, textColor), _backgroundColor(backgroundColor) {
         SetBounds(bounds);
+        Show();
     }
 
 void Button::Draw() {
@@ -54,14 +56,6 @@ void Button::SetText(std::string text) {
 
 void Button::SetBackgroundColor(Color color) {
     _backgroundColor = color;
-}
-
-void Button::Show() {
-    _visible = true;
-}
-
-void Button::Hide() {
-    _visible = false;
 }
 
 bool Button::IsClicked() const {

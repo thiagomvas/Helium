@@ -15,8 +15,6 @@ class Dropdown : public UIElement {
     void SetPosition(Vector2 pos) override;
     void SetSize(Vector2 size) override;
 
-    void Show();
-    void Hide();
     bool IsVisible() const;
     int GetSelected() const;
 
