@@ -6,6 +6,8 @@
 #include <sstream>
 #include <string>
 #include <filesystem>
+#include "Button.hpp"
+#include <unordered_set>
 
 namespace fs = std::filesystem;
 
@@ -336,5 +338,55 @@ std::string CleanseText(const std::string &text) {
     }
 
     return cleansedText;
+}
+
+std::vector<UI::Button> LoadFilesInDirectoryAsButtons(const std::filesystem::path& currentPath, const std::string& fileFilter)
+{
+    std::vector<UI::Button> fileButtons;
+
+    // Parse fileFilter into a set of extensions if it is not empty
+    std::unordered_set<std::string> allowedExtensions;
+    if (!fileFilter.empty()) {
+        std::istringstream filterStream(fileFilter);
+        std::string extension;
+        while (std::getline(filterStream, extension, ',')) {
+            extension.erase(0, extension.find_first_not_of(" \t"));
+            extension.erase(extension.find_last_not_of(" \t") + 1);
+            allowedExtensions.insert("." + extension); // Prefix with '.' for consistency
+        }
+    }
+
+    if (fs::exists(currentPath) && fs::is_directory(currentPath)) {
+        std::vector<UI::Button> directories;
+        std::vector<UI::Button> files;
+
+        for (const auto& entry : fs::directory_iterator(currentPath)) {
+            std::string entryName = entry.path().filename().string();
+            UI::Button button(
+                entryName,
+                Helium::Configuration::getInstance().Formatting.Paragraph,
+                Helium::Configuration::getInstance().ColorTheme.TextColor,
+                Helium::Configuration::getInstance().ColorTheme.Foreground);
+
+            if (fs::is_directory(entry)) {
+                button.SetText(entryName + "/"); // Add "/" to indicate a directory
+                directories.push_back(button);
+            } else {
+                // If fileFilter is specified, check the extension
+                if (allowedExtensions.empty() ||
+                    allowedExtensions.count(entry.path().extension().string()) > 0) {
+                    files.push_back(button);
+                }
+            }
+        }
+
+        // Add directories first, followed by files
+        fileButtons.insert(fileButtons.end(), directories.begin(), directories.end());
+        fileButtons.insert(fileButtons.end(), files.begin(), files.end());
+    } else {
+        std::cerr << "Directory does not exist: " << currentPath << std::endl;
+    }
+
+    return fileButtons;
 }
 }

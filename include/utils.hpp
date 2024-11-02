@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "Button.hpp"
+#include <filesystem>
 namespace Utils {
 void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output);
 std::vector<std::string> WrapText(const std::string& text, Font font, float fontSize, float charSpacing, int maxWidth); 
@@ -23,6 +25,8 @@ bool IsSupportedNoteFileType(const std::string& path);
 Color ParseHexColor(const std::string& hexColor);
 std::string ColorToHex(const Color& color);
 std::string CleanseText(const std::string& text);
+
+std::vector<UI::Button> LoadFilesInDirectoryAsButtons(const std::filesystem::path& currentPath, const std::string& fileFilter);
 
 }
 

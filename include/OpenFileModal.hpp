@@ -16,7 +16,6 @@ public:
 
     const float PATH_BAR_MARGIN = 5;
     const float TOP_BAR_HEIGHT = 25;
-    const float WINDOW_PADDING = 5;
     const float FILE_ITEM_HEIGHT = 25;
 
     // Methods to show, hide, and render the modal

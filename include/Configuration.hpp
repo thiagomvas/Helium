@@ -21,7 +21,7 @@ class Configuration {
     Configuration &operator=(const Configuration &) = delete;
 
     const std::string AppName = "Helium";
-    const int TopMenuBarHeight = 25;
+    const float TopMenuBarHeight = 25;
     std::unordered_map<std::string, std::string> Macros;
     int MaxNoteWidth = 600;
     float ActionRepeatInitialDelaySeconds = 0.5f;

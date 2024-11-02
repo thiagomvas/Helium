@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <iostream>
 #include <unordered_set>
-
+#include "constants.h"
 namespace fs = std::filesystem;
 
 OpenFileModal::OpenFileModal(const Rectangle &rect)
@@ -14,7 +14,7 @@ OpenFileModal::OpenFileModal(const Rectangle &rect)
       isVisible(false),
       scrollOffset(0),
       parentFolderBtn(".. <", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, Helium::Configuration::getInstance().ColorTheme.Foreground), 
-      selectFileBtn("Select", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, Helium::Configuration::getInstance().ColorTheme.Foreground), 
+      selectFileBtn("Open", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, Helium::Configuration::getInstance().ColorTheme.Foreground), 
       closeModalBtn("X", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, BLANK) {
 }
 
@@ -170,15 +170,15 @@ void OpenFileModal::Draw() {
     DrawRectangleRec({modalRect.x, modalRect.y + TOP_BAR_HEIGHT * 0.5f, modalRect.width, TOP_BAR_HEIGHT * 0.5f}, Helium::Configuration::getInstance().ColorTheme.AccentBackground); // Modal Top bar (straight bottom)
     DrawRectangleRoundedLinesEx(modalRect, 0.1, 8, 2, Helium::Configuration::getInstance().ColorTheme.AccentBackground);                                                            // Modal border
     Utils::DrawText("    Open File...", {modalRect.x, modalRect.y});                                                                                                                // Modal title
-    closeModalBtn.SetBounds({modalRect.x + modalRect.width - WINDOW_PADDING - 25, modalRect.y, 25, 25});
+    closeModalBtn.SetBounds({modalRect.x + modalRect.width - Constants::MODAL_PADDING - 25, modalRect.y, 25, 25});
     closeModalBtn.Draw();
 
     // Path bar
     float height = Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph) + 10;
-    float barWidth = (modalRect.width - 2 * WINDOW_PADDING) * 0.75f;
-    float buttonWidth = (modalRect.width - 2 * WINDOW_PADDING) * 0.25f - PATH_BAR_MARGIN;
-    pathBarRect = {modalRect.x + WINDOW_PADDING, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN, barWidth, height};
-    parentFolderButtonRect = {modalRect.x + WINDOW_PADDING + barWidth + PATH_BAR_MARGIN, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN, buttonWidth, height};
+    float barWidth = (modalRect.width - 2 * Constants::MODAL_PADDING) * 0.75f;
+    float buttonWidth = (modalRect.width - 2 * Constants::MODAL_PADDING) * 0.25f - PATH_BAR_MARGIN;
+    pathBarRect = {modalRect.x + Constants::MODAL_PADDING, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN, barWidth, height};
+    parentFolderButtonRect = {modalRect.x + Constants::MODAL_PADDING + barWidth + PATH_BAR_MARGIN, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN, buttonWidth, height};
     parentFolderBtn.SetBounds(parentFolderButtonRect);
     parentFolderBtn.Draw();
 
@@ -200,19 +200,19 @@ void OpenFileModal::Draw() {
         }
     }
 
-    Utils::DrawText(pathText.c_str(), {modalRect.x + WINDOW_PADDING, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN});
+    Utils::DrawText(pathText.c_str(), {modalRect.x + Constants::MODAL_PADDING, modalRect.y + TOP_BAR_HEIGHT + PATH_BAR_MARGIN});
 
     // Bottom bar
-    selectedFileNameRect = {modalRect.x + WINDOW_PADDING + PATH_BAR_MARGIN, modalRect.y + modalRect.height - WINDOW_PADDING - height - PATH_BAR_MARGIN, barWidth, height};
+    selectedFileNameRect = {modalRect.x + Constants::MODAL_PADDING + PATH_BAR_MARGIN, modalRect.y + modalRect.height - Constants::MODAL_PADDING - height - PATH_BAR_MARGIN, barWidth, height};
     DrawRectangleRounded(selectedFileNameRect, 0.25, 8, Helium::Configuration::getInstance().ColorTheme.Foreground);
-    Utils::DrawText(unconfirmedSelectedFile, {selectedFileNameRect.x + WINDOW_PADDING, selectedFileNameRect.y + WINDOW_PADDING});
-    confirmSelectionButtonRect = {modalRect.x + WINDOW_PADDING + barWidth + PATH_BAR_MARGIN + PATH_BAR_MARGIN, modalRect.y + modalRect.height - WINDOW_PADDING - height - PATH_BAR_MARGIN, buttonWidth - WINDOW_PADDING, height};
+    Utils::DrawText(unconfirmedSelectedFile, {selectedFileNameRect.x + Constants::MODAL_PADDING, selectedFileNameRect.y + Constants::MODAL_PADDING});
+    confirmSelectionButtonRect = {modalRect.x + Constants::MODAL_PADDING + barWidth + PATH_BAR_MARGIN + PATH_BAR_MARGIN, modalRect.y + modalRect.height - Constants::MODAL_PADDING - height - PATH_BAR_MARGIN, buttonWidth - Constants::MODAL_PADDING, height};
     selectFileBtn.SetBounds(confirmSelectionButtonRect);
     selectFileBtn.Draw();
 
-    fileListRect = {modalRect.x + WINDOW_PADDING, pathBarRect.y + pathBarRect.height + PATH_BAR_MARGIN, modalRect.width - 2 * WINDOW_PADDING, selectedFileNameRect.y - (pathBarRect.y + pathBarRect.height + 2 * PATH_BAR_MARGIN)};
+    fileListRect = {modalRect.x + Constants::MODAL_PADDING, pathBarRect.y + pathBarRect.height + PATH_BAR_MARGIN, modalRect.width - 2 * Constants::MODAL_PADDING, selectedFileNameRect.y - (pathBarRect.y + pathBarRect.height + 2 * PATH_BAR_MARGIN)};
 
-    visibleItemCount = static_cast<int>(fileListRect.height) / FILE_ITEM_HEIGHT;
+    visibleItemCount = static_cast<int>(fileListRect.height) / Constants::FILE_ITEM_HEIGHT;
 
     for (size_t i = scrollOffset; i < scrollOffset + visibleItemCount && i < fileButtons.size(); ++i) {
         Rectangle itemRect = {fileListRect.x, fileListRect.y + (i - scrollOffset) * FILE_ITEM_HEIGHT, fileListRect.width, FILE_ITEM_HEIGHT};

@@ -168,6 +168,7 @@ void Application::Start() {
         EndDrawing();
 
         if (wasModalClosed) {
+            std::cout << "Modal closed" << std::endl;
             if (!fileOpenModal.IsVisible() && !fileOpenModal.GetSelectedFile().empty()) {
                 if (Utils::IsFile(fileOpenModal.GetSelectedFile())) {
                     _noteArea->TryLoadNote(fileOpenModal.GetSelectedFile());
