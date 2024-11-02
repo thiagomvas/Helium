@@ -20,6 +20,7 @@
 #include "OpenFileModal.hpp"
 #include "raygui.h"
 #include <SaveFileModal.hpp>
+#include "StackPanel.hpp"
 
 namespace Helium {
 
@@ -105,7 +106,14 @@ void Application::Start() {
     GuiSetFont(Helium::Configuration::getInstance().Formatting.DefaultFont);
     Rectangle modalRect = {100, 100, 400, 300};
     OpenFileModal fileOpenModal(modalRect, Helium::Configuration::getInstance().SUPPORTED_NOTE_FILE_TYPE);
-    UI::Dropdown fileDropdown({0, 0, 150, 20}, Helium::Configuration::getInstance().ColorTheme.Foreground, "File;Open;Save#CTRL+S");
+
+    int filedpwidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, "File", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+
+    UI::Dropdown fileDropdown({0, 0, 100, Constants::TOP_BAR_MENU_HEIGHT}, Helium::Configuration::getInstance().ColorTheme.Foreground, "File;Open;Save#CTRL+S");
+
+    UI::StackPanel topBar(UI::Orientation::Horizontal, 5.0f);
+    topBar.AddElement(&fileDropdown);
+
     _noteArea->Initialize(Helium::Configuration::getInstance().TopMenuBarHeight); // Offset the NoteArea 50px down
     while (isRunning) {
         wasModalClosed = isModalOpen; // Assume this as a temporary value
@@ -156,7 +164,7 @@ void Application::Start() {
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(Helium::Configuration::getInstance().TopMenuBarHeight)}, Helium::Configuration::getInstance().ColorTheme.Foreground);
         fileOpenModal.Draw();
         _saveModal.Draw();
-        fileDropdown.Draw();
+        topBar.Draw();
         switch (fileDropdown.GetSelected()) {
         case 1: // Open
             fileOpenModal.Show(GetUserRootPath());

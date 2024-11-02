@@ -23,7 +23,6 @@ class Dropdown : public UIElement {
     Color _backgroundColor;       
     std::vector<Button> _buttons; 
     bool _active;                 
-    bool _visible;                
 };
 }
 

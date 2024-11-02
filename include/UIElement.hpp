@@ -29,7 +29,7 @@ class UIElement {
     }
     protected:
     Rectangle _bounds;
-    bool _visible;
+    bool _visible = true;
 };
 }
 

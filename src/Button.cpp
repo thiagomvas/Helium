@@ -6,7 +6,7 @@
 
 namespace UI {
 Button::Button(std::string text, int fontSize, Color textColor, Color backgroundColor)
-    : _label(text, fontSize, textColor), _backgroundColor(backgroundColor) {
+    : _label(text, fontSize, textColor), _backgroundColor(backgroundColor), _hoverTime(0) {
     _bounds = {0, 0, 100, 50}; // Default size, can be changed later
     Show();
 }
