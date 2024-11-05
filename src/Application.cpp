@@ -18,10 +18,10 @@
 #include "DataPath.hpp"
 #include "Dropdown.hpp"
 #include "OpenFileModal.hpp"
+#include "SettingsModal.hpp"
 #include "StackPanel.hpp"
 #include "raygui.h"
 #include <SaveFileModal.hpp>
-#include "SettingsModal.hpp"
 
 namespace Helium {
 
@@ -158,7 +158,6 @@ void Application::Start() {
 
         // NOTE AREA
         // -------------------------------------
-        DrawRectangleRec({})
         BeginMode2D(camera);
         _noteArea->Draw();
         EndMode2D();
