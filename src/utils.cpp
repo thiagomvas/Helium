@@ -17,6 +17,7 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
     std::string line;
     std::istringstream textStream(text);
     output->clear();
+    int spaceWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, " ", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
     
     // Process the raw text line by line
     while (std::getline(textStream, line)) {
@@ -62,7 +63,7 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
                     currLine.append(" ");  // Add a space before the next segment if currLine is not empty
                 }
                 currLine.append(segment);  // Add the segment to the current line
-                currWidth += width;  // Update the width
+                currWidth += width + spaceWidth;  // Update the width
             }
 
             // Move to the next character after the space

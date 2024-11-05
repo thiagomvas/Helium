@@ -208,7 +208,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string &text) {
                                                                Configuration::getInstance().Formatting.DefaultFont,
                                                                Configuration::getInstance().Formatting.Paragraph,
                                                                Configuration::getInstance().Formatting.CharSpacing,
-                                                               Configuration::getInstance().GetScaledNoteWidth());
+                                                               Configuration::getInstance().GetScaledNoteWidth() - Configuration::getInstance().Formatting.ListItemOffset);
 
             if (!wrapped.empty()) {
                 // Add the first line as a LIST

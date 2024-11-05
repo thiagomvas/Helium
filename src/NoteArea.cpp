@@ -518,14 +518,14 @@ void NoteArea::RenderMarkdown(int y) {
             if (t.attributes.at(ATTRIBUTE_LIST_ORDERED) == "true") {
                 std::string listItemText = std::to_string(orderedListCount) + ".";
                 DrawTextEx(Configuration::getInstance().Formatting.DefaultFont, listItemText.c_str(), {static_cast<float>(x), static_cast<float>(y)}, Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing, Configuration::getInstance().ColorTheme.ListItemBulletColor);
-                x += 25;
+                x += Configuration::getInstance().Formatting.QuoteOffset;
                 for (const Token &it : t.children) {
                     x += Utils::DrawInlineToken(it, x, y);
                 }
                 orderedListCount++;
             } else {
                 DrawTextEx(Configuration::getInstance().Formatting.DefaultFont, "-", {static_cast<float>(x), static_cast<float>(y)}, Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing, Configuration::getInstance().ColorTheme.ListItemBulletColor);
-                x += 25;
+                x += Configuration::getInstance().Formatting.QuoteOffset;
                 for (const Token &it : t.children) {
                     x += Utils::DrawInlineToken(it, x, y);
                 }
