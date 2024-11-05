@@ -35,6 +35,7 @@ public:
     Font ItalicFont;
     Font CodeFont;
     float TodoOffset;
+    int CharSpacingPixels;
 
     int GetLineHeight(int fontSize);
     int GetFontSizeForHeader(int level);

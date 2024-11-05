@@ -208,7 +208,7 @@ void NoteArea::Update() {
             if (lineIndex < wrappedLines->size()) {
                 float currentY = _rect.y;
                 int totalChars = 0;
-                int width = mousePosition.x - _rect.x;
+                float width = mousePosition.x - _rect.x;
 
                 for (int i = 0; i < lineIndex; i++)
                     totalChars += wrappedLines->at(i).size() + 1;
@@ -216,7 +216,7 @@ void NoteArea::Update() {
                 bool moved = false;
                 for (size_t i = 0; i < line.size(); i++) {
                     char c = line[i];
-                    int charWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, &c, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+                    float charWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, &c, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
                     if (width <= charWidth) {
                         _cursor.Goto(totalChars + i);
@@ -224,7 +224,7 @@ void NoteArea::Update() {
                         break;
                     }
 
-                    width -= charWidth + Helium::Configuration::getInstance().Formatting.CharSpacing;
+                    width -= charWidth + Helium::Configuration::getInstance().Formatting.CharSpacingPixels;
                 }
                 if (!moved) {
                     _cursor.Goto(totalChars + line.size());
@@ -244,6 +244,7 @@ void NoteArea::Update() {
 
         if (isDirty) {
             isDirty = false;
+            _rawText->erase(std::remove(_rawText->begin(), _rawText->end(), '\r'), _rawText->end());
             Utils::WrapText(*_rawText, wrappedLines);
         }
 
