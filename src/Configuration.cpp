@@ -66,7 +66,9 @@ std::vector<std::pair<std::string, std::string>> Configuration::serializeIntoMap
     return configVector; // Return vector of pairs
 }
 
-
+void Configuration::resetDefault() {
+    deserialize(Configuration().serialize());
+}
 void Configuration::deserialize(const std::string &data) {
     std::istringstream iss(data);
     std::string line;

@@ -19,6 +19,7 @@ SettingsModal::SettingsModal(Rectangle bounds)
       _scrollOffset(0),
       _settingItemHeight(25 + Constants::MODAL_PADDING),
       closeModalBtn("X", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, BLANK),
+      resetSettingsBtn("Reset", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, BLANK),
       _settingListRect({bounds.x + Constants::MODAL_PADDING, bounds.y + Constants::TOP_BAR_MENU_HEIGHT + Constants::MODAL_PADDING, bounds.width - 2 * Constants::MODAL_PADDING, bounds.height - Constants::TOP_BAR_MENU_HEIGHT - 2 * Constants::MODAL_PADDING}) {
 }
 
@@ -35,7 +36,11 @@ void SettingsModal::RegisterSetting(std::string key, std::string value) {
 }
 
 void SettingsModal::Show() {
-    _visible = true;
+    _visible = true;    
+    for (auto e : _settingItems) {
+        e->ClearAndFree();
+        delete e;
+    }
     _settingItems.clear();
     for (const auto &[key, value] : Helium::Configuration::getInstance().serializeIntoMap()) {
         if (key.contains("MACROS")) break;
@@ -107,6 +112,11 @@ void SettingsModal::Update() {
     if (closeModalBtn.IsClicked()) {
         Hide();
     }
+
+    if(resetSettingsBtn.IsClicked()) {
+        Helium::Configuration::getInstance().resetDefault();
+        Show();
+    }
 }
 
 void SettingsModal::Draw() {
@@ -116,9 +126,11 @@ void SettingsModal::Draw() {
     DrawRectangleRounded({_modalRect.x, _modalRect.y, _modalRect.width, Constants::TOP_BAR_MENU_HEIGHT}, 1, 8, Helium::Configuration::getInstance().ColorTheme.AccentBackground);                                      // Modal top bar
     DrawRectangleRec({_modalRect.x, _modalRect.y + Constants::TOP_BAR_MENU_HEIGHT * 0.5f, _modalRect.width, Constants::TOP_BAR_MENU_HEIGHT * 0.5f}, Helium::Configuration::getInstance().ColorTheme.AccentBackground); // Modal Top bar (straight bottom)
     DrawRectangleRoundedLinesEx(_modalRect, 0.1, 8, 2, Helium::Configuration::getInstance().ColorTheme.AccentBackground);                                                                                              // Modal border
-    Utils::DrawText("    Save File...", {_modalRect.x, _modalRect.y});                                                                                                                                                 // Modal title
+    Utils::DrawText("    Settings", {_modalRect.x, _modalRect.y});                                                                                                                                                 // Modal title
     closeModalBtn.SetBounds({_modalRect.x + _modalRect.width - Constants::MODAL_PADDING - 25, _modalRect.y, 25, 25});
     closeModalBtn.Draw();
+    resetSettingsBtn.SetBounds({_modalRect.x + _modalRect.width - Constants::MODAL_PADDING - 125, _modalRect.y, 100, 25});
+    resetSettingsBtn.Draw();
 
     _settingListRect.x = _modalRect.x + Constants::MODAL_PADDING;
     _settingListRect.y = _modalRect.y + Constants::TOP_BAR_MENU_HEIGHT + Constants::MODAL_PADDING;

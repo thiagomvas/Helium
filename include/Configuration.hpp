@@ -40,6 +40,7 @@ class Configuration {
     void deserialize(const std::vector<std::pair<std::string, std::string>> &data);
 
     void unloadResources();
+    void resetDefault();
 
     private:
     Configuration();

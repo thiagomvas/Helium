@@ -25,6 +25,7 @@ class SettingsModal {
     int _visibleItemCount;
     std::vector<UI::StackPanel*> _settingItems;
     UI::Button closeModalBtn;
+    UI::Button resetSettingsBtn;
     int _settingItemHeight;
 };
 
