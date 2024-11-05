@@ -30,6 +30,7 @@ void Formatting::loadFonts() {
     BoldFont = LoadFontEx(BoldFontPath.c_str(), 64, 0, 250);
     ItalicFont = LoadFontEx(ItalicFontPath.c_str(), 64, 0, 250);
     CodeFont = LoadFontEx(CodeFontPath.c_str(), 64, 0, 250);
+    TodoOffset = MeasureTextEx(DefaultFont, "TODO: ", Paragraph, CharSpacing).x;
 }
 
 std::string Formatting::serialize() const {

@@ -423,7 +423,7 @@ void NoteArea::Draw() {
 void NoteArea::RenderMarkdown(int y) {
     int orderedListCount = 0;
     for (const Token &t : _tokens) {
-        if (t.type != Helium::TokenType::LIST)
+        if (t.type != Helium::TokenType::LIST && t.type != Helium::TokenType::WRAPPEDLIST)
             orderedListCount = 0;
         int x = _rect.x;
         switch (t.type) {
@@ -492,7 +492,7 @@ void NoteArea::RenderMarkdown(int y) {
             int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
             float totalHeight = t.children.size() * lineHeight;
             DrawRectangle(x, y, 5, totalHeight, Configuration::getInstance().ColorTheme.getQuoteColor(t.attributes.at(ATTRIBUTE_QUOTE_TYPE)));
-            x += 25;
+            x += Configuration::getInstance().Formatting.QuoteOffset;
 
             for (const Token &child : t.children) {
                 for (const Token &it : child.children) {
@@ -502,6 +502,16 @@ void NoteArea::RenderMarkdown(int y) {
                 y += lineHeight;
             }
             x = _rect.x;
+            break;
+        }
+        case Helium::TokenType::WRAPPEDLIST: {
+            x += Configuration::getInstance().Formatting.ListItemOffset;
+            for (const Token &it : t.children) {
+                x += Utils::DrawInlineToken(it, x, y);
+            }
+            x = _rect.x;
+            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+
             break;
         }
         case Helium::TokenType::LIST: {

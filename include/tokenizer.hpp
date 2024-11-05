@@ -30,6 +30,7 @@ const std::string ATTRIBUTE_COLOREDTEXT_COLOR = "colorhex";
 enum class TokenType {
     HEADER,
     LIST,
+    WRAPPEDLIST,
     LINK,
     PARAGRAPH,
     TEXT,
