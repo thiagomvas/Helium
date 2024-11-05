@@ -105,7 +105,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                     token.children.push_back(headerParent);
                 } else if (content.starts_with("[!IMPORTANT]")) {
                     token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_IMPORTANT;
-                    content = content.substr(13); // Remove "[!IMPORTANT]"
+                    content = content.substr(12); // Remove "[!IMPORTANT]"
                     Token headerParent = Token(TokenType::QUOTECHILD, "");
                     Token header = Token(TokenType::COLOREDTEXT, "Important");
                     header.attributes[ATTRIBUTE_COLOREDTEXT_COLOR] = Utils::ColorToHex(Helium::Configuration::getInstance().ColorTheme.QuoteImportant);
@@ -158,7 +158,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                 multilineType = TokenType::UNKNOWN;
         }
 
-        if (line == "---" || line == "***" || line == "___") {
+        if (line == "---" || line == "***" || line == "___" || line == "+++") {
             tokens.push_back(Token(TokenType::HORIZONTALLINE));
             continue;
         }
