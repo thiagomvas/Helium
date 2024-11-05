@@ -34,8 +34,10 @@ class Configuration {
     int GetScaledNoteWidth();
 
     std::string serialize();
+    std::vector<std::pair<std::string, std::string>> serializeIntoMap();
 
     void deserialize(const std::string &data);
+    void deserialize(const std::vector<std::pair<std::string, std::string>> &data);
 
     void unloadResources();
 

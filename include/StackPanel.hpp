@@ -10,7 +10,9 @@ public:
     StackPanel(Orientation orientation = Orientation::Vertical, float spacing = 5.0f);
 
     void AddElement(UIElement* element);
+    UIElement& GetElement(int index) const;
 
+    void Update() override;
     void Draw() override;
 
     void SetSpacing(float spacing);
@@ -18,6 +20,7 @@ public:
     void SetOrientation(Orientation orientation);
 
     void Clear();
+    void ClearAndFree();
 
 private:
     std::vector<UIElement*> _elements; 

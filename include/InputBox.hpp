@@ -16,7 +16,7 @@ class InputBox : public UIElement {
     void SetText(const std::string &text);
     void SetPlaceholder(const std::string &placeholder);
 
-    void Update();
+    void Update() override;
     void Draw() override;
 
     void Focus();

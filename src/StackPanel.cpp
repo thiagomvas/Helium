@@ -13,6 +13,10 @@ void StackPanel::AddElement(UIElement *element) {
     _elements.push_back(element);
 }
 
+UIElement& StackPanel::GetElement(int index) const {
+    return *_elements[index];
+}
+
 void StackPanel::SetSpacing(float spacing) {
     _spacing = spacing;
 }
@@ -25,6 +29,18 @@ void StackPanel::Clear() {
     _elements.clear();
 }
 
+void StackPanel::ClearAndFree() {
+    for (auto element : _elements) {
+        delete element; 
+    }
+    _elements.clear();
+}
+
+void StackPanel::Update() {
+    for(UIElement *element : _elements) {
+        element->Update();
+    }
+}
 void StackPanel::Draw() {
     Vector2 offset = {_bounds.x, _bounds.y};
     for (UIElement *element : _elements) {

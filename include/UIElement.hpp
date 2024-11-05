@@ -7,6 +7,7 @@ namespace UI {
 class UIElement {
     public:
     virtual void Draw() {}
+    virtual void Update() {}
     Rectangle GetBounds() {
         return _bounds;
     }

@@ -18,9 +18,10 @@
 #include "DataPath.hpp"
 #include "Dropdown.hpp"
 #include "OpenFileModal.hpp"
+#include "StackPanel.hpp"
 #include "raygui.h"
 #include <SaveFileModal.hpp>
-#include "StackPanel.hpp"
+#include "SettingsModal.hpp"
 
 namespace Helium {
 
@@ -104,20 +105,21 @@ void Application::Start() {
     Vector2 scroll = {0, 0};
     Helium::Configuration::getInstance().Formatting.loadFonts();
     GuiSetFont(Helium::Configuration::getInstance().Formatting.DefaultFont);
-    Rectangle modalRect = {100, 100, 400, 300};
+    Rectangle modalRect = {100, 100, 900, 500};
     OpenFileModal fileOpenModal(modalRect, Helium::Configuration::getInstance().SUPPORTED_NOTE_FILE_TYPE);
+    SettingsModal settingsModal(modalRect);
 
     int filedpwidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, "File", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
-    UI::Dropdown fileDropdown({0, 0, 100, Constants::TOP_BAR_MENU_HEIGHT}, Helium::Configuration::getInstance().ColorTheme.Foreground, "File;Open;Save#CTRL+S");
-
+    UI::Dropdown fileDropdown({0, 0, 100, Constants::TOP_BAR_MENU_HEIGHT}, Helium::Configuration::getInstance().ColorTheme.Foreground, "File;Open;Save#CTRL+S;Settings");
+    fileDropdown.Show();
     UI::StackPanel topBar(UI::Orientation::Horizontal, 5.0f);
     topBar.AddElement(&fileDropdown);
 
     _noteArea->Initialize(Helium::Configuration::getInstance().TopMenuBarHeight); // Offset the NoteArea 50px down
     while (isRunning) {
         wasModalClosed = isModalOpen; // Assume this as a temporary value
-        isModalOpen = fileOpenModal.IsVisible() || _saveModal.IsVisible();
+        isModalOpen = fileOpenModal.IsVisible() || _saveModal.IsVisible() || settingsModal.IsVisible();
         wasModalClosed = !isModalOpen && wasModalClosed; // Check if the modal is closed but was open
 
         if (WindowShouldClose()) {
@@ -131,6 +133,8 @@ void Application::Start() {
         // Modals
         fileOpenModal.Update();
         _saveModal.Update();
+        settingsModal.Update();
+        topBar.SetPosition({0, 0});
 
         // Handle updates only if no modal is open
         if (!isModalOpen) {
@@ -150,7 +154,7 @@ void Application::Start() {
         // --------------------------------------------------------------------------------------------------
         BeginDrawing();
         ClearBackground(Helium::Configuration::getInstance().ColorTheme.Background);
-        
+
         // NOTE AREA
         // -------------------------------------
         BeginMode2D(camera);
@@ -162,6 +166,7 @@ void Application::Start() {
         // --------------------------------------------------------------------------------------------------
         DrawRectangleRec({0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(Helium::Configuration::getInstance().TopMenuBarHeight)}, Helium::Configuration::getInstance().ColorTheme.Foreground);
         fileOpenModal.Draw();
+        settingsModal.Draw();
         _saveModal.Draw();
         topBar.Draw();
         switch (fileDropdown.GetSelected()) {
@@ -172,6 +177,10 @@ void Application::Start() {
             if (_noteArea->GetPath().empty()) {
                 _saveModal.Show();
             }
+            break;
+        case 3:
+            settingsModal.Show();
+            break;
         default: break;
         }
         EndDrawing();
@@ -188,6 +197,7 @@ void Application::Start() {
             }
         }
     }
+
     CloseWindow();
     return;
 }
