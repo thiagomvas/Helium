@@ -1,11 +1,14 @@
 #include "Application.hpp"
+#include "Atom.hpp"
+#include "Bond.hpp"
 #include "Configuration.hpp"
+#include "DataPath.hpp"
+#include "Molecule.hpp"
 #include <cstdlib>
-#include <iostream>
-#include <memory>
 #include <filesystem>
 #include <fstream>
-#include "DataPath.hpp"
+#include <iostream>
+#include <memory>
 
 int main() {
     std::string appDataPath = GetAppDataPath();
@@ -25,7 +28,7 @@ int main() {
 
         Helium::Configuration::getInstance().deserialize(configData);
         std::cout << "Configuration loaded from config.txt." << std::endl;
-        
+
         std::string updatedConfig = Helium::Configuration::getInstance().serialize();
         std::ofstream configFileOut(filePath);
         configFileOut << updatedConfig;
