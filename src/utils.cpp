@@ -6,6 +6,8 @@
 #include <sstream>
 #include <string>
 #include <filesystem>
+#include "Button.hpp"
+#include <unordered_set>
 
 namespace fs = std::filesystem;
 
@@ -15,11 +17,12 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
     std::string line;
     std::istringstream textStream(text);
     output->clear();
+    int spaceWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, " ", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
     
     // Process the raw text line by line
     while (std::getline(textStream, line)) {
         // Check if the entire line fits without wrapping
-        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().MaxNoteWidth) {
+        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().GetScaledNoteWidth()) {
             output->push_back(line);  // Line fits without wrapping
             continue;
         }
@@ -48,7 +51,7 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
             }
 
             // If the segment doesn't fit, wrap to the next line
-            if (currWidth + width > Helium::Configuration::getInstance().MaxNoteWidth) {
+            if (currWidth + width > Helium::Configuration::getInstance().GetScaledNoteWidth()) {
                 if (!currLine.empty()) {
                     output->push_back(currLine);  // Only push if there's content in currLine
                 }
@@ -60,7 +63,7 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
                     currLine.append(" ");  // Add a space before the next segment if currLine is not empty
                 }
                 currLine.append(segment);  // Add the segment to the current line
-                currWidth += width;  // Update the width
+                currWidth += width + spaceWidth;  // Update the width
             }
 
             // Move to the next character after the space
@@ -81,7 +84,7 @@ void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>>
     // Process the raw text line by line
     while (std::getline(textStream, line)) {
         // Check if the entire line fits without wrapping
-        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().MaxNoteWidth) {
+        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().GetScaledNoteWidth()) {
             output->push_back(line);  // Line fits without wrapping
             continue;
         }
@@ -110,7 +113,7 @@ void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>>
             }
 
             // If the segment doesn't fit, wrap to the next line
-            if (currWidth + width > Helium::Configuration::getInstance().MaxNoteWidth) {
+            if (currWidth + width > Helium::Configuration::getInstance().GetScaledNoteWidth()) {
                 if (!currLine.empty()) {
                     output->push_back(currLine);  // Only push if there's content in currLine
                 }
@@ -336,5 +339,55 @@ std::string CleanseText(const std::string &text) {
     }
 
     return cleansedText;
+}
+
+std::vector<UI::Button> LoadFilesInDirectoryAsButtons(const std::filesystem::path& currentPath, const std::string& fileFilter)
+{
+    std::vector<UI::Button> fileButtons;
+
+    // Parse fileFilter into a set of extensions if it is not empty
+    std::unordered_set<std::string> allowedExtensions;
+    if (!fileFilter.empty()) {
+        std::istringstream filterStream(fileFilter);
+        std::string extension;
+        while (std::getline(filterStream, extension, ',')) {
+            extension.erase(0, extension.find_first_not_of(" \t"));
+            extension.erase(extension.find_last_not_of(" \t") + 1);
+            allowedExtensions.insert("." + extension); // Prefix with '.' for consistency
+        }
+    }
+
+    if (fs::exists(currentPath) && fs::is_directory(currentPath)) {
+        std::vector<UI::Button> directories;
+        std::vector<UI::Button> files;
+
+        for (const auto& entry : fs::directory_iterator(currentPath)) {
+            std::string entryName = entry.path().filename().string();
+            UI::Button button(
+                entryName,
+                Helium::Configuration::getInstance().Formatting.Paragraph,
+                Helium::Configuration::getInstance().ColorTheme.TextColor,
+                Helium::Configuration::getInstance().ColorTheme.Foreground);
+
+            if (fs::is_directory(entry)) {
+                button.SetText(entryName + "/"); // Add "/" to indicate a directory
+                directories.push_back(button);
+            } else {
+                // If fileFilter is specified, check the extension
+                if (allowedExtensions.empty() ||
+                    allowedExtensions.count(entry.path().extension().string()) > 0) {
+                    files.push_back(button);
+                }
+            }
+        }
+
+        // Add directories first, followed by files
+        fileButtons.insert(fileButtons.end(), directories.begin(), directories.end());
+        fileButtons.insert(fileButtons.end(), files.begin(), files.end());
+    } else {
+        std::cerr << "Directory does not exist: " << currentPath << std::endl;
+    }
+
+    return fileButtons;
 }
 }

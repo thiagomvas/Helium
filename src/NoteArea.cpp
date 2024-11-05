@@ -34,7 +34,8 @@ void NoteArea::Initialize(int heightOffset) {
     _texture = LoadRenderTexture(Helium::Configuration::getInstance().MaxNoteWidth, GetScreenHeight());
 
     rlSetBlendFactorsSeparate(0x0302, 0x0303, 1, 0x0303, 0x8006, 0x8006); // Required configuration to be able to erase on the texture!
-    _rect.width = Helium::Configuration::getInstance().MaxNoteWidth;
+    _rect.width = Helium::Configuration::getInstance().GetScaledNoteWidth();
+    ;
     _rect.height = GetScreenHeight();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
     _rect.y = heightOffset;
@@ -137,8 +138,14 @@ void NoteArea::SetMode(NoteMode mode) {
 void NoteArea::Update() {
 
     _rect.height = GetScreenHeight();
-    _rect.width = Helium::Configuration::getInstance().MaxNoteWidth;
+    _rect.width = Helium::Configuration::getInstance().GetScaledNoteWidth();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
+    if (IsWindowResized()) {
+        if (_mode == NoteMode::WRITE)
+            SetDirty();
+        else
+            _tokens = _tokenizer.tokenize(*_rawText);
+    }
 
     int wheel;
     if (CheckCollisionPointRec(GetMousePosition(), _rect) &&
@@ -201,7 +208,7 @@ void NoteArea::Update() {
             if (lineIndex < wrappedLines->size()) {
                 float currentY = _rect.y;
                 int totalChars = 0;
-                int width = mousePosition.x - _rect.x;
+                float width = mousePosition.x - _rect.x;
 
                 for (int i = 0; i < lineIndex; i++)
                     totalChars += wrappedLines->at(i).size() + 1;
@@ -209,7 +216,7 @@ void NoteArea::Update() {
                 bool moved = false;
                 for (size_t i = 0; i < line.size(); i++) {
                     char c = line[i];
-                    int charWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, &c, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
+                    float charWidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, &c, Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
                     if (width <= charWidth) {
                         _cursor.Goto(totalChars + i);
@@ -217,7 +224,7 @@ void NoteArea::Update() {
                         break;
                     }
 
-                    width -= charWidth + Helium::Configuration::getInstance().Formatting.CharSpacing;
+                    width -= charWidth + Helium::Configuration::getInstance().Formatting.CharSpacingPixels;
                 }
                 if (!moved) {
                     _cursor.Goto(totalChars + line.size());
@@ -237,6 +244,7 @@ void NoteArea::Update() {
 
         if (isDirty) {
             isDirty = false;
+            _rawText->erase(std::remove(_rawText->begin(), _rawText->end(), '\r'), _rawText->end());
             Utils::WrapText(*_rawText, wrappedLines);
         }
 
@@ -416,7 +424,7 @@ void NoteArea::Draw() {
 void NoteArea::RenderMarkdown(int y) {
     int orderedListCount = 0;
     for (const Token &t : _tokens) {
-        if (t.type != Helium::TokenType::LIST)
+        if (t.type != Helium::TokenType::LIST && t.type != Helium::TokenType::WRAPPEDLIST)
             orderedListCount = 0;
         int x = _rect.x;
         switch (t.type) {
@@ -485,7 +493,7 @@ void NoteArea::RenderMarkdown(int y) {
             int lineHeight = Helium::Configuration::getInstance().Formatting.GetLineHeight(fontSize);
             float totalHeight = t.children.size() * lineHeight;
             DrawRectangle(x, y, 5, totalHeight, Configuration::getInstance().ColorTheme.getQuoteColor(t.attributes.at(ATTRIBUTE_QUOTE_TYPE)));
-            x += 25;
+            x += Configuration::getInstance().Formatting.QuoteOffset;
 
             for (const Token &child : t.children) {
                 for (const Token &it : child.children) {
@@ -497,18 +505,28 @@ void NoteArea::RenderMarkdown(int y) {
             x = _rect.x;
             break;
         }
+        case Helium::TokenType::WRAPPEDLIST: {
+            x += Configuration::getInstance().Formatting.ListItemOffset;
+            for (const Token &it : t.children) {
+                x += Utils::DrawInlineToken(it, x, y);
+            }
+            x = _rect.x;
+            y += Helium::Configuration::getInstance().Formatting.GetLineHeight(Helium::Configuration::getInstance().Formatting.Paragraph);
+
+            break;
+        }
         case Helium::TokenType::LIST: {
             if (t.attributes.at(ATTRIBUTE_LIST_ORDERED) == "true") {
                 std::string listItemText = std::to_string(orderedListCount) + ".";
                 DrawTextEx(Configuration::getInstance().Formatting.DefaultFont, listItemText.c_str(), {static_cast<float>(x), static_cast<float>(y)}, Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing, Configuration::getInstance().ColorTheme.ListItemBulletColor);
-                x += 25;
+                x += Configuration::getInstance().Formatting.QuoteOffset;
                 for (const Token &it : t.children) {
                     x += Utils::DrawInlineToken(it, x, y);
                 }
                 orderedListCount++;
             } else {
                 DrawTextEx(Configuration::getInstance().Formatting.DefaultFont, "-", {static_cast<float>(x), static_cast<float>(y)}, Configuration::getInstance().Formatting.Paragraph, Configuration::getInstance().Formatting.CharSpacing, Configuration::getInstance().ColorTheme.ListItemBulletColor);
-                x += 25;
+                x += Configuration::getInstance().Formatting.QuoteOffset;
                 for (const Token &it : t.children) {
                     x += Utils::DrawInlineToken(it, x, y);
                 }

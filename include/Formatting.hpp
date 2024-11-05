@@ -25,6 +25,8 @@ public:
     std::string CodeFontPath = "resources/Roboto-Regular.ttf";
     float CharSpacing = 1;
     int HorizontalLineThickness = 2;
+    float QuoteOffset = 25;
+    float ListItemOffset = 25;
 
     // Loaded during runtime
     // !! DO NOT SERIALIZE !!
@@ -32,6 +34,8 @@ public:
     Font BoldFont;
     Font ItalicFont;
     Font CodeFont;
+    float TodoOffset;
+    int CharSpacingPixels;
 
     int GetLineHeight(int fontSize);
     int GetFontSizeForHeader(int level);

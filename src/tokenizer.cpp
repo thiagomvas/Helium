@@ -1,19 +1,19 @@
 #include "tokenizer.hpp"
-#include <vector>
-#include <string>
+#include "utils.hpp"
 #include <regex>
 #include <sstream>
+#include <string>
 #include <unordered_map>
-#include "utils.hpp"
+#include <vector>
 
 namespace Helium {
-bool isEmptyOrWhitespace(const std::string& str) {
+bool isEmptyOrWhitespace(const std::string &str) {
     return std::all_of(str.begin(), str.end(), [](unsigned char c) {
         return std::isspace(c);
     });
 }
 
-std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
+std::vector<Token> Tokenizer::tokenizeInline(const std::string &line) {
     std::vector<Token> tokens;
     std::string::const_iterator searchStart = line.cbegin();
     std::smatch match;
@@ -35,8 +35,8 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
                 tokens.push_back(Token(TokenType::ITALIC, match[4].str()));
             } else if (match[5].matched) { // Strikethrough
                 tokens.push_back(Token(TokenType::STRIKETHROUGH, match[6].str()));
-            } else if (match[7].matched) { 
-                std::string hexColor = match[8].str(); 
+            } else if (match[7].matched) {
+                std::string hexColor = match[8].str();
 
                 Token token(TokenType::COLORCHIP, hexColor);
                 token.attributes[ATTRIBUTE_COLORCHIP_COLOR] = hexColor;
@@ -57,8 +57,7 @@ std::vector<Token> Tokenizer::tokenizeInline(const std::string& line) {
     return tokens;
 }
 
-
-std::vector<Token> Tokenizer::tokenize(const std::string& text) {
+std::vector<Token> Tokenizer::tokenize(const std::string &text) {
     std::vector<Token> tokens;
     std::istringstream stream(text);
     std::regex listRegex(R"(^(\s*)([\-\*\+])\s+(.*)$)");
@@ -76,9 +75,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
             tokens.push_back(Token(TokenType::PARAGRAPH, "\n"));
         }
 
-        
-
-        if(line.starts_with("> ")) {
+        if (line.starts_with("> ")) {
             std::string content = line.substr(2);
             token.type = TokenType::QUOTE;
             if (!multiline) {
@@ -105,7 +102,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                     token.children.push_back(headerParent);
                 } else if (content.starts_with("[!IMPORTANT]")) {
                     token.attributes[ATTRIBUTE_QUOTE_TYPE] = ATTRIBUTE_QUOTE_TYPE_IMPORTANT;
-                    content = content.substr(13); // Remove "[!IMPORTANT]"
+                    content = content.substr(12); // Remove "[!IMPORTANT]"
                     Token headerParent = Token(TokenType::QUOTECHILD, "");
                     Token header = Token(TokenType::COLOREDTEXT, "Important");
                     header.attributes[ATTRIBUTE_COLOREDTEXT_COLOR] = Utils::ColorToHex(Helium::Configuration::getInstance().ColorTheme.QuoteImportant);
@@ -133,68 +130,66 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
 
                 // Trim leading whitespace from the content
                 content.erase(content.begin(), std::find_if(content.begin(), content.end(), [](unsigned char ch) {
-                    return !std::isspace(ch);
-                }));
+                                  return !std::isspace(ch);
+                              }));
             }
-            std::vector<std::string> wrapped = Utils::WrapText(content, 
-                                                                Configuration::getInstance().Formatting.CodeFont, 
-                                                                Configuration::getInstance().Formatting.Paragraph,
-                                                                Configuration::getInstance().Formatting.CharSpacing,
-                                                                Configuration::getInstance().MaxNoteWidth);
-            for(const std::string& wline : wrapped) {
+            std::vector<std::string> wrapped = Utils::WrapText(content,
+                                                               Configuration::getInstance().Formatting.CodeFont,
+                                                               Configuration::getInstance().Formatting.Paragraph,
+                                                               Configuration::getInstance().Formatting.CharSpacing,
+                                                               Configuration::getInstance().GetScaledNoteWidth() - Configuration::getInstance().Formatting.QuoteOffset);
+            for (const std::string &wline : wrapped) {
                 token.children.push_back(Token(TokenType::QUOTECHILD, wline, tokenizeInline(wline)));
             }
 
-            if(line.starts_with("> ")) {
+            if (line.starts_with("> ")) {
                 continue;
             } else {
                 tokens.push_back(token);
                 multiline = false;
                 multilineType = TokenType::UNKNOWN;
             }
-        } else if(multilineType == TokenType::QUOTE) {
-                tokens.push_back(token);
-                multiline = false;
-                multilineType = TokenType::UNKNOWN;
+        } else if (multilineType == TokenType::QUOTE) {
+            tokens.push_back(token);
+            multiline = false;
+            multilineType = TokenType::UNKNOWN;
         }
 
-        if (line == "---" || line == "***" || line == "___") {
+        if (line == "---" || line == "***" || line == "___" || line == "+++") {
             tokens.push_back(Token(TokenType::HORIZONTALLINE));
             continue;
         }
         // MULTILINE CODE BLOCKS
-        if(line.starts_with("```") || (multiline && multilineType == TokenType::CODE)) {
-            if(!multiline) {
+        if (line.starts_with("```") || (multiline && multilineType == TokenType::CODE)) {
+            if (!multiline) {
                 multiline = true;
                 multilineType = TokenType::CODE;
                 token = Token(TokenType::CODE, "");
             }
 
-
-            std::vector<std::string> wrapped = Utils::WrapText(line, 
-                                                                Configuration::getInstance().Formatting.CodeFont, 
-                                                                Configuration::getInstance().Formatting.Paragraph,
-                                                                Configuration::getInstance().Formatting.CharSpacing,
-                                                                Configuration::getInstance().MaxNoteWidth);
-            for(std::string wline : wrapped) {
+            std::vector<std::string> wrapped = Utils::WrapText(line,
+                                                               Configuration::getInstance().Formatting.CodeFont,
+                                                               Configuration::getInstance().Formatting.Paragraph,
+                                                               Configuration::getInstance().Formatting.CharSpacing,
+                                                               Configuration::getInstance().GetScaledNoteWidth());
+            for (std::string wline : wrapped) {
                 wline.erase(std::remove(wline.begin(), wline.end(), '`'), wline.end());
                 token.children.push_back(Token(TokenType::INLINECODE, wline));
             }
-            if(line.ends_with("```")) {
+            if (line.ends_with("```")) {
                 multiline = false;
                 multilineType = TokenType::UNKNOWN;
                 tokens.push_back(token);
             }
-        }
-        else if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
-            
+        } else if (token = tokenizeHeading(line); token.type != TokenType::UNKNOWN) {
+
             int headerFontSize = Helium::Configuration::getInstance().Formatting.GetFontSizeForHeader(std::stoi(token.attributes.at(ATTRIBUTE_HEADER_LEVEL)));
-            std::vector<std::string> wrapped = Utils::WrapText(token.value, 
-                                                                Configuration::getInstance().Formatting.DefaultFont, 
-                                                                headerFontSize,
-                                                                Configuration::getInstance().Formatting.CharSpacing,
-                                                                Configuration::getInstance().MaxNoteWidth);
-            for(std::string line : wrapped) {
+            std::vector<std::string> wrapped = Utils::WrapText(token.value,
+                                                               Configuration::getInstance().Formatting.DefaultFont,
+                                                               headerFontSize,
+                                                               Configuration::getInstance().Formatting.CharSpacing,
+                                                               Configuration::getInstance().GetScaledNoteWidth());
+            for (std::string line : wrapped) {
                 Helium::Token t(token.type, line, tokenizeInline(line));
                 t.attributes[ATTRIBUTE_HEADER_LEVEL] = token.attributes.at(ATTRIBUTE_HEADER_LEVEL);
                 tokens.push_back(t);
@@ -206,27 +201,45 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
             tokens.push_back(token);
         } else if (token = tokenizeLink(line); token.type != TokenType::UNKNOWN) {
             tokens.push_back(token);
-        } else if(token = tokenizeCode(line); token.type != TokenType::UNKNOWN) { 
+        } else if (token = tokenizeCode(line); token.type != TokenType::UNKNOWN) {
             tokens.push_back(token);
         } else if (token = tokenizeList(line); token.type != TokenType::UNKNOWN) {
-            token.children = tokenizeInline(token.value);
-            tokens.push_back(token);
+            std::vector<std::string> wrapped = Utils::WrapText(token.value,
+                                                               Configuration::getInstance().Formatting.DefaultFont,
+                                                               Configuration::getInstance().Formatting.Paragraph,
+                                                               Configuration::getInstance().Formatting.CharSpacing,
+                                                               Configuration::getInstance().GetScaledNoteWidth() - Configuration::getInstance().Formatting.ListItemOffset);
+
+            if (!wrapped.empty()) {
+                // Add the first line as a LIST
+                Helium::Token firstToken(TokenType::LIST, wrapped[0], tokenizeInline(wrapped[0]));
+                firstToken.attributes[ATTRIBUTE_LIST_ORDERED] = token.attributes.at(ATTRIBUTE_LIST_ORDERED);
+                tokens.push_back(firstToken);
+
+                // Add the remaining lines as WRAPPEDLIST
+                for (size_t i = 1; i < wrapped.size(); ++i) {
+                    Helium::Token t(TokenType::WRAPPEDLIST, wrapped[i], tokenizeInline(wrapped[i]));
+                    t.attributes[ATTRIBUTE_LIST_ORDERED] = token.attributes.at(ATTRIBUTE_LIST_ORDERED);
+                    tokens.push_back(t);
+                }
+            }
+
         } else {
             token.type = TokenType::PARAGRAPH;
             token.value = line;
-            std::vector<std::string> wrapped = Utils::WrapText(token.value, 
-                                                                Configuration::getInstance().Formatting.DefaultFont, 
-                                                                Configuration::getInstance().Formatting.Paragraph,
-                                                                Configuration::getInstance().Formatting.CharSpacing,
-                                                                Configuration::getInstance().MaxNoteWidth);
-            for(std::string line : wrapped) {
+            std::vector<std::string> wrapped = Utils::WrapText(token.value,
+                                                               Configuration::getInstance().Formatting.DefaultFont,
+                                                               Configuration::getInstance().Formatting.Paragraph,
+                                                               Configuration::getInstance().Formatting.CharSpacing,
+                                                               Configuration::getInstance().GetScaledNoteWidth());
+            for (std::string line : wrapped) {
                 Helium::Token t(token.type, line, tokenizeInline(line));
                 tokens.push_back(t);
             }
         }
     }
 
-    if(multiline) {
+    if (multiline) {
         multiline = false;
         multilineType = TokenType::UNKNOWN;
         tokens.push_back(token);
@@ -234,9 +247,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
     return tokens;
 }
 
-
-
-Token Tokenizer::tokenizeHeading(const std::string& line) {
+Token Tokenizer::tokenizeHeading(const std::string &line) {
     std::regex headingRegex(R"(^(\#{1,6})\s*(.*)$)");
     std::smatch matches;
 
@@ -251,8 +262,7 @@ Token Tokenizer::tokenizeHeading(const std::string& line) {
     return Token(TokenType::UNKNOWN, "");
 }
 
-
-Token Tokenizer::tokenizeBold(const std::string& text) {
+Token Tokenizer::tokenizeBold(const std::string &text) {
     std::regex boldRegex(R"(\*\*(.*?)\*\*)");
     std::smatch matches;
 
@@ -263,7 +273,7 @@ Token Tokenizer::tokenizeBold(const std::string& text) {
     return Token(TokenType::UNKNOWN, "");
 }
 
-Token Tokenizer::tokenizeLink(const std::string& text) {
+Token Tokenizer::tokenizeLink(const std::string &text) {
     std::regex linkRegex(R"(\[(.*?)\]\((.*?)\))");
     std::smatch matches;
 
@@ -278,7 +288,7 @@ Token Tokenizer::tokenizeLink(const std::string& text) {
     return Token(TokenType::UNKNOWN, "");
 }
 
-Token Tokenizer::tokenizeList(const std::string& line) {
+Token Tokenizer::tokenizeList(const std::string &line) {
     std::regex unorderedListRegex(R"(^[\-\*\+]\s+(.*)$)");
     std::regex orderedListRegex(R"(^\d+\.\s+(.*)$)");
     std::smatch matches;
@@ -301,19 +311,19 @@ Token Tokenizer::tokenizeList(const std::string& line) {
     return Token(TokenType::UNKNOWN, "");
 }
 
-Token Tokenizer::tokenizeQuote(const std::string& text) {
-    if (text.rfind(">", 0) == 0) { // Check if line starts with '>'
+Token Tokenizer::tokenizeQuote(const std::string &text) {
+    if (text.rfind(">", 0) == 0) {                 // Check if line starts with '>'
         std::string quoteContent = text.substr(1); // Remove the '>'
         return Token(TokenType::QUOTE, quoteContent);
     }
     return Token();
 }
 
-Token Tokenizer::tokenizeCode(const std::string& text) {
-    if (text.starts_with("`") && text.ends_with("`")) { // Check for inline code
+Token Tokenizer::tokenizeCode(const std::string &text) {
+    if (text.starts_with("`") && text.ends_with("`")) {            // Check for inline code
         std::string codeContent = text.substr(1, text.size() - 2); // Remove backticks
         return Token(TokenType::CODE, codeContent);
     }
     return Token();
 }
-}// Constructor for Tokenizer
+} // Constructor for Tokenizer
