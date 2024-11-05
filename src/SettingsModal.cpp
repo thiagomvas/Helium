@@ -1,28 +1,31 @@
 #include "SettingsModal.hpp"
 #include "Button.hpp"
 #include "Configuration.hpp"
+#include "InputBox.hpp"
+#include "Label.hpp"
 #include "StackPanel.hpp"
+#include "UI.hpp"
 #include "constants.h"
 #include "raylib.h"
 #include "utils.hpp"
-#include "Label.hpp"
-#include "InputBox.hpp"
-#include "UI.hpp"
 #include <algorithm>
 #include <vector>
+#include <filesystem>
+#include <fstream>
+#include "DataPath.hpp"
 SettingsModal::SettingsModal(Rectangle bounds)
     : _modalRect(bounds),
-        _visible(false),
-        _scrollOffset(0),
-        _settingItemHeight(25 + Constants::MODAL_PADDING),
+      _visible(false),
+      _scrollOffset(0),
+      _settingItemHeight(25 + Constants::MODAL_PADDING),
       closeModalBtn("X", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().ColorTheme.TextColor, BLANK),
       _settingListRect({bounds.x + Constants::MODAL_PADDING, bounds.y + Constants::TOP_BAR_MENU_HEIGHT + Constants::MODAL_PADDING, bounds.width - 2 * Constants::MODAL_PADDING, bounds.height - Constants::TOP_BAR_MENU_HEIGHT - 2 * Constants::MODAL_PADDING}) {
 }
 
 void SettingsModal::RegisterSetting(std::string key, std::string value) {
-    UI::StackPanel* sp = new UI::StackPanel(UI::Orientation::Horizontal, 50);
-    UI::Label* l = new UI::Label(key);
-    UI::InputBox* b = new UI::InputBox(value);
+    UI::StackPanel *sp = new UI::StackPanel(UI::Orientation::Horizontal, 50);
+    UI::Label *l = new UI::Label(key);
+    UI::InputBox *b = new UI::InputBox(value);
     b->SetText(value);
     b->SetColor(Helium::Configuration::getInstance().ColorTheme.Foreground);
     b->SetBounds({0, 0, (value == "" ? 0.0f : _modalRect.width - l->GetBounds().width - 50 - Constants::MODAL_PADDING * 2), 25});
@@ -34,9 +37,9 @@ void SettingsModal::RegisterSetting(std::string key, std::string value) {
 void SettingsModal::Show() {
     _visible = true;
     _settingItems.clear();
-    for(const auto& [key, value] : Helium::Configuration::getInstance().serializeIntoMap()) {
-        if(key.contains("MACROS")) break;
-        if(key.contains("COLORTHEME") || key.contains("FORMATTING")) 
+    for (const auto &[key, value] : Helium::Configuration::getInstance().serializeIntoMap()) {
+        if (key.contains("MACROS")) break;
+        if (key.contains("COLORTHEME") || key.contains("FORMATTING"))
             RegisterSetting("", "");
         RegisterSetting(key, value);
     }
@@ -45,10 +48,10 @@ void SettingsModal::Show() {
 void SettingsModal::Hide() {
     _visible = false;
     std::string newConfig;
-    for(auto e : _settingItems) {
-        auto* label = dynamic_cast<UI::Label*>(&e->GetElement(0));
-        auto* box = dynamic_cast<UI::InputBox*>(&e->GetElement(1));
-        if(box->GetText() == "")
+    for (auto e : _settingItems) {
+        auto *label = dynamic_cast<UI::Label *>(&e->GetElement(0));
+        auto *box = dynamic_cast<UI::InputBox *>(&e->GetElement(1));
+        if (box->GetText() == "")
             newConfig += label->GetText() + "\n";
         else
             newConfig += label->GetText() + ":" + box->GetText() + "\n";
@@ -56,6 +59,17 @@ void SettingsModal::Hide() {
         delete e;
     }
     Helium::Configuration::getInstance().deserialize(newConfig);
+    std::string appDataPath = GetAppDataPath();
+    std::filesystem::path heliumFolderPath = appDataPath + "/Helium";
+    if (!std::filesystem::exists(heliumFolderPath)) {
+        std::filesystem::create_directories(heliumFolderPath);
+    }
+
+    std::filesystem::path filePath = heliumFolderPath / "config.txt";
+
+    std::ofstream configFile(filePath);
+    configFile << Helium::Configuration::getInstance().serialize();
+    configFile.close();
     _settingItems.clear();
 }
 
@@ -90,7 +104,7 @@ void SettingsModal::Update() {
         _settingItems[i]->Update();
     }
 
-    if(closeModalBtn.IsClicked()) {
+    if (closeModalBtn.IsClicked()) {
         Hide();
     }
 }
@@ -108,7 +122,6 @@ void SettingsModal::Draw() {
 
     _settingListRect.x = _modalRect.x + Constants::MODAL_PADDING;
     _settingListRect.y = _modalRect.y + Constants::TOP_BAR_MENU_HEIGHT + Constants::MODAL_PADDING;
-
 
     _visibleItemCount = static_cast<int>(_settingListRect.height / _settingItemHeight);
 
