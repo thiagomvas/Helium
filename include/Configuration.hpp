@@ -31,6 +31,8 @@ class Configuration {
     ColorTheme ColorTheme;
     float HoverAnimationDurationSeconds = 0.125f;
 
+    int GetScaledNoteWidth();
+
     std::string serialize();
 
     void deserialize(const std::string &data);

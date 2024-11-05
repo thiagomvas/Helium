@@ -150,8 +150,7 @@ void Application::Start() {
         // --------------------------------------------------------------------------------------------------
         BeginDrawing();
         ClearBackground(Helium::Configuration::getInstance().ColorTheme.Background);
-
-        DrawRectangleRec({(GetScreenWidth() - Helium::Configuration::getInstance().MaxNoteWidth) * 0.5f, 0, static_cast<float>(Helium::Configuration::getInstance().MaxNoteWidth), static_cast<float>(GetScreenHeight())}, Helium::Configuration::getInstance().ColorTheme.Foreground);
+        
         // NOTE AREA
         // -------------------------------------
         BeginMode2D(camera);

@@ -21,7 +21,7 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
     // Process the raw text line by line
     while (std::getline(textStream, line)) {
         // Check if the entire line fits without wrapping
-        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().MaxNoteWidth) {
+        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().GetScaledNoteWidth()) {
             output->push_back(line);  // Line fits without wrapping
             continue;
         }
@@ -50,7 +50,7 @@ void WrapText(std::string text, std::shared_ptr<std::vector<std::string>> output
             }
 
             // If the segment doesn't fit, wrap to the next line
-            if (currWidth + width > Helium::Configuration::getInstance().MaxNoteWidth) {
+            if (currWidth + width > Helium::Configuration::getInstance().GetScaledNoteWidth()) {
                 if (!currLine.empty()) {
                     output->push_back(currLine);  // Only push if there's content in currLine
                 }
@@ -83,7 +83,7 @@ void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>>
     // Process the raw text line by line
     while (std::getline(textStream, line)) {
         // Check if the entire line fits without wrapping
-        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().MaxNoteWidth) {
+        if (MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, line.c_str(), fontSize, Helium::Configuration::getInstance().Formatting.CharSpacing).x < Helium::Configuration::getInstance().GetScaledNoteWidth()) {
             output->push_back(line);  // Line fits without wrapping
             continue;
         }
@@ -112,7 +112,7 @@ void WrapText(const std::string& text, std::shared_ptr<std::vector<std::string>>
             }
 
             // If the segment doesn't fit, wrap to the next line
-            if (currWidth + width > Helium::Configuration::getInstance().MaxNoteWidth) {
+            if (currWidth + width > Helium::Configuration::getInstance().GetScaledNoteWidth()) {
                 if (!currLine.empty()) {
                     output->push_back(currLine);  // Only push if there's content in currLine
                 }

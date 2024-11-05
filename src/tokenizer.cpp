@@ -140,7 +140,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                                                                 Configuration::getInstance().Formatting.CodeFont, 
                                                                 Configuration::getInstance().Formatting.Paragraph,
                                                                 Configuration::getInstance().Formatting.CharSpacing,
-                                                                Configuration::getInstance().MaxNoteWidth);
+                                                                Configuration::getInstance().GetScaledNoteWidth());
             for(const std::string& wline : wrapped) {
                 token.children.push_back(Token(TokenType::QUOTECHILD, wline, tokenizeInline(wline)));
             }
@@ -175,7 +175,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                                                                 Configuration::getInstance().Formatting.CodeFont, 
                                                                 Configuration::getInstance().Formatting.Paragraph,
                                                                 Configuration::getInstance().Formatting.CharSpacing,
-                                                                Configuration::getInstance().MaxNoteWidth);
+                                                                Configuration::getInstance().GetScaledNoteWidth());
             for(std::string wline : wrapped) {
                 wline.erase(std::remove(wline.begin(), wline.end(), '`'), wline.end());
                 token.children.push_back(Token(TokenType::INLINECODE, wline));
@@ -193,7 +193,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                                                                 Configuration::getInstance().Formatting.DefaultFont, 
                                                                 headerFontSize,
                                                                 Configuration::getInstance().Formatting.CharSpacing,
-                                                                Configuration::getInstance().MaxNoteWidth);
+                                                                Configuration::getInstance().GetScaledNoteWidth());
             for(std::string line : wrapped) {
                 Helium::Token t(token.type, line, tokenizeInline(line));
                 t.attributes[ATTRIBUTE_HEADER_LEVEL] = token.attributes.at(ATTRIBUTE_HEADER_LEVEL);
@@ -218,7 +218,7 @@ std::vector<Token> Tokenizer::tokenize(const std::string& text) {
                                                                 Configuration::getInstance().Formatting.DefaultFont, 
                                                                 Configuration::getInstance().Formatting.Paragraph,
                                                                 Configuration::getInstance().Formatting.CharSpacing,
-                                                                Configuration::getInstance().MaxNoteWidth);
+                                                                Configuration::getInstance().GetScaledNoteWidth());
             for(std::string line : wrapped) {
                 Helium::Token t(token.type, line, tokenizeInline(line));
                 tokens.push_back(t);

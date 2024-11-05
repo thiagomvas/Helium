@@ -34,7 +34,8 @@ void NoteArea::Initialize(int heightOffset) {
     _texture = LoadRenderTexture(Helium::Configuration::getInstance().MaxNoteWidth, GetScreenHeight());
 
     rlSetBlendFactorsSeparate(0x0302, 0x0303, 1, 0x0303, 0x8006, 0x8006); // Required configuration to be able to erase on the texture!
-    _rect.width = Helium::Configuration::getInstance().MaxNoteWidth;
+    _rect.width = Helium::Configuration::getInstance().GetScaledNoteWidth();
+    ;
     _rect.height = GetScreenHeight();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
     _rect.y = heightOffset;
@@ -137,8 +138,14 @@ void NoteArea::SetMode(NoteMode mode) {
 void NoteArea::Update() {
 
     _rect.height = GetScreenHeight();
-    _rect.width = Helium::Configuration::getInstance().MaxNoteWidth;
+    _rect.width = Helium::Configuration::getInstance().GetScaledNoteWidth();
     _rect.x = (GetScreenWidth() - _rect.width) / 2;
+    if (IsWindowResized()) {
+        if (_mode == NoteMode::WRITE)
+            SetDirty();
+        else
+            _tokens = _tokenizer.tokenize(*_rawText);
+    }
 
     int wheel;
     if (CheckCollisionPointRec(GetMousePosition(), _rect) &&

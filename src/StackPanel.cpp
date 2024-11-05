@@ -6,6 +6,7 @@
 namespace UI {
 StackPanel::StackPanel(Orientation orientation, float spacing)
     : _orientation(orientation), _spacing(spacing) {
+        Show();
 }
 
 void StackPanel::AddElement(UIElement *element) {

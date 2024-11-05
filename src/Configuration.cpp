@@ -14,6 +14,10 @@ namespace Helium {
         static Configuration instance; // Singleton instance
         return instance;
     }
+
+    int Configuration::GetScaledNoteWidth() {
+        return std::min(GetScreenWidth(), MaxNoteWidth);
+    }
     std::string Configuration::serialize() {
         std::ostringstream oss;
         oss << "MaxNoteWidth:" << MaxNoteWidth << '\n';
