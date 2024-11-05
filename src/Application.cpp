@@ -1,8 +1,12 @@
 #include "Application.hpp"
+#include "Atom.hpp"
+#include "Bond.hpp"
 #include "Configuration.hpp"
 #include "InputCombo.hpp"
+#include "Molecule.hpp"
 #include "NoteArea.hpp"
 #include "UiUtils.hpp"
+#include "Window.hpp"
 #include "constants.h"
 #include "raylib.h"
 #include "rlgl.h"
@@ -17,25 +21,55 @@
 #define RAYGUI_IMPLEMENTATION
 #include "DataPath.hpp"
 #include "Dropdown.hpp"
+#include "NoteWindow.hpp"
 #include "OpenFileModal.hpp"
 #include "SettingsModal.hpp"
 #include "StackPanel.hpp"
 #include "raygui.h"
+#include <MoleculeWindow.hpp>
 #include <SaveFileModal.hpp>
-
 namespace Helium {
 
 Application::Application()
     : isRunning(false), _inputHandler(std::make_unique<InputHandler>()), _noteArea(std::make_unique<NoteArea>()), _saveModal({100, 100, 400, 300}, Helium::Configuration::getInstance().SUPPORTED_NOTE_FILE_TYPE) {
     _noteArea->SetMode(NoteMode::READ);
     _inputHandler->SetMode(NoteMode::READ);
+    auto atom1 = std::make_shared<Atom>("Atom 1", "Content A");
+    auto atom2 = std::make_shared<Atom>("Atom 2", "Content B");
+    auto atom3 = std::make_shared<Atom>("Atom 3", "Content C");
+    auto atom4 = std::make_shared<Atom>("Atom 4", "Content D");
 
+    // Create bonds to connect the atoms
+    auto bond1 = std::make_shared<Bond>(atom1, atom2);
+    auto bond2 = std::make_shared<Bond>(atom2, atom3);
+    auto bond3 = std::make_shared<Bond>(atom3, atom4);
+    auto bond4 = std::make_shared<Bond>(atom4, atom1); // Closing the loop
+
+    // Add bonds to each atom
+    atom1->AddBond(bond1);
+    atom1->AddBond(bond4);
+
+    atom2->AddBond(bond1);
+    atom2->AddBond(bond2);
+
+    atom3->AddBond(bond2);
+    atom3->AddBond(bond3);
+
+    atom4->AddBond(bond3);
+    atom4->AddBond(bond4);
+
+    // Create a molecule and add the atoms and bonds
+    _loadedMolecule = std::make_shared<Molecule>("Molecule Project");
+    _loadedMolecule->AddAtom(atom1);
+    _loadedMolecule->AddAtom(atom2);
+    _loadedMolecule->AddAtom(atom3);
+    _loadedMolecule->AddAtom(atom4);
+
+    _loadedMolecule->AddBond(bond1);
+    _loadedMolecule->AddBond(bond2);
+    _loadedMolecule->AddBond(bond3);
+    _loadedMolecule->AddBond(bond4);
     // GLOBAL ACTIONS
-    _inputHandler->AddGlobalAction(InputCombo(KEY_ESCAPE), [this]() {
-        _noteArea->SetMode(NoteMode::READ);
-        _inputHandler->SetMode(NoteMode::READ);
-    });
-
     _inputHandler->AddGlobalAction(InputCombo(KEY_S, KEY_LEFT_CONTROL), [this]() {
         if (_noteArea->GetPath().empty()) {
             OpenSaveModal();
@@ -89,17 +123,17 @@ void Application::Start() {
 
     MaximizeWindow();
 
-    Camera2D camera = {0};
-    camera.target = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
-    camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
-    camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
     // Initialize raygui
     GuiLoadStyle("styles/raygui-dark");
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20); // Adjust text size
 
     bool isModalOpen = false;
     bool wasModalClosed = false;
+
+    NoteWindow noteWindow;
+    MoleculeWindow moleculeWindow(_loadedMolecule);
+
+    Window* window = &moleculeWindow;
 
     float menuHeight = Helium::Configuration::getInstance().TopMenuBarHeight;
     Vector2 scroll = {0, 0};
@@ -111,7 +145,7 @@ void Application::Start() {
 
     int filedpwidth = MeasureTextEx(Helium::Configuration::getInstance().Formatting.DefaultFont, "File", Helium::Configuration::getInstance().Formatting.Paragraph, Helium::Configuration::getInstance().Formatting.CharSpacing).x;
 
-    UI::Dropdown fileDropdown({0, 0, 100, Constants::TOP_BAR_MENU_HEIGHT}, Helium::Configuration::getInstance().ColorTheme.Foreground, "File;Open;Save#CTRL+S;Settings");
+    UI::Dropdown fileDropdown({0, 0, 100, Constants::TOP_BAR_MENU_HEIGHT}, Helium::Configuration::getInstance().ColorTheme.Foreground, "File;New Molecule;Open;Save#CTRL+S;Settings");
     fileDropdown.Show();
     UI::StackPanel topBar(UI::Orientation::Horizontal, 5.0f);
     topBar.AddElement(&fileDropdown);
@@ -138,29 +172,16 @@ void Application::Start() {
 
         // Handle updates only if no modal is open
         if (!isModalOpen) {
-            _noteArea->Update();
-
-            if (!IsKeyDown(KEY_LEFT_SHIFT))
-                scroll.y -= GetMouseWheelMove() * Helium::Configuration::getInstance().Formatting.Paragraph * Helium::Configuration::getInstance().ScrollLineCount;
-            if (scroll.y < 0) scroll.y = 0;
-            camera.target = {
-                GetScreenWidth() * 0.5f + scroll.x,
-                GetScreenHeight() * 0.5f + scroll.y,
-            };
-            _noteArea->SetViewOffset(scroll.y);
-            camera.offset = {GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f};
+            window->Update();
         }
         // Draw
         // --------------------------------------------------------------------------------------------------
         BeginDrawing();
         ClearBackground(Helium::Configuration::getInstance().ColorTheme.Background);
-        DrawRectangleRec({(GetScreenWidth() - Helium::Configuration::getInstance().MaxNoteWidth) * 0.5f, 0, static_cast<float>(Helium::Configuration::getInstance().MaxNoteWidth), static_cast<float>(GetScreenHeight())}, Helium::Configuration::getInstance().ColorTheme.Foreground);
 
         // NOTE AREA
         // -------------------------------------
-        BeginMode2D(camera);
-        _noteArea->Draw();
-        EndMode2D();
+        window->Draw();
         DrawFPS(0, 0);
 
         // UI
@@ -171,15 +192,18 @@ void Application::Start() {
         _saveModal.Draw();
         topBar.Draw();
         switch (fileDropdown.GetSelected()) {
-        case 1: // Open
+        case 1:
+            _loadedMolecule = std::make_shared<Molecule>("New Molecule");
+            break;
+        case 2: // Open
             fileOpenModal.Show(GetUserRootPath());
             break;
-        case 2: // Save
+        case 3: // Save
             if (_noteArea->GetPath().empty()) {
                 _saveModal.Show();
             }
             break;
-        case 3:
+        case 4:
             settingsModal.Show();
             break;
         default: break;
@@ -215,5 +239,8 @@ void Application::Stop() {
 }
 void Application::OpenSaveModal() {
     _saveModal.Show();
+}
+std::shared_ptr<Molecule> Application::GetLoadedMolecule() {
+    return _loadedMolecule;
 }
 }
