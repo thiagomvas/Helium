@@ -25,7 +25,7 @@ void MoleculeWindow::Update() {
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         for (const auto &atom : _loadedMolecule->GetAtoms()) {
             Vector2 atomPos = atomPositions[atom];
-            if (CheckCollisionPointCircle(mousePos, atomPos, 20)) {
+            if (CheckCollisionPointCircle(mousePos, atomPos, _settings.CalculateAtomSize(atom->GetBonds().size()))) {
                 _selectedAtom = atom;
                 _isDragginAtom = true;
                 break;
@@ -131,6 +131,7 @@ void MoleculeWindow::Update() {
 
 
 void MoleculeWindow::Draw() {
+    SimulationSettings& _settings = Helium::Configuration::getInstance().Simulation;
     BeginMode2D(_camera);
 
     for (const auto &bond : _loadedMolecule->GetBonds()) {
@@ -143,9 +144,10 @@ void MoleculeWindow::Draw() {
 
     for (const auto &atom : _loadedMolecule->GetAtoms()) {
         Vector2 pos = atomPositions[atom];
-        DrawCircleV(pos, 20, BLUE);
+        int atomSize = _settings.CalculateAtomSize(atom->GetBonds().size());
+        DrawCircleV(pos, atomSize, BLUE);
         int textWidth = MeasureText(atom->GetTitle().c_str(), 20);
-        DrawText(atom->GetTitle().c_str(), pos.x - textWidth / 2, pos.y - 30, 20, WHITE);
+        DrawText(atom->GetTitle().c_str(), pos.x - textWidth / 2, pos.y - atomSize, 20, WHITE);
     }
 
     EndMode2D();

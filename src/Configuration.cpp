@@ -2,12 +2,12 @@
 #include "ColorTheme.hpp"
 #include "Formatting.hpp"
 #include <functional>
-#include <vector>
+#include <iostream>
 #include <mutex>
 #include <sstream>
 #include <string>
 #include <unordered_map>
-#include <iostream>
+#include <vector>
 
 namespace Helium {
 
@@ -33,6 +33,8 @@ std::string Configuration::serialize() {
         << Formatting.serialize() << '\n';
     oss << "COLORTHEME\n"
         << ColorTheme.serialize() << '\n';
+    oss << "SIMULATION\n"
+        << Simulation.serialize() << '\n';
     oss << "MACROS\n";
 
     for (const auto &[key, value] : Macros) {
@@ -73,7 +75,7 @@ void Configuration::deserialize(const std::string &data) {
     std::istringstream iss(data);
     std::string line;
     bool inMacrosSection = false;
-    
+
     std::unordered_map<std::string, std::function<void(const std::string &)>> handlers{
         {"MaxNoteWidth", [this](const std::string &value) { MaxNoteWidth = std::stoi(value); }},
         {"ActionRepeatInitialDelaySeconds", [this](const std::string &value) { ActionRepeatInitialDelaySeconds = std::stof(value); }},
@@ -84,6 +86,7 @@ void Configuration::deserialize(const std::string &data) {
 
     std::string formattingData;
     std::string colorThemeData;
+    std::string simulationData;
 
     while (std::getline(iss, line)) {
         if (line == "MACROS") {
@@ -128,6 +131,12 @@ void Configuration::deserialize(const std::string &data) {
                 colorThemeData += line + "\n";
             }
             ColorTheme.deserialize(colorThemeData);
+        } else if (line == "SIMULATION") {
+            simulationData.clear();
+            while (std::getline(iss, line) && !line.empty()) {
+                simulationData += line + "\n";
+            }
+            Simulation.deserialize(simulationData);
         } else {
             auto delimiterPos = line.find(':');
             if (delimiterPos != std::string::npos) {
@@ -144,15 +153,15 @@ void Configuration::deserialize(const std::string &data) {
 }
 void Configuration::deserialize(const std::vector<std::pair<std::string, std::string>> &data) {
     std::string serializedData;
-    
-    for (const auto& [key, value] : data) {
-        if(value == "") {
+
+    for (const auto &[key, value] : data) {
+        if (value == "") {
             serializedData += key + '\n';
         } else {
             serializedData += key + ":" + value + "\n";
         }
     }
-    
+
     deserialize(serializedData);
 }
 

@@ -38,25 +38,23 @@ Application::Application()
     auto atom2 = std::make_shared<Atom>("Atom 2", "Content B");
     auto atom3 = std::make_shared<Atom>("Atom 3", "Content C");
     auto atom4 = std::make_shared<Atom>("Atom 4", "Content D");
+    auto atom5 = std::make_shared<Atom>("Atom 5", "Content E"); // Adding an extra atom for branching
 
     // Create bonds to connect the atoms
-    auto bond1 = std::make_shared<Bond>(atom1, atom2);
-    auto bond2 = std::make_shared<Bond>(atom2, atom3);
-    auto bond3 = std::make_shared<Bond>(atom3, atom4);
-    auto bond4 = std::make_shared<Bond>(atom4, atom1); // Closing the loop
+    auto bond1 = std::make_shared<Bond>(atom1, atom2); // bond between atom1 and atom2
+    auto bond2 = std::make_shared<Bond>(atom2, atom3); // bond between atom2 and atom3
+    auto bond3 = std::make_shared<Bond>(atom3, atom4); // bond between atom3 and atom4
+    auto bond4 = std::make_shared<Bond>(atom2, atom5); // bond between atom2 and atom5 (branching)
 
-    // Add bonds to each atom
-    atom1->AddBond(bond1);
-    atom1->AddBond(bond4);
-
-    atom2->AddBond(bond1);
-    atom2->AddBond(bond2);
-
-    atom3->AddBond(bond2);
-    atom3->AddBond(bond3);
-
-    atom4->AddBond(bond3);
-    atom4->AddBond(bond4);
+    // Add bonds to each atom (tree-like structure)
+    atom1->AddBond(bond1); // Atom 1 connected to Atom 2
+    atom2->AddBond(bond1); // Atom 2 connected to Atom 1
+    atom2->AddBond(bond2); // Atom 2 connected to Atom 3
+    atom3->AddBond(bond2); // Atom 3 connected to Atom 2
+    atom3->AddBond(bond3); // Atom 3 connected to Atom 4
+    atom4->AddBond(bond3); // Atom 4 connected to Atom 3
+    atom2->AddBond(bond4); // Atom 2 connected to Atom 5 (branching point)
+    atom5->AddBond(bond4); // Atom 5 connected to Atom 2
 
     // Create a molecule and add the atoms and bonds
     _loadedMolecule = std::make_shared<Molecule>("Molecule Project");
@@ -64,11 +62,13 @@ Application::Application()
     _loadedMolecule->AddAtom(atom2);
     _loadedMolecule->AddAtom(atom3);
     _loadedMolecule->AddAtom(atom4);
+    _loadedMolecule->AddAtom(atom5); // Adding Atom 5 to the molecule
 
     _loadedMolecule->AddBond(bond1);
     _loadedMolecule->AddBond(bond2);
     _loadedMolecule->AddBond(bond3);
-    _loadedMolecule->AddBond(bond4);
+    _loadedMolecule->AddBond(bond4); // Adding the bond between Atom 2 and Atom 5
+
     // GLOBAL ACTIONS
     _inputHandler->AddGlobalAction(InputCombo(KEY_S, KEY_LEFT_CONTROL), [this]() {
         if (_noteArea->GetPath().empty()) {
@@ -133,7 +133,7 @@ void Application::Start() {
     NoteWindow noteWindow;
     MoleculeWindow moleculeWindow(_loadedMolecule);
 
-    Window* window = &moleculeWindow;
+    Window *window = &moleculeWindow;
 
     float menuHeight = Helium::Configuration::getInstance().TopMenuBarHeight;
     Vector2 scroll = {0, 0};
