@@ -9,6 +9,7 @@
 
 #include "ColorTheme.hpp"
 #include "Formatting.hpp"
+#include "SimulationSettings.hpp"
 
 namespace Helium {
 class Configuration {
@@ -29,6 +30,7 @@ class Configuration {
     int ScrollLineCount = 4;
     Formatting Formatting;
     ColorTheme ColorTheme;
+    SimulationSettings Simulation;
     float HoverAnimationDurationSeconds = 0.125f;
 
     int GetScaledNoteWidth();

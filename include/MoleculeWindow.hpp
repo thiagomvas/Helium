@@ -17,6 +17,11 @@ class MoleculeWindow : public Window {
     private:
     std::shared_ptr<Molecule> _loadedMolecule;
     std::unordered_map<std::shared_ptr<Atom>, Vector2> atomPositions;
+    std::unordered_map<std::shared_ptr<Atom>, Vector2> atomVelocities;
+    Camera2D _camera;
+    bool _isDragginAtom;
+    bool _isPanningCamera;
+    std::shared_ptr<Atom> _selectedAtom;
     void InitializeAtomPositions();
 };
 
